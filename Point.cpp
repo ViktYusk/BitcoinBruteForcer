@@ -173,9 +173,9 @@ void Point::double_()
 void Point::compress(unsigned char* output) // TODO: компрессировать в unsigned, а не unsigned char
 {
 	output[0] = y.blocks[0] % 2 == 0 ? 0x02 : 0x03;
-	for (int i = 0; i < 8; i++)
-		for (int j = 0; j < 4; j++)
-			output[1 + 4 * i + j] = x.blocks[7 - i] >> 8 * (3 - j);
+	for (int i = 0; i < 4; i++)
+		for (int j = 0; j < 8; j++)
+			output[1 + 8 * i + j] = x.blocks[3 - i] >> 8 * (7 - j);
 }
 
 void Point::group(Point* points)

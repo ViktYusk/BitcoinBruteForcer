@@ -11,7 +11,7 @@
 
 struct Key
 {
-	static const int GROUP_BITS = 12;
+	static const int GROUP_BITS = 12; // TODO: ещё раз оптимизировать после остальных оптимизаций
 	static const int GROUP_SIZE = 1 << GROUP_BITS;
 	
 	static const Key ZERO;
@@ -47,7 +47,7 @@ struct Key
 	bool subtract(const Key& key);
 	void multiply(const Key& key);
 	void multiply();
-	void multiply(const unsigned block);
+	//void multiply(const unsigned block);
 	void reduce();
 	bool getBit(int position);
 	void setBit(int position);

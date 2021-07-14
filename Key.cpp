@@ -89,26 +89,22 @@ void Key::operator<<=(int shift)
 	blocks[1] = shift < 2 ? blocks[1 - shift] : 0;
 	blocks[0] = shift < 1 ? blocks[0] : 0;
 	*/
-	///*
-	int shifts32 = shift / 32;
-	blocks[7] = shifts32 < 8 ? blocks[7 - shifts32] : 0;
-	blocks[6] = shifts32 < 7 ? blocks[6 - shifts32] : 0;
-	blocks[5] = shifts32 < 6 ? blocks[5 - shifts32] : 0;
-	blocks[4] = shifts32 < 5 ? blocks[4 - shifts32] : 0;
-	blocks[3] = shifts32 < 4 ? blocks[3 - shifts32] : 0;
-	blocks[2] = shifts32 < 3 ? blocks[2 - shifts32] : 0;
-	blocks[1] = shifts32 < 2 ? blocks[1 - shifts32] : 0;
-	blocks[0] = shifts32 < 1 ? blocks[0] : 0;
-	int shifts1 = shift % 32;
-	blocks[7] = (blocks[7] << shifts1) + (blocks[6] >> 32 - shifts1);
-	blocks[6] = (blocks[6] << shifts1) + (blocks[5] >> 32 - shifts1);
-	blocks[5] = (blocks[5] << shifts1) + (blocks[4] >> 32 - shifts1);
-	blocks[4] = (blocks[4] << shifts1) + (blocks[3] >> 32 - shifts1);
-	blocks[3] = (blocks[3] << shifts1) + (blocks[2] >> 32 - shifts1);
-	blocks[2] = (blocks[2] << shifts1) + (blocks[1] >> 32 - shifts1);
-	blocks[1] = (blocks[1] << shifts1) + (blocks[0] >> 32 - shifts1);
-	blocks[0] = blocks[0] << shifts1;
-	//*/
+    int shifts64 = shift / 64;
+    if (shifts64)
+    {
+        blocks[3] = shifts64 < 4 ? blocks[3 - shifts64] : 0;
+        blocks[2] = shifts64 < 3 ? blocks[2 - shifts64] : 0;
+        blocks[1] = shifts64 < 2 ? blocks[1 - shifts64] : 0;
+        blocks[0] = shifts64 < 1 ? blocks[0] : 0;
+    }
+    int shifts1 = shift % 64;
+    if (shifts1)
+    {
+        blocks[3] = (blocks[3] << shifts1) + (blocks[2] >> (64 - shifts1));
+        blocks[2] = (blocks[2] << shifts1) + (blocks[1] >> (64 - shifts1));
+        blocks[1] = (blocks[1] << shifts1) + (blocks[0] >> (64 - shifts1));
+        blocks[0] = blocks[0] << shifts1;
+    }
 }
 
 void Key::operator+=(const Key& key)
@@ -215,7 +211,7 @@ void Key::multiply(const Key& key)
     unsigned long long zero;
     __asm("MOV %[z], #0\n\t MOV %[r2], #0\n\t MOV %[r3], #0\n\t MOV %[r4], #0\n\t MOV %[r5], #0\n\t MOV %[r6], #0\n\t MOV %[r7], #0\n\t"
           "MUL %[r0], %[a0], %[b0]\n\t UMULH %[r1], %[a0], %[b0]\n\t"
-          MULTIPLY_BLOCKS("0", "1", "1", "2", "3") MULTIPLY_BLOCKS("1", "0", "1", "2", "3")
+          MULTIPLY_BLOCKS("1", "0", "1", "2", "3") MULTIPLY_BLOCKS("0", "1", "1", "2", "3")
           MULTIPLY_BLOCKS("2", "0", "2", "3", "4") MULTIPLY_BLOCKS("1", "1", "2", "3", "4") MULTIPLY_BLOCKS("0", "2", "2", "3", "4")
           MULTIPLY_BLOCKS("3", "0", "3", "4", "5") MULTIPLY_BLOCKS("2", "1", "3", "4", "5") MULTIPLY_BLOCKS("1", "2", "3", "4", "5") MULTIPLY_BLOCKS("0", "3", "3", "4", "5")
           MULTIPLY_BLOCKS("3", "1", "4", "5", "6") MULTIPLY_BLOCKS("2", "2", "4", "5", "6") MULTIPLY_BLOCKS("1", "3", "4", "5", "6")
@@ -227,61 +223,23 @@ void Key::multiply(const Key& key)
 
 void Key::multiply()
 {
-    /*
-	unsigned results[16] = { 0x00000000 };
-	unsigned tempLow;
-	unsigned tempHigh;
-	__asm("MULTIPLY_BLOCKS %[r0], %[r1], %[a0], %[b0]"
-		: [r0] "=r" (results[0]), [r1] "=r" (results[1]) 
-		: [a0] "r" (blocks[0]), [b0] "r" (R2.blocks[0]));
-	__asm(MULTIPLY_BLOCKS("1", "0", "1", "2", "3")
-		  MULTIPLY_BLOCKS("0", "1", "1", "2", "3")
-		: [r1] "+r" (results[1]), [r2] "+r" (results[2]), [r3] "+r" (results[3]), [t_l] "+&r" (tempLow), [t_h] "+&r" (tempHigh) 
-		: [a0] "r" (blocks[0]), [a1] "r" (blocks[1]), [b0] "r" (R2.blocks[0]), [b1] "r" (R2.blocks[1]));
-	__asm(MULTIPLY_BLOCKS("2", "0", "2", "3", "4")
-		  MULTIPLY_BLOCKS("1", "1", "2", "3", "4")
-		  "ADDS %[r2], %[r2], %[a0]\n\t ADCS %[r3], %[r3], $0\n\t ADC %[r4], %[r4], $0"
-		: [r2] "+r" (results[2]), [r3] "+r" (results[3]), [r4] "+r" (results[4]), [t_l] "+&r" (tempLow), [t_h] "+&r" (tempHigh) 
-		: [a0] "r" (blocks[0]), [a1] "r" (blocks[1]), [a2] "r" (blocks[2]), [b0] "r" (R2.blocks[0]), [b1] "r" (R2.blocks[1]));
-	__asm(MULTIPLY_BLOCKS("3", "0", "3", "4", "5")
-		  MULTIPLY_BLOCKS("2", "1", "3", "4", "5")
-		  "ADDS %[r3], %[r3], %[a1]\n\t ADCS %[r4], %[r4], $0\n\t ADC %[r5], %[r5], $0"
-		: [r3] "+r" (results[3]), [r4] "+r" (results[4]), [r5] "+r" (results[5]), [t_l] "+&r" (tempLow), [t_h] "+&r" (tempHigh) 
-		: [a1] "r" (blocks[1]), [a2] "r" (blocks[2]), [a3] "r" (blocks[3]), [b0] "r" (R2.blocks[0]), [b1] "r" (R2.blocks[1]));
-	__asm(MULTIPLY_BLOCKS("4", "0", "4", "5", "6")
-		  MULTIPLY_BLOCKS("3", "1", "4", "5", "6")
-		  "ADDS %[r4], %[r4], %[a2]\n\t ADCS %[r5], %[r5], $0\n\t ADC %[r6], %[r6], $0"
-		: [r4] "+r" (results[4]), [r5] "+r" (results[5]), [r6] "+r" (results[6]), [t_l] "+&r" (tempLow), [t_h] "+&r" (tempHigh) 
-		: [a2] "r" (blocks[2]), [a3] "r" (blocks[3]),  [a4] "r" (blocks[4]), [b0] "r" (R2.blocks[0]), [b1] "r" (R2.blocks[1]));
-	__asm(MULTIPLY_BLOCKS("5", "0", "5", "6", "7")
-		  MULTIPLY_BLOCKS("4", "1", "5", "6", "7")
-		  "ADDS %[r5], %[r5], %[a3]\n\t ADCS %[r6], %[r6], $0\n\t ADC %[r7], %[r7], $0"
-		: [r5] "+r" (results[5]), [r6] "+r" (results[6]), [r7] "+r" (results[7]), [t_l] "+&r" (tempLow), [t_h] "+&r" (tempHigh) 
-		: [a3] "r" (blocks[3]), [a4] "r" (blocks[4]),  [a5] "r" (blocks[5]), [b0] "r" (R2.blocks[0]), [b1] "r" (R2.blocks[1]));
-	__asm(MULTIPLY_BLOCKS("6", "0", "6", "7", "8")
-		  MULTIPLY_BLOCKS("5", "1", "6", "7", "8")
-		  "ADDS %[r6], %[r6], %[a4]\n\t ADCS %[r7], %[r7], $0\n\t ADC %[r8], %[r8], $0"
-		: [r6] "+r" (results[6]), [r7] "+r" (results[7]), [r8] "+r" (results[8]), [t_l] "+&r" (tempLow), [t_h] "+&r" (tempHigh) 
-		: [a4] "r" (blocks[4]), [a5] "r" (blocks[5]),  [a6] "r" (blocks[6]), [b0] "r" (R2.blocks[0]), [b1] "r" (R2.blocks[1]));
-	__asm(MULTIPLY_BLOCKS("7", "0", "7", "8", "9")
-		  MULTIPLY_BLOCKS("6", "1", "7", "8", "9")
-		  "ADDS %[r7], %[r7], %[a5]\n\t ADCS %[r8], %[r8], $0\n\t ADC %[r9], %[r9], $0"
-		: [r7] "+r" (results[7]), [r8] "+r" (results[8]), [r9] "+r" (results[9]), [t_l] "+&r" (tempLow), [t_h] "+&r" (tempHigh) 
-		: [a5] "r" (blocks[5]), [a6] "r" (blocks[6]),  [a7] "r" (blocks[7]), [b0] "r" (R2.blocks[0]), [b1] "r" (R2.blocks[1]));
-	__asm(MULTIPLY_BLOCKS("7", "1", "8", "9", "10")
-		  "ADDS %[r8], %[r8], %[a6]\n\t ADCS %[r9], %[r9], $0\n\t ADC %[r10], %[r10], $0"
-		: [r8] "+r" (results[8]), [r9] "+r" (results[9]), [r10] "+r" (results[10]), [t_l] "+&r" (tempLow), [t_h] "+&r" (tempHigh) 
-		: [a6] "r" (blocks[6]),  [a7] "r" (blocks[7]), [b1] "r" (R2.blocks[1]));
-	__asm("ADDS %[r9], %[r9], %[a7]\n\t ADC %[r10], %[r10], $0"
-		: [r9] "+r" (results[9]), [r10] "+r" (results[10])
-		: [a7] "r" (blocks[7]));
-	memcpy(blocks, results, 64);
-     */
-}
+    unsigned long long tempLow;
+    unsigned long long tempHigh;
+    unsigned long long zero;
+    __asm("MOV %[z], #0\n\t MOV %[r2], #0\n\t MOV %[r3], #0\n\t MOV %[r4], #0\n\t MOV %[r5], #0\n\t MOV %[r6], #0\n\t MOV %[r7], #0\n\t"
+          "MUL %[r0], %[a0], %[b0]\n\t UMULH %[r1], %[a0], %[b0]\n\t"
+          MULTIPLY_BLOCKS("1", "0", "1", "2", "3") "ADDS %[r1], %[r1], %[a0]\n\t ADCS %[r2], %[r2], %[z]\n\t ADC %[r3], %[r3], %[z]\n\t"
+          MULTIPLY_BLOCKS("2", "0", "2", "3", "4") "ADDS %[r2], %[r2], %[a1]\n\t ADCS %[r3], %[r3], %[z]\n\t ADC %[r4], %[r4], %[z]\n\t"
+          MULTIPLY_BLOCKS("3", "0", "3", "4", "5") "ADDS %[r3], %[r3], %[a2]\n\t ADCS %[r4], %[r4], %[z]\n\t ADC %[r5], %[r5], %[z]\n\t"
+          "ADDS %[r4], %[r4], %[a3]\n\t ADC %[r5], %[r5], %[z]"
+    : [t_l] "+r" (tempLow), [t_h] "+r" (tempHigh), [z] "+r" (zero), [r0] "+r" (blocks[0]), [r1] "+r" (blocks[1]), [r2] "+r" (blocks[2]), [r3] "+r" (blocks[3]), [r4] "+r" (blocks[4]), [r5] "+r" (blocks[5]), [r6] "+r" (blocks[6]), [r7] "+r" (blocks[7])
+    : [a0] "r" (blocks[0]), [a1] "r" (blocks[1]), [a2] "r" (blocks[2]), [a3] "r" (blocks[3]), [b0] "r" (R2.blocks[0]));
 
+}
+/*
 void Key::multiply(const unsigned block)
 {
-    /*
+
 	unsigned results[16] = { 0x00000000 };
 	unsigned tempLow;
 	unsigned tempHigh;
@@ -310,8 +268,9 @@ void Key::multiply(const unsigned block)
 		: [r7] "+r" (results[7]), [r8] "+r" (results[8]), [t_l] "+&r" (tempLow), [t_h] "+&r" (tempHigh) 
 		: [a7] "r" (blocks[7]), [b0] "r" (block));
 	memcpy(blocks, results, 64);
-     */
+
 }
+ */
 
 void Key::reduce()
 {
@@ -319,7 +278,7 @@ void Key::reduce()
 	temp.multiply(P_PRIME);
 	temp.multiply(P);
 	bool carry = addExtended(temp);
-	memcpy(blocks, blocks + 8, 32);
+	memcpy(blocks, blocks + 4, 32);
 	if (carry)
 		add(R);
 	else if (compare(P) >= 0)
@@ -329,12 +288,12 @@ void Key::reduce()
 
 bool Key::getBit(int position)
 {
-	return blocks[position / 32] & 1 << position % 32;
+	return blocks[position / 64] & 1ULL << position % 64;
 }
 
 void Key::setBit(int position)
 {
-	blocks[position / 32] |= 1 << position % 32;
+	blocks[position / 64] |= 1ULL << position % 64;
 }
 
 /*
@@ -377,17 +336,11 @@ void Key::shiftRight()
 	blocks[6] = blocks[7];
 	blocks[7] = 0;
 	*/
-	///*
-	__asm("MOV %[b0], %[b0], LSR #1\n\t ADD %[b0], %[b0], %[b1], LSL #31\n\t"
-		  "MOV %[b1], %[b1], LSR #1\n\t ADD %[b1], %[b1], %[b2], LSL #31\n\t"
-		  "MOV %[b2], %[b2], LSR #1\n\t ADD %[b2], %[b2], %[b3], LSL #31\n\t"
-		  "MOV %[b3], %[b3], LSR #1\n\t ADD %[b3], %[b3], %[b4], LSL #31\n\t"
-		  "MOV %[b4], %[b4], LSR #1\n\t ADD %[b4], %[b4], %[b5], LSL #31\n\t"
-		  "MOV %[b5], %[b5], LSR #1\n\t ADD %[b5], %[b5], %[b6], LSL #31\n\t"
-		  "MOV %[b6], %[b6], LSR #1\n\t ADD %[b6], %[b6], %[b7], LSL #31\n\t"
-		  "MOV %[b7], %[b7], LSR #1\n\t"
-		: [b0] "+r" (blocks[0]), [b1] "+r" (blocks[1]), [b2] "+r" (blocks[2]), [b3] "+r" (blocks[3]), [b4] "+r" (blocks[4]), [b5] "+r" (blocks[5]), [b6] "+r" (blocks[6]), [b7] "+r" (blocks[7]));
-	//*/
+	__asm("MOV %[b0], %[b0], LSR #1\n\t ADD %[b0], %[b0], %[b1], LSL #63\n\t"
+		  "MOV %[b1], %[b1], LSR #1\n\t ADD %[b1], %[b1], %[b2], LSL #63\n\t"
+		  "MOV %[b2], %[b2], LSR #1\n\t ADD %[b2], %[b2], %[b3], LSL #63\n\t"
+		  "MOV %[b3], %[b3], LSR #1\n\t"
+		: [b0] "+r" (blocks[0]), [b1] "+r" (blocks[1]), [b2] "+r" (blocks[2]), [b3] "+r" (blocks[3]));
 }
 
 // TODO: Knuth section 4.3.1

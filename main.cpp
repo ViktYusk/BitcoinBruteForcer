@@ -26,11 +26,11 @@ int block;
 int threadsProgresses[THREADS_NUMBER] = { 0 };
 mutex mutex_;
 Point threadsPoints[THREADS_NUMBER + 1];
+Timer timer;
 
 void* thread(void* id) 
 {
 	Point center(threadsPoints[*(int*)id]);
-	Timer timer;
 	unsigned char compression[64];
 	memcpy(compression + 33, Point::COMPRESSION_ENDING, sizeof(Point::COMPRESSION_ENDING));
 	for (int i = 0; i < PROGRESSES_NUMBER; i++)
@@ -117,7 +117,7 @@ int main(int argc, char* argv[])
 	startKey += Key::GROUP_SIZE / 2;
 	Point::initialize();
 	threadsPoints[0] = Point(startKey);
-	unsigned long long threadKeys = 1ULL << PROGRESS_BITS + SUBBLOCK_BITS + Key::GROUP_BITS;
+	unsigned long long threadKeys = 1ULL << (PROGRESS_BITS + SUBBLOCK_BITS + Key::GROUP_BITS);
 	unsigned long long threadKey = threadKeys;
 	for (int i = 1; i <= THREADS_NUMBER; i++)
 	{
@@ -125,6 +125,7 @@ int main(int argc, char* argv[])
 		threadsPoints[i] += threadsPoints[0];
 		threadKey += threadKeys;
 	}
+	timer = Timer();
 	int thread_ids[THREADS_NUMBER];
 	pthread_t threads[THREADS_NUMBER];
 	for (int id = 0; id < THREADS_NUMBER; id++)

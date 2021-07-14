@@ -44,7 +44,7 @@ bool check(unsigned char* array1, unsigned char* array2, int length)
 
 long long test()
 {
-	unsigned long long time;
+    unsigned long long time;
 	unsigned long long sha256Time;
 	unsigned long long ripemd160Time;
 	unsigned long long checkTime;
@@ -208,6 +208,7 @@ long long test()
            key2.multiply();
         TEST("Key::multiply()", key1.compareExtended(key2) == 0, iterations, key2.multiply(), time)
     }
+    /*
     {
         Key key1(0x59F2815B16F81798, 0x029BFCDB2DCE28D9, 0x55A06295CE870B07, 0x79BE667EF9DCBBAC);
         unsigned long long block = 0x00000000FB10D4B9;
@@ -220,7 +221,7 @@ long long test()
         }
         TEST("Key::multiply(unsigned)", key1.compareExtended(answer) == 0, 1000000, key1.multiply(block), time)
     }
-    /*
+     */
    {
        Key key1(0x9C47D08FFB10D4B8, 0xFD17B448A6855419, 0x5DA4FBFC0E1108A8, 0x483ADA7726A3C465, 0x59F2815B16F81798, 0x029BFCDB2DCE28D9, 0x55A06295CE870B07, 0x79BE667EF9DCBBAC);
        Key key2(0xC526CE3E29B569A1, 0xF55B7994186165D1, 0xD227C08AA6818A39, 0x03F4520816A42A72);
@@ -263,7 +264,6 @@ long long test()
        bool result = key1 == key2;
        TEST("Key::setBit", result, 1000000, key1.setBit(126), time)
    }
-   */
 	/*
 	{
 		Key key1(0x9C47D08FFB10D4B9, 0xFD17B448A6855419, 0x5DA4FBFC0E1108A8, 0x483ADA7726A3C465);
@@ -302,7 +302,6 @@ long long test()
 		TEST("Key::shiftLeft32", result, iterations, key1.shiftLeft32(), time)
 	}
 	*/
-	/*
 	{
 		Key key1(0x59F2815B16F81798, 0x029BFCDB2DCE28D9, 0x55A06295CE870B07, 0x79BE667EF9DCBBAC);
 		char bits[257] = "0001100111101000000111110110100011011010100000010100111110011010100110110001010001110011101101001101101100111111110110010100000011100000110100001110000101110011101010010100011000000101101010100011010111011101001110111001111101111110011001100111110110011110";
@@ -326,6 +325,8 @@ long long test()
 			for (int p = 0; p < 256; p++)
 				if (key1.getBit(p) != (p - s >= 0 ? bits[p - s] : '0') - '0')
 					result = false;
+			if (result == false)
+			    break;
 		}
 		Key key1(0x59F2815B16F81798, 0x029BFCDB2DCE28D9, 0x55A06295CE870B07, 0x79BE667EF9DCBBAC);
 		TEST("Key::operator<<=", result, 1000000, key1 <<= 3, time)
@@ -358,8 +359,8 @@ long long test()
 		Key y_1;
 		Key::gcd(a1, b1, x_1, y_1);
 		bool result1 = x_1 == x1 && y_1 == y1;
-		Key a2();
-		Key b2(0x59F2815B16F81798, 0x029BFCDB2DCE28D9, 0x55A06295CE870B07, 0x79BE667EF9DCBBAC);
+		Key a2(0x59F2815B16F81798, 0x029BFCDB2DCE28D9, 0x55A06295CE870B07, 0x79BE667EF9DCBBAC);
+		Key b2(0xFFFFFFFEFFFFFC2F, 0xFFFFFFFFFFFFFFFF, 0xFFFFFFFFFFFFFFFF, 0xFFFFFFFFFFFFFFFF);
 		Key x2(0xE61D003687CA9EF6, 0x67B8E794ABFB076B, 0x870AAEB8AD77626A, 0x237AFDF1D2938D86);
 		Key y2(0xB946138B35F7D60E, 0x7935C9F605369F4E, 0xC5ADA7DDB91DC968, 0xEF207A7B9FA568F6);
 		Key x_2;
@@ -510,7 +511,6 @@ long long test()
 		TEST("Point::group", result, 1, center.group(points), groupTime);
 		groupTime /= Key::GROUP_SIZE;
 	}
-
 	time = sha256Time + ripemd160Time + checkTime + compressTime + groupTime;
 	cout << "TIME USAGE FOR 1 KEY = " << time << " ns: " << endl;
 	cout << "* sha256          = " << (double)sha256Time / time * 100 << " % [" << sha256Time << " ns]" << endl;
@@ -518,7 +518,5 @@ long long test()
 	cout << "* Point::check    = " << (double)checkTime / time * 100 << " % [" << checkTime << " ns]" << endl;
 	cout << "* Point::compress = " << (double)compressTime / time * 100 << " % [" << compressTime << " ns]" << endl;
 	cout << "* Point::group    = " << (double)groupTime / time * 100 << " % [" << groupTime << " ns]" << endl;
-	*/
-	return -1;
 	return time;
 }
