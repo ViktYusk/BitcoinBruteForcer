@@ -1,9 +1,6 @@
 #include <iostream>
 
 #include "Point.h"
-#include "Key.h"
-#include "sha256.h"
-#include "ripemd160.h"
 
 using namespace std;
 
@@ -20,6 +17,14 @@ const Point Point::G = Point(1, Key(0x59F2815B16F81798, 0x029BFCDB2DCE28D9, 0x55
 
 Point Point::gPowers[64] = {};
 Point Point::gMultiples[Key::GROUP_SIZE / 2 + 1] = {};
+
+#ifdef COUNT_TEST
+unsigned long long Point::checkCounter = 0;
+unsigned long long Point::addCounter = 0;
+unsigned long long Point::subtractCounter = 0;
+unsigned long long Point::compressCounter = 0;
+unsigned long long Point::groupCounter = 0;
+#endif
 
 void Point::initialize()
 {
@@ -41,10 +46,13 @@ void Point::initialize()
 	gMultiples[Key::GROUP_SIZE / 2].double_();
 }
 
-bool Point::check(unsigned char* address1)
+bool Point::check(unsigned char* address)
 {
+#ifdef COUNT_TEST
+    checkCounter++;
+#endif
 	for (int c = 0; c < 20; c++)
-		if (address1[c] != ADDRESS[c])
+		if (address[c] != ADDRESS[c])
 			return false;
 	return true;
 }
@@ -74,6 +82,9 @@ Point::Point(unsigned long long key, Key x, Key y)
 
 void Point::add(const Point& point, Key inverse)
 {
+#ifdef COUNT_TEST
+    addCounter++;
+#endif
 	key += point.key;
 	Key slope = point.y;
 	slope -= y;
@@ -92,6 +103,9 @@ void Point::add(const Point& point, Key inverse)
 
 void Point::subtract(const Point& point, Key inverse)
 {
+#ifdef COUNT_TEST
+    subtractCounter++;
+#endif
 	key -= point.key;
 	Key slope = Key::P;
 	slope.subtract(point.y);
@@ -172,6 +186,9 @@ void Point::double_()
 // TODO: можно получать байты с помощью указателей
 void Point::compress(unsigned char* output) // TODO: компрессировать в unsigned, а не unsigned char
 {
+#ifdef COUNT_TEST
+    compressCounter++;
+#endif
 	output[0] = y.blocks[0] % 2 == 0 ? 0x02 : 0x03;
 	for (int i = 0; i < 4; i++)
 		for (int j = 0; j < 8; j++)
@@ -180,6 +197,9 @@ void Point::compress(unsigned char* output) // TODO: компрессирова�
 
 void Point::group(Point* points)
 {
+#ifdef COUNT_TEST
+    groupCounter++;
+#endif
 	points[Key::GROUP_SIZE / 2] = *this;
 	Key inverses[Key::GROUP_SIZE / 2 + 1];
 	for (int i = 0; i <= Key::GROUP_SIZE / 2; i++)

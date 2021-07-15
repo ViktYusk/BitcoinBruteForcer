@@ -368,3 +368,10 @@ static void compress(uint32_t* MDbuf, uint32_t* X)
     MDbuf[4] = MDbuf[0] + bb + ccc;
     MDbuf[0] = ddd;
 }
+
+#ifdef COUNT_TEST
+struct Ripemd160Counter
+{
+    static unsigned long long counter;
+};
+#endif

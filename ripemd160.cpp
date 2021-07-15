@@ -1,7 +1,14 @@
 #include "ripemd160.h"
 
+#ifdef COUNT_TEST
+unsigned long long Ripemd160Counter::counter = 0;
+#endif
+
 void ripemd160(const uint8_t* msg, uint8_t* hash)
 {
+#ifdef COUNT_TEST
+    Ripemd160Counter::counter++;
+#endif
 	uint32_t i;
 	int j;
 	uint32_t digest[5] = { 0x67452301, 0xefcdab89, 0x98badcfe, 0x10325476, 0xc3d2e1f0UL };

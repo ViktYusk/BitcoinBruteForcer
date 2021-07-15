@@ -1,17 +1,38 @@
 #include "Key.h"
 
-const Key Key::ZERO    = Key(0x0000000000000000, 0x0000000000000000, 0x0000000000000000, 0x0000000000000000); // 0
-const Key Key::ONE     = Key(0x0000000000000001, 0x0000000000000000, 0x0000000000000000, 0x0000000000000000); // 1
+const Key Key::ZERO      = Key(0x0000000000000000, 0x0000000000000000, 0x0000000000000000, 0x0000000000000000); // 0
+const Key Key::ONE       = Key(0x0000000000000001, 0x0000000000000000, 0x0000000000000000, 0x0000000000000000); // 1
 //const Key Key::TWO     = Key(0x0000000000000002, 0x0000000000000000, 0x0000000000000000, 0x0000000000000000); // 2
-const Key Key::THREE   = Key(0x0000000000000003, 0x0000000000000000, 0x0000000000000000, 0x0000000000000000); // 3
-const Key Key::R       = Key(0x00000001000003D1, 0x0000000000000000, 0x0000000000000000, 0x0000000000000000); // 4294968273
-const Key Key::R2      = Key(0x000007A2000E90A1, 0x0000000000000001, 0x0000000000000000, 0x0000000000000000); // 18446752466076602529
-const Key Key::P_PRIME = Key(0xD838091DD2253531, 0xBCB223FEDC24A059, 0x9C46C2C295F2B761, 0xC9BD190515538399); // 91248989341183975618893650062416139444822672217621753343178995607987479196977
-const Key Key::P       = Key(0xFFFFFFFEFFFFFC2F, 0xFFFFFFFFFFFFFFFF, 0xFFFFFFFFFFFFFFFF, 0xFFFFFFFFFFFFFFFF); // 115792089237316195423570985008687907853269984665640564039457584007908834671663
+const Key Key::THREE     = Key(0x0000000000000003, 0x0000000000000000, 0x0000000000000000, 0x0000000000000000); // 3
+const Key Key::R         = Key(0x00000001000003D1, 0x0000000000000000, 0x0000000000000000, 0x0000000000000000); // 4294968273
+const Key Key::R2        = Key(0x000007A2000E90A1, 0x0000000000000001, 0x0000000000000000, 0x0000000000000000); // 18446752466076602529
+const Key Key::P_PRIME   = Key(0xD838091DD2253531, 0xBCB223FEDC24A059, 0x9C46C2C295F2B761, 0xC9BD190515538399); // 91248989341183975618893650062416139444822672217621753343178995607987479196977
+const Key Key::P         = Key(0xFFFFFFFEFFFFFC2F, 0xFFFFFFFFFFFFFFFF, 0xFFFFFFFFFFFFFFFF, 0xFFFFFFFFFFFFFFFF); // 115792089237316195423570985008687907853269984665640564039457584007908834671663
+
+#ifdef COUNT_TEST
+unsigned long long Key::gcdCounter = 0;
+unsigned long long Key::invertGroupCounter = 0;
+unsigned long long Key::operatorEqualToCounter = 0;
+unsigned long long Key::operatorBitwiseLeftShiftAssignmentCounter = 0;
+unsigned long long Key::operatorSubtractionAssignmentCounter = 0;
+unsigned long long Key::operatorMultiplicationAssignmentCounter = 0;
+unsigned long long Key::compareCounter = 0;
+unsigned long long Key::addCounter = 0;
+unsigned long long Key::addExtendedCounter = 0;
+unsigned long long Key::subtractCounter = 0;
+unsigned long long Key::multiplyCounter = 0;
+unsigned long long Key::multiplyByR2Counter = 0;
+unsigned long long Key::reduceCounter = 0;
+unsigned long long Key::setBitCounter = 0;
+unsigned long long Key::getBitCounter = 0;
+unsigned long long Key::rightShiftCounter = 0;
+unsigned long long Key::divideCounter = 0;
+unsigned long long Key::invertCounter = 0;
+#endif
 
 void Key::gcd(Key a, Key b, Key& x, Key&y)
 {
-	if (a == ZERO)
+    if (a == ZERO)
 	{
 		x = ZERO;
 		y = ONE;
@@ -30,6 +51,9 @@ void Key::gcd(Key a, Key b, Key& x, Key&y)
 
 void Key::invertGroup(Key* keys)
 {
+#ifdef COUNT_TEST
+    invertGroupCounter++;
+#endif
 	Key products[GROUP_SIZE / 2 + 1];
 	products[0] = keys[0];
 	for (int k = 1; k < GROUP_SIZE / 2 + 1; k++)
@@ -50,7 +74,8 @@ void Key::invertGroup(Key* keys)
 }
 
 Key::Key()
-= default;
+{
+}
 
 Key::Key(unsigned long long block0, unsigned long long block1, unsigned long long block2, unsigned long long block3)
 {
@@ -72,13 +97,19 @@ Key::Key(unsigned long long block0, unsigned long long block1, unsigned long lon
 	blocks[7] = block7;
 }
 
-bool Key::operator==(const Key& key) // TODO: сделать эффективно (как в Vanity)
+bool Key::operator==(const Key& key)
 {
-	return compare(key) == 0;
+#ifdef COUNT_TEST
+    operatorEqualToCounter++;
+#endif
+	return blocks[0] == key.blocks[0] && blocks[1] == key.blocks[1] && blocks[2] == key.blocks[2] && blocks[3] == key.blocks[3];
 }
 
 void Key::operator<<=(int shift)
 {
+#ifdef COUNT_TEST
+    operatorBitwiseLeftShiftAssignmentCounter++;
+#endif
 	/*
 	blocks[7] = shift < 8 ? blocks[7 - shift] : 0;
 	blocks[6] = shift < 7 ? blocks[6 - shift] : 0;
@@ -117,13 +148,19 @@ void Key::operator+=(const Key& key)
 
 void Key::operator-=(const Key& key)
 {
+#ifdef COUNT_TEST
+    operatorSubtractionAssignmentCounter++;
+#endif
 	if (subtract(key))
 		add(P);
 }
 
 void Key::operator*=(const Key& key)
 {
-	multiply();
+#ifdef COUNT_TEST
+    operatorMultiplicationAssignmentCounter++;
+#endif
+    multiplyByR2();
 	reduce();
 	multiply(key);
 	reduce();
@@ -145,8 +182,11 @@ void Key::operator++()
 }
 */
 
-int Key::compare(const Key& key) // TODO: сделать отдельные методы для ==, >, <, ... (как в Vanity)
+int Key::compare(const Key& key)
 {
+#ifdef COUNT_TEST
+    compareCounter++;
+#endif
 	COMPARE_BLOCKS(blocks[3], key.blocks[3]);
 	COMPARE_BLOCKS(blocks[2], key.blocks[2]);
 	COMPARE_BLOCKS(blocks[1], key.blocks[1]);
@@ -169,6 +209,9 @@ int Key::compareExtended(const Key& key)
 
 bool Key::add(const Key& key)
 {
+#ifdef COUNT_TEST
+    addCounter++;
+#endif
 	unsigned long long carry = 0;
 	ADD_BLOCKS("ADDS", blocks[0], key.blocks[0]);
 	ADD_BLOCKS("ADCS", blocks[1], key.blocks[1]);
@@ -180,7 +223,10 @@ bool Key::add(const Key& key)
 
 bool Key::addExtended(const Key& key)
 {
-	unsigned long long carry = 0;
+#ifdef COUNT_TEST
+    addExtendedCounter++;
+#endif
+    unsigned long long carry = 0;
 	ADD_BLOCKS("ADDS", blocks[0], key.blocks[0]);
 	ADD_BLOCKS("ADCS", blocks[1], key.blocks[1]);
 	ADD_BLOCKS("ADCS", blocks[2], key.blocks[2]);
@@ -195,7 +241,11 @@ bool Key::addExtended(const Key& key)
 
 bool Key::subtract(const Key& key)
 {
-	unsigned long long carry = 0;
+#ifdef COUNT_TEST
+    subtractCounter++;
+#endif
+
+    unsigned long long carry = 0;
 	SUBTRACT_BLOCKS("SUBS", blocks[0], key.blocks[0]);
 	SUBTRACT_BLOCKS("SBCS", blocks[1], key.blocks[1]);
 	SUBTRACT_BLOCKS("SBCS", blocks[2], key.blocks[2]);
@@ -206,6 +256,9 @@ bool Key::subtract(const Key& key)
 
 void Key::multiply(const Key& key)
 {
+#ifdef COUNT_TEST
+    multiplyCounter++;
+#endif
     unsigned long long tempLow;
     unsigned long long tempHigh;
     unsigned long long zero;
@@ -221,8 +274,11 @@ void Key::multiply(const Key& key)
           : [a0] "r" (blocks[0]), [a1] "r" (blocks[1]), [a2] "r" (blocks[2]), [a3] "r" (blocks[3]), [b0] "r" (key.blocks[0]), [b1] "r" (key.blocks[1]), [b2] "r" (key.blocks[2]), [b3] "r" (key.blocks[3]));
 }
 
-void Key::multiply()
+void Key::multiplyByR2()
 {
+#ifdef COUNT_TEST
+    multiplyByR2Counter++;
+#endif
     unsigned long long tempLow;
     unsigned long long tempHigh;
     unsigned long long zero;
@@ -237,7 +293,7 @@ void Key::multiply()
 
 }
 /*
-void Key::multiply(const unsigned block)
+void Key::multiplyByR2(const unsigned block)
 {
 
 	unsigned results[16] = { 0x00000000 };
@@ -274,7 +330,10 @@ void Key::multiply(const unsigned block)
 
 void Key::reduce()
 {
-	Key temp = *this;
+#ifdef COUNT_TEST
+    reduceCounter++;
+#endif
+    Key temp = *this;
 	temp.multiply(P_PRIME);
 	temp.multiply(P);
 	bool carry = addExtended(temp);
@@ -285,14 +344,19 @@ void Key::reduce()
 		subtract(P);
 }
 
-
 bool Key::getBit(int position)
 {
-	return blocks[position / 64] & 1ULL << position % 64;
+#ifdef COUNT_TEST
+    getBitCounter++;
+#endif
+    return blocks[position / 64] & 1ULL << position % 64;
 }
 
 void Key::setBit(int position)
 {
+#ifdef COUNT_TEST
+    setBitCounter++;
+#endif
 	blocks[position / 64] |= 1ULL << position % 64;
 }
 
@@ -324,8 +388,11 @@ void Key::shiftLeft32()
 }
 */
 
-void Key::shiftRight()
+void Key::rightShift()
 {
+#ifdef COUNT_TEST
+    rightShiftCounter++;
+#endif
 	/*
 	blocks[0] = blocks[1];
 	blocks[1] = blocks[2];
@@ -346,6 +413,9 @@ void Key::shiftRight()
 // TODO: Knuth section 4.3.1
 void Key::divide(Key& divisor, Key& quotient)
 {
+#ifdef COUNT_TEST
+    divideCounter++;
+#endif
 	int shifts = 255;
 	while (!divisor.getBit(shifts))
 		shifts--;
@@ -359,7 +429,7 @@ void Key::divide(Key& divisor, Key& quotient)
 	}
 	while (--shifts >= 0)
 	{
-		divisor.shiftRight();
+        divisor.rightShift();
 		if (compare(divisor) >= 0)
 		{
 			subtract(divisor);
@@ -371,86 +441,13 @@ void Key::divide(Key& divisor, Key& quotient)
 
 void Key::invert()
 {
+#ifdef COUNT_TEST
+    invertCounter++;
+    gcdCounter++;
+#endif
 	///*
 	Key x;
 	Key y;
 	gcd(*this, P, x, y);
 	*this = x;
-	//*/
-	/*
-	Key t = *this;
-	t.multiplyByR2();
-	t.reduce();
-	*this = R2;
-	reduce();
-	multiply(*this); reduce(); multiply(t); reduce(); multiply(*this); reduce(); multiply(t); reduce(); multiply(*this); reduce(); multiply(t); reduce(); multiply(*this); reduce(); multiply(t); reduce();
-	multiply(*this); reduce(); multiply(t); reduce(); multiply(*this); reduce(); multiply(t); reduce(); multiply(*this); reduce(); multiply(t); reduce(); multiply(*this); reduce(); multiply(t); reduce();
-	multiply(*this); reduce(); multiply(t); reduce(); multiply(*this); reduce(); multiply(t); reduce(); multiply(*this); reduce(); multiply(t); reduce(); multiply(*this); reduce(); multiply(t); reduce();
-	multiply(*this); reduce(); multiply(t); reduce(); multiply(*this); reduce(); multiply(t); reduce(); multiply(*this); reduce(); multiply(t); reduce(); multiply(*this); reduce(); multiply(t); reduce();
-	multiply(*this); reduce(); multiply(t); reduce(); multiply(*this); reduce(); multiply(t); reduce(); multiply(*this); reduce(); multiply(t); reduce(); multiply(*this); reduce(); multiply(t); reduce();
-	multiply(*this); reduce(); multiply(t); reduce(); multiply(*this); reduce(); multiply(t); reduce(); multiply(*this); reduce(); multiply(t); reduce(); multiply(*this); reduce(); multiply(t); reduce();
-	multiply(*this); reduce(); multiply(t); reduce(); multiply(*this); reduce(); multiply(t); reduce(); multiply(*this); reduce(); multiply(t); reduce(); multiply(*this); reduce(); multiply(t); reduce();
-	multiply(*this); reduce(); multiply(t); reduce(); multiply(*this); reduce(); multiply(t); reduce(); multiply(*this); reduce(); multiply(t); reduce(); multiply(*this); reduce(); multiply(t); reduce();
-	multiply(*this); reduce(); multiply(t); reduce(); multiply(*this); reduce(); multiply(t); reduce(); multiply(*this); reduce(); multiply(t); reduce(); multiply(*this); reduce(); multiply(t); reduce();
-	multiply(*this); reduce(); multiply(t); reduce(); multiply(*this); reduce(); multiply(t); reduce(); multiply(*this); reduce(); multiply(t); reduce(); multiply(*this); reduce(); multiply(t); reduce();
-	multiply(*this); reduce(); multiply(t); reduce(); multiply(*this); reduce(); multiply(t); reduce(); multiply(*this); reduce(); multiply(t); reduce(); multiply(*this); reduce(); multiply(t); reduce();
-	multiply(*this); reduce(); multiply(t); reduce(); multiply(*this); reduce(); multiply(t); reduce(); multiply(*this); reduce(); multiply(t); reduce(); multiply(*this); reduce(); multiply(t); reduce();
-	multiply(*this); reduce(); multiply(t); reduce(); multiply(*this); reduce(); multiply(t); reduce(); multiply(*this); reduce(); multiply(t); reduce(); multiply(*this); reduce(); multiply(t); reduce();
-	multiply(*this); reduce(); multiply(t); reduce(); multiply(*this); reduce(); multiply(t); reduce(); multiply(*this); reduce(); multiply(t); reduce(); multiply(*this); reduce(); multiply(t); reduce();
-	multiply(*this); reduce(); multiply(t); reduce(); multiply(*this); reduce(); multiply(t); reduce(); multiply(*this); reduce(); multiply(t); reduce(); multiply(*this); reduce(); multiply(t); reduce();
-	multiply(*this); reduce(); multiply(t); reduce(); multiply(*this); reduce(); multiply(t); reduce(); multiply(*this); reduce(); multiply(t); reduce(); multiply(*this); reduce(); multiply(t); reduce();
-	multiply(*this); reduce(); multiply(t); reduce(); multiply(*this); reduce(); multiply(t); reduce(); multiply(*this); reduce(); multiply(t); reduce(); multiply(*this); reduce(); multiply(t); reduce();
-	multiply(*this); reduce(); multiply(t); reduce(); multiply(*this); reduce(); multiply(t); reduce(); multiply(*this); reduce(); multiply(t); reduce(); multiply(*this); reduce(); multiply(t); reduce();
-	multiply(*this); reduce(); multiply(t); reduce(); multiply(*this); reduce(); multiply(t); reduce(); multiply(*this); reduce(); multiply(t); reduce(); multiply(*this); reduce(); multiply(t); reduce();
-	multiply(*this); reduce(); multiply(t); reduce(); multiply(*this); reduce(); multiply(t); reduce(); multiply(*this); reduce(); multiply(t); reduce(); multiply(*this); reduce(); multiply(t); reduce();
-	multiply(*this); reduce(); multiply(t); reduce(); multiply(*this); reduce(); multiply(t); reduce(); multiply(*this); reduce(); multiply(t); reduce(); multiply(*this); reduce(); multiply(t); reduce();
-	multiply(*this); reduce(); multiply(t); reduce(); multiply(*this); reduce(); multiply(t); reduce(); multiply(*this); reduce(); multiply(t); reduce(); multiply(*this); reduce(); multiply(t); reduce();
-	multiply(*this); reduce(); multiply(t); reduce(); multiply(*this); reduce(); multiply(t); reduce(); multiply(*this); reduce(); multiply(t); reduce(); multiply(*this); reduce(); multiply(t); reduce();
-	multiply(*this); reduce(); multiply(t); reduce(); multiply(*this); reduce(); multiply(t); reduce(); multiply(*this); reduce(); multiply(t); reduce(); multiply(*this); reduce(); multiply(t); reduce();
-	multiply(*this); reduce(); multiply(t); reduce(); multiply(*this); reduce(); multiply(t); reduce(); multiply(*this); reduce(); multiply(t); reduce(); multiply(*this); reduce(); multiply(t); reduce();
-	multiply(*this); reduce(); multiply(t); reduce(); multiply(*this); reduce(); multiply(t); reduce(); multiply(*this); reduce(); multiply(t); reduce(); multiply(*this); reduce(); multiply(t); reduce();
-	multiply(*this); reduce(); multiply(t); reduce(); multiply(*this); reduce(); multiply(t); reduce(); multiply(*this); reduce(); multiply(t); reduce(); multiply(*this); reduce(); multiply(t); reduce();
-	multiply(*this); reduce(); multiply(t); reduce(); multiply(*this); reduce(); multiply(t); reduce(); multiply(*this); reduce(); multiply(t); reduce(); multiply(*this); reduce(); multiply(t); reduce();
-	multiply(*this); reduce(); multiply(t); reduce(); multiply(*this); reduce(); multiply(t); reduce(); multiply(*this); reduce(); multiply(t); reduce(); multiply(*this); reduce(); multiply(t); reduce();
-	multiply(*this); reduce(); multiply(t); reduce(); multiply(*this); reduce(); multiply(t); reduce(); multiply(*this); reduce(); multiply(t); reduce(); multiply(*this); reduce(); multiply(t); reduce();
-	multiply(*this); reduce(); multiply(t); reduce(); multiply(*this); reduce(); multiply(t); reduce(); multiply(*this); reduce(); multiply(t); reduce(); multiply(*this); reduce(); multiply(t); reduce();
-	multiply(*this); reduce(); multiply(t); reduce(); multiply(*this); reduce(); multiply(t); reduce(); multiply(*this); reduce(); multiply(t); reduce(); multiply(*this); reduce(); multiply(t); reduce();
-	multiply(*this); reduce(); multiply(t); reduce(); multiply(*this); reduce(); multiply(t); reduce(); multiply(*this); reduce(); multiply(t); reduce(); multiply(*this); reduce(); multiply(t); reduce();
-	multiply(*this); reduce(); multiply(t); reduce(); multiply(*this); reduce(); multiply(t); reduce(); multiply(*this); reduce(); multiply(t); reduce(); multiply(*this); reduce(); multiply(t); reduce();
-	multiply(*this); reduce(); multiply(t); reduce(); multiply(*this); reduce(); multiply(t); reduce(); multiply(*this); reduce(); multiply(t); reduce(); multiply(*this); reduce(); multiply(t); reduce();
-	multiply(*this); reduce(); multiply(t); reduce(); multiply(*this); reduce(); multiply(t); reduce(); multiply(*this); reduce(); multiply(t); reduce(); multiply(*this); reduce(); multiply(t); reduce();
-	multiply(*this); reduce(); multiply(t); reduce(); multiply(*this); reduce(); multiply(t); reduce(); multiply(*this); reduce(); multiply(t); reduce(); multiply(*this); reduce(); multiply(t); reduce();
-	multiply(*this); reduce(); multiply(t); reduce(); multiply(*this); reduce(); multiply(t); reduce(); multiply(*this); reduce(); multiply(t); reduce(); multiply(*this); reduce(); multiply(t); reduce();
-	multiply(*this); reduce(); multiply(t); reduce(); multiply(*this); reduce(); multiply(t); reduce(); multiply(*this); reduce(); multiply(t); reduce(); multiply(*this); reduce(); multiply(t); reduce();
-	multiply(*this); reduce(); multiply(t); reduce(); multiply(*this); reduce(); multiply(t); reduce(); multiply(*this); reduce(); multiply(t); reduce(); multiply(*this); reduce(); multiply(t); reduce();
-	multiply(*this); reduce(); multiply(t); reduce(); multiply(*this); reduce(); multiply(t); reduce(); multiply(*this); reduce(); multiply(t); reduce(); multiply(*this); reduce(); multiply(t); reduce();
-	multiply(*this); reduce(); multiply(t); reduce(); multiply(*this); reduce(); multiply(t); reduce(); multiply(*this); reduce(); multiply(t); reduce(); multiply(*this); reduce(); multiply(t); reduce();
-	multiply(*this); reduce(); multiply(t); reduce(); multiply(*this); reduce(); multiply(t); reduce(); multiply(*this); reduce(); multiply(t); reduce(); multiply(*this); reduce(); multiply(t); reduce();
-	multiply(*this); reduce(); multiply(t); reduce(); multiply(*this); reduce(); multiply(t); reduce(); multiply(*this); reduce(); multiply(t); reduce(); multiply(*this); reduce(); multiply(t); reduce();
-	multiply(*this); reduce(); multiply(t); reduce(); multiply(*this); reduce(); multiply(t); reduce(); multiply(*this); reduce(); multiply(t); reduce(); multiply(*this); reduce(); multiply(t); reduce();
-	multiply(*this); reduce(); multiply(t); reduce(); multiply(*this); reduce(); multiply(t); reduce(); multiply(*this); reduce(); multiply(t); reduce(); multiply(*this); reduce(); multiply(t); reduce();
-	multiply(*this); reduce(); multiply(t); reduce(); multiply(*this); reduce(); multiply(t); reduce(); multiply(*this); reduce(); multiply(t); reduce(); multiply(*this); reduce(); multiply(t); reduce();
-	multiply(*this); reduce(); multiply(t); reduce(); multiply(*this); reduce(); multiply(t); reduce(); multiply(*this); reduce(); multiply(t); reduce(); multiply(*this); reduce(); multiply(t); reduce();
-	multiply(*this); reduce(); multiply(t); reduce(); multiply(*this); reduce(); multiply(t); reduce(); multiply(*this); reduce(); multiply(t); reduce(); multiply(*this); reduce(); multiply(t); reduce();
-	multiply(*this); reduce(); multiply(t); reduce(); multiply(*this); reduce(); multiply(t); reduce(); multiply(*this); reduce(); multiply(t); reduce(); multiply(*this); reduce(); multiply(t); reduce();
-	multiply(*this); reduce(); multiply(t); reduce(); multiply(*this); reduce(); multiply(t); reduce(); multiply(*this); reduce(); multiply(t); reduce(); multiply(*this); reduce(); multiply(t); reduce();
-	multiply(*this); reduce(); multiply(t); reduce(); multiply(*this); reduce(); multiply(t); reduce(); multiply(*this); reduce(); multiply(t); reduce(); multiply(*this); reduce(); multiply(t); reduce();
-	multiply(*this); reduce(); multiply(t); reduce(); multiply(*this); reduce(); multiply(t); reduce(); multiply(*this); reduce(); multiply(t); reduce(); multiply(*this); reduce(); multiply(t); reduce();
-	multiply(*this); reduce(); multiply(t); reduce(); multiply(*this); reduce(); multiply(t); reduce(); multiply(*this); reduce(); multiply(t); reduce(); multiply(*this); reduce(); multiply(t); reduce();
-	multiply(*this); reduce(); multiply(t); reduce(); multiply(*this); reduce(); multiply(t); reduce(); multiply(*this); reduce(); multiply(t); reduce(); multiply(*this); reduce(); multiply(t); reduce();
-	multiply(*this); reduce(); multiply(t); reduce(); multiply(*this); reduce(); multiply(t); reduce(); multiply(*this); reduce(); multiply(t); reduce(); // 223 * 1
-	multiply(*this); reduce(); // 0
-	multiply(*this); reduce(); multiply(t); reduce(); multiply(*this); reduce(); multiply(t); reduce(); multiply(*this); reduce(); multiply(t); reduce(); multiply(*this); reduce(); multiply(t); reduce();
-	multiply(*this); reduce(); multiply(t); reduce(); multiply(*this); reduce(); multiply(t); reduce(); multiply(*this); reduce(); multiply(t); reduce(); multiply(*this); reduce(); multiply(t); reduce();
-	multiply(*this); reduce(); multiply(t); reduce(); multiply(*this); reduce(); multiply(t); reduce(); multiply(*this); reduce(); multiply(t); reduce(); multiply(*this); reduce(); multiply(t); reduce();
-	multiply(*this); reduce(); multiply(t); reduce(); multiply(*this); reduce(); multiply(t); reduce(); multiply(*this); reduce(); multiply(t); reduce(); multiply(*this); reduce(); multiply(t); reduce();
-	multiply(*this); reduce(); multiply(t); reduce(); multiply(*this); reduce(); multiply(t); reduce(); multiply(*this); reduce(); multiply(t); reduce(); multiply(*this); reduce(); multiply(t); reduce();
-	multiply(*this); reduce(); multiply(t); reduce(); multiply(*this); reduce(); multiply(t); reduce(); // 22 * 1
-	multiply(*this); reduce(); multiply(*this); reduce(); multiply(*this); reduce(); multiply(*this); reduce(); // 0 0 0 0
-	multiply(*this); reduce(); multiply(t); reduce(); multiply(*this); reduce(); // 1 0
-	multiply(*this); reduce(); multiply(t); reduce(); multiply(*this); reduce(); multiply(t); reduce(); // 1 1
-	multiply(*this); reduce(); multiply(*this); reduce(); multiply(t); reduce(); // 0 1
-	memset(blocks + 8, 0x00, 32);
-	reduce();
-	*/
 }

@@ -13,13 +13,17 @@
 using namespace std;
 using namespace chrono;
 
-const int BLOCK_BITS = 26;
-const int THREAD_BITS = 2;
+const int BLOCK_BITS    = 26;
+const int THREAD_BITS   = 2;
 const int PROGRESS_BITS = 16;
 const int SUBBLOCK_BITS = 63 - BLOCK_BITS - THREAD_BITS - PROGRESS_BITS - Key::GROUP_BITS;
-const int THREADS_NUMBER = 1 << THREAD_BITS;
-const int PROGRESSES_NUMBER = 1 << PROGRESS_BITS;
-const int SUBBLOCKS_NUMBER = 1 << SUBBLOCK_BITS;
+const unsigned long long THREADS_NUMBER    = 1ULL << THREAD_BITS;
+const unsigned long long PROGRESSES_NUMBER = 1ULL << PROGRESS_BITS;
+const unsigned long long SUBBLOCKS_NUMBER  = 1ULL << SUBBLOCK_BITS;
+const unsigned long long GROUPS_PER_PROGRESS = THREADS_NUMBER * SUBBLOCKS_NUMBER;
+
+unsigned long long sha256Counter = 0;
+unsigned long long ripemd160Counter = 0;
 
 int code = 0;
 int block;
@@ -63,7 +67,7 @@ void* thread(void* id)
 		for (int t = 0; t < THREADS_NUMBER; t++)
 			log &= threadsProgresses[t] >= threadsProgresses[*(int*)id];
 		if (log)
-			cout << "[DEBUG] Progress = " << (i + 1) * 100.0 / PROGRESSES_NUMBER << " % [" << (int)(THREADS_NUMBER * SUBBLOCKS_NUMBER * Key::GROUP_SIZE / 1000 / timer.stop()) << " Kkeys/second]" << endl;
+            cout << "Progress = " << (i + 1) * 100.0 / PROGRESSES_NUMBER << " % [" << (int)(GROUPS_PER_PROGRESS * Key::GROUP_SIZE / 1000 / timer.stop()) << " Kkeys/second]" << endl;
 		mutex_.unlock();
 #endif
 	}
@@ -80,17 +84,8 @@ void* thread(void* id)
 int main(int argc, char* argv[])
 {
 #ifdef DEBUG
-	/*
-	unsigned long long a = 0x7284637527483905;
-	unsigned long long b = 0x1857293419582034;
-	unsigned long long c = a + b;
-	unsigned long long r;
-	__asm("ADD %[r], %[a], %[b]" : [r] "=r" (r) : [a] "r" (a), [b] "r" (b));
-	*/
-	long long time = test();
-	if (time == -1)
+	if (test())
 		return -1;
-	cout << "Estimated speed = " << (int)(THREADS_NUMBER * 1000000 / time) << " Kkeys/second" << endl;
 #endif
 	if (argc < 2)
 	{

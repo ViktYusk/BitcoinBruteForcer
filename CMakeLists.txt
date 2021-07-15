@@ -8,4 +8,5 @@ add_executable(BitcoinPuzzleRaspberry Key.cpp Key.h main.cpp Point.cpp Point.h r
 
 if (CMAKE_BUILD_TYPE MATCHES Debug)
     add_definitions(-DDEBUG)
+#    add_definitions(-DCOUNT_TEST)
 endif()

@@ -76,6 +76,9 @@ unsigned sha256_k[64] =
              0x391c0cb3, 0x4ed8aa4a, 0x5b9cca4f, 0x682e6ff3,
              0x748f82ee, 0x78a5636f, 0x84c87814, 0x8cc70208,
              0x90befffa, 0xa4506ceb, 0xbef9a3f7, 0xc67178f2};
+#ifdef COUNT_TEST
+unsigned long long Sha256Counter::counter = 0;
+#endif
 
 /* SHA-256 functions */
 
@@ -127,6 +130,9 @@ void sha256_transf(sha256_ctx *ctx, const unsigned char *message,
 
 void sha256(unsigned char *message, unsigned char *digest) // TODO: вход и выход типа unsigned
 {
+#ifdef COUNT_TEST
+    Sha256Counter::counter++;
+#endif
     sha256_ctx ctx;
 	ctx.h[0] = 0x6a09e667;
 	ctx.h[1] = 0xbb67ae85;

@@ -22,11 +22,32 @@ struct Key
 	static const Key R2;
 	static const Key P_PRIME;
 	static const Key P;
+
+#ifdef COUNT_TEST
+	static unsigned long long gcdCounter;
+	static unsigned long long invertGroupCounter;
+    static unsigned long long operatorEqualToCounter;
+    static unsigned long long operatorBitwiseLeftShiftAssignmentCounter;
+    static unsigned long long operatorSubtractionAssignmentCounter;
+    static unsigned long long operatorMultiplicationAssignmentCounter;
+    static unsigned long long compareCounter;
+    static unsigned long long addCounter;
+    static unsigned long long addExtendedCounter;
+    static unsigned long long subtractCounter;
+    static unsigned long long multiplyCounter;
+    static unsigned long long multiplyByR2Counter;
+    static unsigned long long reduceCounter;
+    static unsigned long long setBitCounter;
+    static unsigned long long getBitCounter;
+    static unsigned long long rightShiftCounter;
+    static unsigned long long divideCounter;
+    static unsigned long long invertCounter;
+#endif
 	
 	static void gcd(Key a, Key b, Key& x, Key& y);
 	static void invertGroup(Key* keys);
 
-	unsigned long long blocks[8]{};
+	unsigned long long blocks[8];
 	
 	Key();
 	Key(unsigned long long block0, unsigned long long block1, unsigned long long block2, unsigned long long block3);
@@ -46,14 +67,14 @@ struct Key
 	bool addExtended(const Key& key);
 	bool subtract(const Key& key);
 	void multiply(const Key& key);
-	void multiply();
+	void multiplyByR2();
 	//void multiply(const unsigned block);
 	void reduce();
 	bool getBit(int position);
 	void setBit(int position);
 	//void shiftLeft();
 	//void shiftLeft32();
-	void shiftRight();
+	void rightShift();
 	void divide(Key& divisor, Key& quotient);
 	void invert();
 };

@@ -6,7 +6,7 @@
 #include "sha256.h"
 #include "test.h"
 
-#define TEST(name, result, iterations, call, time) if (result) { cout << "* Passed test: " << name; Timer timer; for (int i = 0; i < iterations; i++) call; time = timer.stop(iterations); cout << " [" << time << " ns]"  << endl; } else { cout << "* Failed test: " << name << endl; return -1; }
+#define TEST(name, result, iterations, call, time) if (result) { cout << "* Passed test: " << name; Timer timer; if (iterations) { for (int i = 0; i < iterations; i++) call; time = timer.stop(iterations); cout << " [" << time << " ns]"; } cout << endl; } else { cout << "* Failed test: " << name << endl; return -1; }
 
 using namespace std;
 using namespace chrono;
@@ -96,7 +96,7 @@ long long test()
 		bool result = true;
 		for (int b = 0; b < 4; b++)
 			result &= key.blocks[b] == blocks[b];
-		TEST("Key(4 * unsigned long long)", result, 1000000, Key(blocks[0], blocks[1], blocks[2], blocks[3]), time)
+		TEST("Key(4 * unsigned long long)", result, 0, Key(blocks[0], blocks[1], blocks[2], blocks[3]), time)
 	}
 	{
 		unsigned long long blocks[8] = {0x59F2815B16F81798, 0x029BFCDB2DCE28D9, 0x55A06295CE870B07, 0x79BE667EF9DCBBAC, 0x9C47D08FFB10D4B8, 0xFD17B448A6855419, 0x5DA4FBFC0E1108A8, 0x483ADA7726A3C465 };
@@ -104,7 +104,7 @@ long long test()
 		bool result = true;
 		for (int b = 0; b < 8; b++)
 			result &= key.blocks[b] == blocks[b];
-		TEST("Key(8 * unsigned long long)", result, 1000000, Key(blocks[0], blocks[1], blocks[2], blocks[3], blocks[4], blocks[5], blocks[6], blocks[7]), time)
+		TEST("Key(8 * unsigned long long)", result, 0, Key(blocks[0], blocks[1], blocks[2], blocks[3], blocks[4], blocks[5], blocks[6], blocks[7]), time)
 	}
     {
         Key key1(0x59F2815B16F81798, 0x029BFCDB2DCE28D9, 0x55A06295CE870B07, 0x79BE667EF9DCBBAC);
@@ -116,16 +116,13 @@ long long test()
         Key key1(0x9C47D08FFB10D4B8, 0xFD17B448A6855419, 0x5DA4FBFC0E1108A8, 0x483ADA7726A3C465, 0x59F2815B16F81798, 0x029BFCDB2DCE28D9, 0x55A06295CE870B07, 0x79BE667EF9DCBBAC);
         Key key2(0x59F2815B16F81798, 0x029BFCDB2DCE28D9, 0x55A06295CE870B07, 0x79BE667EF9DCBBAC, 0x9C47D08FFB10D4B8, 0xFD17B448A6855419, 0x5DA4FBFC0E1108A8, 0x483ADA7726A3C465);
         Key key3(0x59F2815B16F81798, 0x029BFCDB2DCE28D9, 0x55A06295CE870B07, 0x79BE667EF9DCBBAC, 0x9C47D08FFB10D4B8, 0xFD17B448A6855419, 0x5DA4FBFC0E1108A8, 0x483ADA7726A3C465);
-        TEST("Key::compareExtended", key1.compareExtended(key2) > 0 && key2.compareExtended(key1) < 0 && key2.compareExtended(key3) == 0, 1000000, key2.compareExtended(key3), time)
+        TEST("Key::compareExtended", key1.compareExtended(key2) > 0 && key2.compareExtended(key1) < 0 && key2.compareExtended(key3) == 0, 0, key2.compareExtended(key3), time)
     }
     {
         Key key1(0x59F2815B16F81798, 0x029BFCDB2DCE28D9, 0x55A06295CE870B07, 0x79BE667EF9DCBBAC, 0x9C47D08FFB10D4B8, 0xFD17B448A6855419, 0x5DA4FBFC0E1108A8, 0x483ADA7726A3C465);
         Key key2(0x9C47D08FFB10D4B8, 0xFD17B448A6855419, 0x5DA4FBFC0E1108A8, 0x483ADA7726A3C465, 0x59F2815B16F81798, 0x029BFCDB2DCE28D9, 0x55A06295CE870B07, 0x79BE667EF9DCBBAC);
         Key key3(0x9C47D08FFB10D4B8, 0xFD17B448A6855419, 0x5DA4FBFC0E1108A8, 0x483ADA7726A3C465, 0x59F2815B16F81798, 0x029BFCDB2DCE28D9, 0x55A06295CE870B07, 0x79BE667EF9DCBBAC);
-        #pragma GCC diagnostic push
-        #pragma GCC diagnostic ignored "-Wunused-comparison"
         TEST("Key::operator==", !(key1 == key2) && !(key2 == key1) && key2 == key3, 1000000, key2 == key3, time)
-        #pragma GCC diagnostic pop
     }
     {
         Key key1(0x59F2815B16F81798, 0x029BFCDB2DCE28D9, 0x55A06295CE870B07, 0x79BE667EF9DCBBAC);
@@ -174,7 +171,7 @@ long long test()
 		int iterations = 10000000;
 		for (int i = 0; i < iterations; i++)
 			key1 += key2;
-		TEST("Key::operator+=", key1 == key3 && key4 == key6, iterations, key1 += key2, time)
+		TEST("Key::operator+=", key1 == key3 && key4 == key6, 0, key1 += key2, time)
 	}
 	{
 		Key key1(0x59F2815B16F81798, 0x029BFCDB2DCE28D9, 0x55A06295CE870B07, 0x79BE667EF9DCBBAC);
@@ -196,7 +193,7 @@ long long test()
 		for (int i = 0; i < iterations; i++)
 			key1.multiply(key2);
 		bool result2 = key1.compareExtended(key4) == 0;
-		TEST("Key::multiply(Key)", result1 && result2, iterations, key1.multiply(key2), time)
+		TEST("Key::multiply", result1 && result2, iterations, key1.multiply(key2), time)
 	}
     {
         Key key1(0x59F2815B16F81798, 0x029BFCDB2DCE28D9, 0x55A06295CE870B07, 0x79BE667EF9DCBBAC);
@@ -205,8 +202,8 @@ long long test()
         for (int i = 0; i < iterations; i++)
            key1.multiply(Key::R2);
         for (int i = 0; i < iterations; i++)
-           key2.multiply();
-        TEST("Key::multiply()", key1.compareExtended(key2) == 0, iterations, key2.multiply(), time)
+            key2.multiplyByR2();
+        TEST("Key::multiplyByR2()", key1.compareExtended(key2) == 0, iterations, key2.multiplyByR2(), time)
     }
     /*
     {
@@ -311,9 +308,9 @@ long long test()
 			for (int p = 0; p < 256; p++)
 				if (key1.getBit(p) != (p + s < 256 ? bits[p + s] : '0') - '0')
 					result = false;
-			key1.shiftRight();
+            key1.rightShift();
 		}
-		TEST("Key::shiftRight", result, 1000000, key1.shiftRight(), time)
+		TEST("Key::rightShift", result, 1000000, key1.rightShift(), time)
 	}
 	{
 		char bits[257] = "0001100111101000000111110110100011011010100000010100111110011010100110110001010001110011101101001101101100111111110110010100000011100000110100001110000101110011101010010100011000000101101010100011010111011101001110111001111101111110011001100111110110011110";
@@ -411,13 +408,13 @@ long long test()
 		Key x(0x59F2815B16F81798, 0x029BFCDB2DCE28D9, 0x55A06295CE870B07, 0x79BE667EF9DCBBAC);
 		Key y(0x9C47D08FFB10D4B8, 0xFD17B448A6855419, 0x5DA4FBFC0E1108A8, 0x483ADA7726A3C465);
 		Point point(key, x, y);
-		TEST("Point(unsigned long long, Key, Key)", point.key == key && point.x == x && point.y == y, 1000000, Point(key, x, y), time)
+		TEST("Point(unsigned long long, Key, Key)", point.key == key && point.x == x && point.y == y, 0, Point(key, x, y), time)
 	}
 	{
 		Point point1 = Point(1, Key(0x59F2815B16F81798, 0x029BFCDB2DCE28D9, 0x55A06295CE870B07, 0x79BE667EF9DCBBAC), Key(0x9C47D08FFB10D4B8, 0xFD17B448A6855419, 0x5DA4FBFC0E1108A8, 0x483ADA7726A3C465));
 		Point point2 = point1;
 		Point point3 = Point(1025, Key(0x8304214FE4985A86, 0x640D2464C7FE0AC4, 0x066535A04DBF563A, 0x635CD7A05064D3BC), Key(0xE0453E27E9E3AE1F, 0xE8D5F047F3281A4C, 0x46735CFCAF9E2F30, 0x00E40265913E77F6));
-		TEST("Point::operator==", point1 == point2 && !(point1 == point3), 1000000, point1 == point2, time)
+		TEST("Point::operator==", point1 == point2 && !(point1 == point3), 0, point1 == point2, time)
 	}
 	{
 		Point point1 = Point(1, Key(0x59F2815B16F81798, 0x029BFCDB2DCE28D9, 0x55A06295CE870B07, 0x79BE667EF9DCBBAC), Key(0x9C47D08FFB10D4B8, 0xFD17B448A6855419, 0x5DA4FBFC0E1108A8, 0x483ADA7726A3C465));
@@ -463,20 +460,20 @@ long long test()
 		Point point1 = Point(1024, Key(0xD5B901B2E285131F, 0xAAEC6ECDC813B088, 0xD664A18F66AD6240, 0x241FEBB8E23CBD77), Key(0xABB3E66F2750026D, 0xCD50FD0FBD0CB5AF, 0xD6C420BD13981DF8, 0x513378D9FF94F8D3));
 		Point point2 = Point(1025, Key(0x8304214FE4985A86, 0x640D2464C7FE0AC4, 0x066535A04DBF563A, 0x635CD7A05064D3BC), Key(0xE0453E27E9E3AE1F, 0xE8D5F047F3281A4C, 0x46735CFCAF9E2F30, 0x00E40265913E77F6));
 		point1 += Point::G;
-		TEST("Point::operator+=", point1 == point2, 100, point1 += Point::G, time)
+		TEST("Point::operator+=", point1 == point2, 0, point1 += Point::G, time)
 	}
 	{
 		Point point1 = Point::G;
 		Point point2 = Point(1024, Key(0xD5B901B2E285131F, 0xAAEC6ECDC813B088, 0xD664A18F66AD6240, 0x241FEBB8E23CBD77), Key(0xABB3E66F2750026D, 0xCD50FD0FBD0CB5AF, 0xD6C420BD13981DF8, 0x513378D9FF94F8D3));
 		for (int i = 0; i < 10; i++)
 			point1.double_();
-		TEST("Point::double_", point1 == point2, 100, point1.double_(), time)
+		TEST("Point::double_", point1 == point2, 0, point1.double_(), time)
 	}
 	{
 		Point gPower46 = Point(70368744177664, Key(0x87EDA8BAB4E218DA, 0x0F4C85F152686050, 0xE68F17D8FF41C259, 0x13D1FFC481509BEE), Key(0xE0DB419DDB191C19, 0xA4AD01206D5BD127, 0xCECB9337B1B758BD, 0x6008391FA991961D));
 		Point gMultiple81 = Point(82, Key(0x9E594FECC13B59DF, 0xBE89B397B454C8B5, 0x0A37C28E771C6CB4, 0xE35BC6BB1B05B213), Key(0xC128B757CDD92ACB, 0x358EB4E66A331B76, 0x9C4D07D56A198DEC, 0x21868874CC2CB5A7));
 		Point::initialize();
-		TEST("Point::initialize", Point::gPowers[46] == gPower46 && Point::gMultiples[81] == gMultiple81, 1, Point::initialize(), time)
+		TEST("Point::initialize", Point::gPowers[46] == gPower46 && Point::gMultiples[81] == gMultiple81, 0, Point::initialize(), time)
 	}
 	{
 		unsigned long long key = 0xA6CB2E5A34934C75;
@@ -485,7 +482,7 @@ long long test()
 		point2.key = key;
 		point2.x = Key(0x16B16A4B7CDD836E, 0x9C54414F3FFD46BD, 0x22E04C5F74753CF8, 0xB74CDBB3469D900F);
 		point2.y = Key(0x3DB3590975F08733, 0x54299F35E9C79C77, 0x2107FFF206C80EF1, 0x6A952BA15E247C7C);
-		TEST("Point(Key)", point1 == point2, 10, point1 = Point(key), time)
+		TEST("Point(Key)", point1 == point2, 0, point1 = Point(key), time)
 	}
 	{
 		Point point = Point::G;
@@ -512,11 +509,75 @@ long long test()
 		groupTime /= Key::GROUP_SIZE;
 	}
 	time = sha256Time + ripemd160Time + checkTime + compressTime + groupTime;
-	cout << "TIME USAGE FOR 1 KEY = " << time << " ns: " << endl;
-	cout << "* sha256          = " << (double)sha256Time / time * 100 << " % [" << sha256Time << " ns]" << endl;
-	cout << "* ripemd160       = " << (double)ripemd160Time / time * 100 << " % [" << ripemd160Time << " ns]" << endl;
-	cout << "* Point::check    = " << (double)checkTime / time * 100 << " % [" << checkTime << " ns]" << endl;
-	cout << "* Point::compress = " << (double)compressTime / time * 100 << " % [" << compressTime << " ns]" << endl;
-	cout << "* Point::group    = " << (double)groupTime / time * 100 << " % [" << groupTime << " ns]" << endl;
-	return time;
+    cout << "Estimated speed = " << (int)(4 * 1000000 / time) << " Kkeys/second for 4 threads" << endl; // TODO: несоответствует действительной скорости (возможно, увеличить количество итераций в тестах)
+#ifdef COUNT_TEST
+    Sha256Counter::counter = 0;
+    Ripemd160Counter::counter = 0;
+    Key::gcdCounter = 0;
+    Key::invertGroupCounter = 0;
+    Key::operatorEqualToCounter = 0;
+    Key::operatorBitwiseLeftShiftAssignmentCounter = 0;
+    Key::operatorSubtractionAssignmentCounter = 0;
+    Key::operatorMultiplicationAssignmentCounter = 0;
+    Key::compareCounter = 0;
+    Key::addCounter = 0;
+    Key::addExtendedCounter = 0;
+    Key::subtractCounter = 0;
+    Key::multiplyCounter = 0;
+    Key::multiplyByR2Counter = 0;
+    Key::reduceCounter = 0;
+    Key::setBitCounter = 0;
+    Key::getBitCounter = 0;
+    Key::rightShiftCounter = 0;
+    Key::divideCounter = 0;
+    Key::invertCounter = 0;
+    Point::checkCounter = 0;
+    Point::addCounter = 0;
+    Point::subtractCounter = 0;
+    Point::compressCounter = 0;
+    Point::groupCounter = 0;
+    Point center(70368744177664, Key(0x87EDA8BAB4E218DA, 0x0F4C85F152686050, 0xE68F17D8FF41C259, 0x13D1FFC481509BEE), Key(0xE0DB419DDB191C19, 0xA4AD01206D5BD127, 0xCECB9337B1B758BD, 0x6008391FA991961D));
+    unsigned char compression[64];
+    memcpy(compression + 33, Point::COMPRESSION_ENDING, sizeof(Point::COMPRESSION_ENDING));
+    Point points[Key::GROUP_SIZE + 1];
+    center.group(points);
+    for (int k = 0; k < Key::GROUP_SIZE; k++)
+    {
+        points[k].compress(compression);
+        unsigned char sha256Output[32];
+        sha256(compression, sha256Output);
+        unsigned char address[20];
+        ripemd160(sha256Output, address);
+        if (Point::check(address))
+            cout << "Key found: " << points[k].key << endl;
+    }
+    center = points[Key::GROUP_SIZE];
+    cout << "COUNT_TEST:" << endl;
+    cout << "* sha256                      = " << (double)Sha256Counter::counter / Key::GROUP_SIZE << endl;
+    cout << "* ripemd160                   = " << (double)Ripemd160Counter::counter / Key::GROUP_SIZE << endl;
+    cout << "* Key::gcd                    = " << (double)Key::gcdCounter / Key::GROUP_SIZE << endl;
+    cout << "* Key::invertGroup            = " << (double)Key::invertGroupCounter / Key::GROUP_SIZE << endl;
+    cout << "* Key::operator==             = " << (double)Key::operatorEqualToCounter / Key::GROUP_SIZE << endl;
+    cout << "* Key::operator<<=            = " << (double)Key::operatorBitwiseLeftShiftAssignmentCounter / Key::GROUP_SIZE << endl;
+    cout << "* Key::operator-=             = " << (double)Key::operatorSubtractionAssignmentCounter / Key::GROUP_SIZE << endl;
+    cout << "* Key::operator*=             = " << (double)Key::operatorMultiplicationAssignmentCounter / Key::GROUP_SIZE << endl;
+    cout << "* Key::compare                = " << (double)Key::compareCounter / Key::GROUP_SIZE << endl;
+    cout << "* Key::add                    = " << (double)Key::gcdCounter / Key::GROUP_SIZE << endl;
+    cout << "* Key::addExtended            = " << (double)Key::addExtendedCounter / Key::GROUP_SIZE << endl;
+    cout << "* Key::subtract               = " << (double)Key::subtractCounter / Key::GROUP_SIZE << endl;
+    cout << "* Key::multiply               = " << (double)Key::multiplyCounter / Key::GROUP_SIZE << endl;
+    cout << "* Key::multiplyByR2           = " << (double)Key::multiplyByR2Counter / Key::GROUP_SIZE << endl;
+    cout << "* Key::reduce                 = " << (double)Key::reduceCounter / Key::GROUP_SIZE << endl;
+    cout << "* Key::setBit                 = " << (double)Key::setBitCounter / Key::GROUP_SIZE << endl;
+    cout << "* Key::getBit                 = " << (double)Key::getBitCounter / Key::GROUP_SIZE << endl;
+    cout << "* Key::rightShift             = " << (double)Key::rightShiftCounter / Key::GROUP_SIZE << endl;
+    cout << "* Key::divide                 = " << (double)Key::divideCounter / Key::GROUP_SIZE << endl;
+    cout << "* Key::invert                 = " << (double)Key::invertCounter / Key::GROUP_SIZE << endl;
+    cout << "* Point::check                = " << (double)Point::checkCounter / Key::GROUP_SIZE << endl;
+    cout << "* Point::add                  = " << (double)Point::addCounter / Key::GROUP_SIZE << endl;
+    cout << "* Point::subtract             = " << (double)Point::subtractCounter / Key::GROUP_SIZE << endl;
+    cout << "* Point::compress             = " << (double)Point::compressCounter / Key::GROUP_SIZE << endl;
+    cout << "* Point::group                = " << (double)Point::groupCounter / Key::GROUP_SIZE << endl;
+#endif
+    return 0;
 }

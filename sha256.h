@@ -62,6 +62,12 @@ typedef struct {
 } sha256_ctx;
 
 extern unsigned sha256_k[64];
+#ifdef COUNT_TEST
+struct Sha256Counter
+{
+    static unsigned long long counter;
+};
+#endif
 
 void sha256(unsigned char *message,
             unsigned char *digest);
