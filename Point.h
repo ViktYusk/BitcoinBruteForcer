@@ -1,13 +1,12 @@
 #pragma once
 
 #include "Key.h"
-#include "sha256.h"
 #include "ripemd160.h"
 
 struct Point
 {
-	static const unsigned char ADDRESS[20];
-	static const unsigned char COMPRESSION_ENDING[31];
+	static const unsigned ADDRESS0;
+	static const unsigned COMPRESSION_ENDING[7];
 	static const Point G;
 
 	static Point gPowers[64];
@@ -22,7 +21,6 @@ struct Point
 #endif
 
 	static void initialize();
-	static bool check(unsigned char* address);
 	
 	unsigned long long key;
 	Key x;
@@ -40,6 +38,6 @@ struct Point
 	//void operator++();
 	
 	void double_();
-	void compress(unsigned char* output);
+	void compress(unsigned* output);
 	void group(Point* points);
 };

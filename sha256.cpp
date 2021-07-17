@@ -32,32 +32,10 @@
  * SUCH DAMAGE.
  */
 
-// TODO: оптимизировать с учётом размера 33 байта
 #include <string.h>
 
 #include "sha256.h"
 
-#define UNPACK32(x, str)                      \
-{                                             \
-    *((str) + 3) = (unsigned char) ((x)      );       \
-    *((str) + 2) = (unsigned char)((x) >>  8); \
-    *((str) + 1) = (unsigned char)((x) >> 16); \
-    *((str) + 0) = (unsigned char)((x) >> 24); \
-}
-
-#define PACK32(str, x)                        \
-{                                             \
-    *(x) =   ((unsigned) *((str) + 3)      )    \
-           | ((unsigned) *((str) + 2) <<  8)    \
-           | ((unsigned) *((str) + 1) << 16)    \
-           | ((unsigned) *((str) + 0) << 24);   \
-}
-
-#define SHA256_SCR(i)                         \
-{                                             \
-    w[i] =  SHA256_F4(w[i -  2]) + w[i -  7]  \
-          + SHA256_F3(w[i - 15]) + w[i - 16]; \
-}
 
 unsigned sha256_k[64] =
             {0x428a2f98, 0x71374491, 0xb5c0fbcf, 0xe9b5dba5,
@@ -77,76 +55,75 @@ unsigned sha256_k[64] =
              0x748f82ee, 0x78a5636f, 0x84c87814, 0x8cc70208,
              0x90befffa, 0xa4506ceb, 0xbef9a3f7, 0xc67178f2};
 #ifdef COUNT_TEST
-unsigned long long Sha256Counter::counter = 0;
+unsigned long long sha256Counter = 0;
 #endif
 
 /* SHA-256 functions */
 
-void sha256_transf(sha256_ctx *ctx, const unsigned char *message,
-                   unsigned int block_nb)
+
+// TODO: оптимизировать с учётом особенностей входных данных
+void sha256(unsigned* input, unsigned* output)
 {
-	unsigned w[64];
-	unsigned wv[8];
-	unsigned t1, t2;
-    const unsigned char *sub_block;
-    int i;
+#ifdef COUNT_TEST
+    sha256Counter++;
+#endif
+    output[0] = 0x6A09E667;
+    output[1] = 0xBB67AE85;
+    output[2] = 0x3C6EF372;
+    output[3] = 0xA54FF53A;
+    output[4] = 0x510E527F;
+    output[5] = 0x9B05688C;
+    output[6] = 0x1F83D9AB;
+    output[7] = 0x5BE0CD19;
+
+    unsigned wv[8];
+    unsigned t1, t2;
 
     int j;
 
-    for (i = 0; i < (int) block_nb; i++) {
-        sub_block = message + (i << 6);
+    for (j = 16; j < 64; j++)
+        SHA256_SCR(input, j);
 
-        for (j = 0; j < 16; j++) {
-            PACK32(&sub_block[j << 2], &w[j]);
-        }
+    //memcpy(wv, state, 32);
+    wv[0] = output[0];
+    wv[1] = output[1];
+    wv[2] = output[2];
+    wv[3] = output[3];
+    wv[4] = output[4];
+    wv[5] = output[5];
+    wv[6] = output[6];
+    wv[7] = output[7];
 
-        for (j = 16; j < 64; j++) {
-            SHA256_SCR(j);
-        }
-
-        for (j = 0; j < 8; j++) {
-            wv[j] = ctx->h[j];
-        }
-
-        for (j = 0; j < 64; j++) {
-            t1 = wv[7] + SHA256_F2(wv[4]) + CH(wv[4], wv[5], wv[6])
-                + sha256_k[j] + w[j];
-            t2 = SHA256_F1(wv[0]) + MAJ(wv[0], wv[1], wv[2]);
-            wv[7] = wv[6];
-            wv[6] = wv[5];
-            wv[5] = wv[4];
-            wv[4] = wv[3] + t1;
-            wv[3] = wv[2];
-            wv[2] = wv[1];
-            wv[1] = wv[0];
-            wv[0] = t1 + t2;
-        }
-
-        for (j = 0; j < 8; j++) {
-            ctx->h[j] += wv[j];
-        }
+    for (j = 0; j < 64; j++) {
+        t1 = wv[7] + SHA256_F2(wv[4]) + CH(wv[4], wv[5], wv[6])
+             + sha256_k[j] + input[j];
+        t2 = SHA256_F1(wv[0]) + MAJ(wv[0], wv[1], wv[2]);
+        wv[7] = wv[6];
+        wv[6] = wv[5];
+        wv[5] = wv[4];
+        wv[4] = wv[3] + t1;
+        wv[3] = wv[2];
+        wv[2] = wv[1];
+        wv[1] = wv[0];
+        wv[0] = t1 + t2;
     }
-}
 
-void sha256(unsigned char *message, unsigned char *digest) // TODO: вход и выход типа unsigned
-{
-#ifdef COUNT_TEST
-    Sha256Counter::counter++;
-#endif
-    sha256_ctx ctx;
-	ctx.h[0] = 0x6a09e667;
-	ctx.h[1] = 0xbb67ae85;
-	ctx.h[2] = 0x3c6ef372;
-	ctx.h[3] = 0xa54ff53a;
-	ctx.h[4] = 0x510e527f;
-	ctx.h[5] = 0x9b05688c;
-	ctx.h[6] = 0x1f83d9ab;
-	ctx.h[7] = 0x5be0cd19;
-	ctx.block = message;
-	sha256_transf(&ctx, ctx.block, 1);
-	int i;
-	for (i = 0; i < 8; i++) {
-		UNPACK32(ctx.h[i], &digest[i << 2]);
-	}
-
+    output[0] += wv[0];
+    output[1] += wv[1];
+    output[2] += wv[2];
+    output[3] += wv[3];
+    output[4] += wv[4];
+    output[5] += wv[5];
+    output[6] += wv[6];
+    output[7] += wv[7];
+    /*
+    UNPACK32(states[0], &output[0]);
+    UNPACK32(states[1], &output[4]);
+    UNPACK32(states[2], &output[8]);
+    UNPACK32(states[3], &output[12]);
+    UNPACK32(states[4], &output[16]);
+    UNPACK32(states[5], &output[20]);
+    UNPACK32(states[6], &output[24]);
+    UNPACK32(states[7], &output[28]);
+    */
 }

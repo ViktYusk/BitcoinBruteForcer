@@ -2,9 +2,10 @@
 #include <iostream>
 #include "Key.h"
 #include "Point.h"
-#include "ripemd160.h"
 #include "sha256.h"
+#include "ripemd160.h"
 #include "test.h"
+
 
 #define TEST(name, result, iterations, call, time) if (result) { cout << "* Passed test: " << name; Timer timer; if (iterations) { for (int i = 0; i < iterations; i++) call; time = timer.stop(iterations); cout << " [" << time << " ns]"; } cout << endl; } else { cout << "* Failed test: " << name << endl; return -1; }
 
@@ -42,6 +43,14 @@ bool check(unsigned char* array1, unsigned char* array2, int length)
 	return true;
 }
 
+bool check(unsigned* array1, unsigned* array2, int length)
+{
+    for (int c = 0; c < length; c++)
+        if (array1[c] != array2[c])
+            return false;
+    return true;
+}
+
 long long test()
 {
     unsigned long long time;
@@ -52,43 +61,39 @@ long long test()
 	unsigned long long groupTime;
 	cout << "TESTING:" << endl;
 	{
-		unsigned char input[64] = { 0x56, 0xF5, 0x25, 0x6A, 0xEE, 0x7B, 0x11, 0x05, 0x09, 0xC3, 0x59, 0xAB, 0xFE, 0x56, 0x71, 0xA5, 0x12, 0x61, 0x8F, 0x3D, 0xDB, 0x1B, 0x84, 0x51, 0xDB, 0x00, 0x37, 0x95, 0x45, 0x25, 0xA1, 0xB0, 0x58, 0x80, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01, 0x08 };
-		unsigned char output[32] = { 0xAC, 0x58, 0x8C, 0x77, 0x58, 0x62, 0x52, 0xE2, 0xB5, 0x67, 0x09, 0xC2, 0xA4, 0x72, 0x82, 0xDE, 0x8C, 0x04, 0x54, 0x39, 0x56, 0x9D, 0xB9, 0x42, 0x72, 0x62, 0xE4, 0x32, 0x2A, 0x98, 0xA0, 0xCE };
-		unsigned char testInput[64];
-		unsigned char testOutput[32];
+        unsigned input[64] = { 0x56F5256A, 0xEE7B1105, 0x09C359AB, 0xFE5671A5, 0x12618F3D, 0xDB1B8451, 0xDB003795, 0x4525A1B0, 0x58800000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000108 };
+		unsigned output[8] = { 0xAC588C77, 0x586252E2, 0xB56709C2, 0xA47282DE, 0x8C045439, 0x569DB942, 0x7262E432, 0x2A98A0CE };
+		unsigned testInput[64];
+		unsigned testOutput[8];
 		memcpy(testInput, input, sizeof(testInput));
 		for (int i = 0; i < 5; i++)
 		{
 			sha256(testInput, testOutput);
 			memcpy(testInput, testOutput, sizeof(testOutput));
-			testInput[32] = 0x13;
+            ((unsigned char*)testInput)[35] = 0x13;
+
 		}
-		TEST("sha256", check(testOutput, output, 32), 1000000, sha256(input, testOutput), sha256Time)
+		TEST("sha256", check(testOutput, output, 8), 1000000, sha256(input, testOutput), sha256Time)
 	}
 	{
-		unsigned char input[32] = { 0x68, 0x65, 0x6C, 0x6C, 0x6F, 0x2C, 0x20, 0x6D, 0x79, 0x20, 0x6E, 0x61, 0x6D, 0x65, 0x20, 0x69, 0x73, 0x20, 0x56, 0x69, 0x6B, 0x74, 0x6F, 0x72, 0x20, 0x59, 0x75, 0x73, 0x6B, 0x6F, 0x76, 0x79 };
-		unsigned char output[20] = { 0xF7, 0xEE, 0xD5, 0x7E, 0xEB, 0x1C, 0x28, 0x78, 0x09, 0x63, 0x53, 0x44, 0x80, 0x56, 0xDA, 0xAB, 0x08, 0x25, 0x34, 0xDF };
-		unsigned char testInput[32];
-		unsigned char testOutput[20];
+        unsigned input[8] = { 0x68656C6C, 0x6F2C206D, 0x79206E61, 0x6D652069, 0x73205669, 0x6B746F72, 0x20597573, 0x6B6F7679 };
+		unsigned output[5] = { 0x7ED5EEF7, 0x78281CEB, 0x44536309, 0xABDA5680, 0xDF342508 };
+		unsigned testInput[8];
+		unsigned testOutput[5];
 		memcpy(testInput, input, sizeof(testInput));
 		for (int i = 0; i < 5; i++)
 		{
 			ripemd160(testInput, testOutput);
-			memcpy(testInput, testOutput, sizeof(testOutput));
-			testInput[20] = 0x00;
-			testInput[21] = 0x01;
-			testInput[22] = 0x02;
-			testInput[23] = 0x03;
-			testInput[24] = 0x04;
-			testInput[25] = 0x05;
-			testInput[26] = 0x06;
-			testInput[27] = 0x07;
-			testInput[28] = 0x08;
-			testInput[29] = 0x09;
-			testInput[30] = 0x0A;
-			testInput[31] = 0x0B;
+			//memcpy(testInput, testOutput, sizeof(testOutput));
+			for (int j = 0; j < 5; j++)
+            {
+			    REVERSE(*((unsigned*)testOutput + j), &testInput[j])
+            }
+			testInput[5] = 0x00010203;
+			testInput[6] = 0x04050607;
+			testInput[7] = 0x08090A0B;
 		}
-		TEST("ripemd160", check(testOutput, output, 20), 1000000, ripemd160(testInput, testOutput), ripemd160Time)
+		TEST("ripemd160", check(testOutput, output, 5), 1000000, ripemd160(testInput, testOutput), ripemd160Time)
 	}
 	{
 		unsigned long long blocks[4] = {0x59F2815B16F81798, 0x029BFCDB2DCE28D9, 0x55A06295CE870B07, 0x79BE667EF9DCBBAC};
@@ -398,12 +403,6 @@ long long test()
 		TEST("Key::invertGroup", result, 1, Key::invertGroup(inputs2), time)
 	}
 	{
-		unsigned char address1[20] = { 0xF7, 0xEE, 0xD5, 0x7E, 0xEB, 0x1C, 0x28, 0x78, 0x09, 0x63, 0x53, 0x44, 0x80, 0x56, 0xDA, 0xAB, 0x08, 0x25, 0x34, 0xDF };
-		unsigned char address2[20];
-		memcpy(address2, Point::ADDRESS, sizeof(address2));
-		TEST("Point::check", !Point::check(address1) && Point::check(address2), 1000000, Point::check(address2), checkTime)
-	}
-	{
 		unsigned long long key = 1;
 		Key x(0x59F2815B16F81798, 0x029BFCDB2DCE28D9, 0x55A06295CE870B07, 0x79BE667EF9DCBBAC);
 		Key y(0x9C47D08FFB10D4B8, 0xFD17B448A6855419, 0x5DA4FBFC0E1108A8, 0x483ADA7726A3C465);
@@ -419,23 +418,13 @@ long long test()
 	{
 		Point point1 = Point(1, Key(0x59F2815B16F81798, 0x029BFCDB2DCE28D9, 0x55A06295CE870B07, 0x79BE667EF9DCBBAC), Key(0x9C47D08FFB10D4B8, 0xFD17B448A6855419, 0x5DA4FBFC0E1108A8, 0x483ADA7726A3C465));
 		Point point2 = Point(0, Key(0x9C47D08FFB10D4B8, 0xFD17B448A6855419, 0x5DA4FBFC0E1108A8, 0x483ADA7726A3C465), Key(0x59F2815B16F81799, 0x029BFCDB2DCE28D9, 0x55A06295CE870B07, 0x79BE667EF9DCBBAC));
-		unsigned char compression1[64] =
-		{ 
-			0x02, 0x79, 0xBE, 0x66, 0x7E, 0xF9, 0xDC, 0xBB, 0xAC, 0x55, 0xA0, 0x62, 0x95, 0xCE, 0x87, 0x0B, 0x07, 0x02, 0x9B, 0xFC, 0xDB, 0x2D, 0xCE, 0x28, 0xD9, 0x59, 0xF2, 0x81, 0x5B, 0x16, 0xF8, 0x17, 
-			0x98, 0x80, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01, 0x08
-		};
-		unsigned char compression2[64] =
-		{
-			0x03, 0x48, 0x3A, 0xDA, 0x77, 0x26, 0xA3, 0xC4, 0x65, 0x5D, 0xA4, 0xFB, 0xFC, 0x0E, 0x11, 0x08, 0xA8, 0xFD, 0x17, 0xB4, 0x48, 0xA6, 0x85, 0x54, 0x19, 0x9C, 0x47, 0xD0, 0x8F, 0xFB, 0x10, 0xD4,
-			0xB8, 0x80, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01, 0x08
-		};
-		unsigned char testCompression1[64];
-		memcpy(testCompression1 + 33, Point::COMPRESSION_ENDING, sizeof(Point::COMPRESSION_ENDING));
-		unsigned char testCompression2[64];
-		memcpy(testCompression2 + 33, Point::COMPRESSION_ENDING, sizeof(Point::COMPRESSION_ENDING));
+        unsigned compression1[9] = { 0x0279BE66, 0x7EF9DCBB, 0xAC55A062, 0x95CE870B, 0x07029BFC, 0xDB2DCE28, 0xD959F281, 0x5B16F817, 0x98800000 };
+        unsigned compression2[9] = { 0x03483ADA, 0x7726A3C4, 0x655DA4FB, 0xFC0E1108, 0xA8FD17B4, 0x48A68554, 0x199C47D0, 0x8FFB10D4, 0xB8800000 };
+		unsigned testCompression1[9];
+		unsigned testCompression2[9];
 		point1.compress(testCompression1);
 		point2.compress(testCompression2);
-		TEST("Point::compress", check(testCompression1, compression1, sizeof(compression1)) && check(testCompression2, compression2, sizeof(compression2)), 1000000, point1.compress(testCompression1), compressTime)
+		TEST("Point::compress", check(testCompression1, compression1, 9) && check(testCompression2, compression2, 9), 1000000, point1.compress(testCompression1), compressTime)
 	}
 	{
 		Point point1 = Point(1024, Key(0xD5B901B2E285131F, 0xAAEC6ECDC813B088, 0xD664A18F66AD6240, 0x241FEBB8E23CBD77), Key(0xABB3E66F2750026D, 0xCD50FD0FBD0CB5AF, 0xD6C420BD13981DF8, 0x513378D9FF94F8D3));
@@ -509,7 +498,7 @@ long long test()
 		groupTime /= Key::GROUP_SIZE;
 	}
 	time = sha256Time + ripemd160Time + checkTime + compressTime + groupTime;
-    cout << "Estimated speed = " << (int)(4 * 1000000 / time) << " Kkeys/second for 4 threads" << endl; // TODO: несоответствует действительной скорости (возможно, увеличить количество итераций в тестах)
+    cout << "Estimated speed = " << (int)(4 * 1000000 / time) << " Kkeys/second for 4 threads" << endl;
 #ifdef COUNT_TEST
     Sha256Counter::counter = 0;
     Ripemd160Counter::counter = 0;

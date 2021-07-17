@@ -1,4 +1,3 @@
-// TODO: реализовать с использований SIMD
 /*
  * FIPS 180-2 SHA-224/256/384/512 implementation
  * Last update: 02/02/2007
@@ -52,24 +51,38 @@
 #define SHA256_F3(x) (ROTR(x,  7) ^ ROTR(x, 18) ^ SHFR(x,  3))
 #define SHA256_F4(x) (ROTR(x, 17) ^ ROTR(x, 19) ^ SHFR(x, 10))
 
-#define LEN 33
+#define UNPACK32(x, str)                      \
+{                                             \
+    *((str) + 3) = (unsigned char) ((x)      );       \
+    *((str) + 2) = (unsigned char)((x) >>  8); \
+    *((str) + 1) = (unsigned char)((x) >> 16); \
+    *((str) + 0) = (unsigned char)((x) >> 24); \
+}
 
-typedef struct {
-    unsigned int tot_len = 0;
-    unsigned int len = LEN;
-    unsigned char* block;
-    unsigned h[8];
-} sha256_ctx;
+
+#define PACK32(str, x)                        \
+{                                             \
+    *(x) =   ((unsigned) *((str) + 3)      )    \
+           | ((unsigned) *((str) + 2) <<  8)    \
+           | ((unsigned) *((str) + 1) << 16)    \
+           | ((unsigned) *((str) + 0) << 24);   \
+}
+
+
+#define SHA256_SCR(message, i)                         \
+{                                             \
+    message[i] =  SHA256_F4(message[i -  2]) + message[i -  7]  \
+          + SHA256_F3(message[i - 15]) + message[i - 16]; \
+}
+
+
+#define LEN 33
 
 extern unsigned sha256_k[64];
 #ifdef COUNT_TEST
-struct Sha256Counter
-{
-    static unsigned long long counter;
-};
+extern static unsigned long long sha256Counter;
 #endif
 
-void sha256(unsigned char *message,
-            unsigned char *digest);
+void sha256(unsigned* input, unsigned* output);
 
 #endif 

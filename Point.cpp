@@ -6,12 +6,12 @@ using namespace std;
 
 #ifdef DEBUG
 // TODO: выбрать больший ключ
-const unsigned char Point::ADDRESS[20] = { 0x2B, 0xA9, 0xA7, 0xE8, 0xEB, 0x11, 0x34, 0xF8, 0xF8, 0xB7, 0x70, 0x3A, 0x8B, 0x18, 0x3F, 0x72, 0x2C, 0x84, 0x03, 0x71 }; // 12056798280269540698
+const unsigned Point::ADDRESS0 = 0xE8A7A92B; // 2BA9A7E8EB1134F8F8B7703A8B183F722C840371
 #else
-const unsigned char Point::ADDRESS[20] = { 0x3E, 0xE4, 0x13, 0x3D, 0x99, 0x1F, 0x52, 0xFD, 0xF6, 0xA2, 0x5C, 0x98, 0x34, 0xE0, 0x74, 0x5A, 0xC7, 0x42, 0x48, 0xA4 };
+const unsigned Point::ADDRESS0 = 0x3D13E43E; // 3EE4133D991F52FDF6A25C9834E0745AC74248A4
 #endif
 
-const unsigned char Point::COMPRESSION_ENDING[31] = { 0x80, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01, 0x08 };
+const unsigned Point::COMPRESSION_ENDING[7] = { 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000108 };
 
 const Point Point::G = Point(1, Key(0x59F2815B16F81798, 0x029BFCDB2DCE28D9, 0x55A06295CE870B07, 0x79BE667EF9DCBBAC), Key(0x9C47D08FFB10D4B8, 0xFD17B448A6855419, 0x5DA4FBFC0E1108A8, 0x483ADA7726A3C465));  // (55066263022277343669578718895168534326250603453777594175500187360389116729240, 32670510020758816978083085130507043184471273380659243275938904335757337482424)
 
@@ -44,17 +44,6 @@ void Point::initialize()
 	}
 	gMultiples[Key::GROUP_SIZE / 2] = gMultiples[Key::GROUP_SIZE / 2 - 1];
 	gMultiples[Key::GROUP_SIZE / 2].double_();
-}
-
-bool Point::check(unsigned char* address)
-{
-#ifdef COUNT_TEST
-    checkCounter++;
-#endif
-	for (int c = 0; c < 20; c++)
-		if (address[c] != ADDRESS[c])
-			return false;
-	return true;
 }
 
 Point::Point()
@@ -183,16 +172,25 @@ void Point::double_()
 	y = result_y;
 }
 
-// TODO: можно получать байты с помощью указателей
-void Point::compress(unsigned char* output) // TODO: компрессировать в unsigned, а не unsigned char
+void Point::compress(unsigned* output)
 {
 #ifdef COUNT_TEST
     compressCounter++;
 #endif
-	output[0] = y.blocks[0] % 2 == 0 ? 0x02 : 0x03;
+	output[0] = ((0x02 + (unsigned)y.blocks[0] % 2) << 24) + (unsigned)(x.blocks[3] >> 40);
+	output[1] = x.blocks[3] >> 8;
+    output[2] = ((unsigned)x.blocks[3] << 24) + (unsigned)(x.blocks[2] >> 40);
+    output[3] = x.blocks[2] >> 8;
+    output[4] = ((unsigned)x.blocks[2] << 24) + (unsigned)(x.blocks[1] >> 40);
+    output[5] = x.blocks[1] >> 8;
+    output[6] = ((unsigned)x.blocks[1] << 24) + (unsigned)(x.blocks[0] >> 40);
+    output[7] = x.blocks[0] >> 8;
+    output[8] = (x.blocks[0] << 24) + 0x00800000;
+    /*
 	for (int i = 0; i < 4; i++)
 		for (int j = 0; j < 8; j++)
 			output[1 + 8 * i + j] = x.blocks[3 - i] >> 8 * (7 - j);
+     */
 }
 
 void Point::group(Point* points)

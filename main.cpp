@@ -1,13 +1,11 @@
-// TODO: посчитать, сколько раз выполняется каждая операция
-// TODO: отчёт о найденных хешах
 #include <chrono>
 #include <iostream>
 #include <mutex>
 #include <pthread.h>
 
 #include "Point.h"
-#include "ripemd160.h"
 #include "sha256.h"
+#include "ripemd160.h"
 #include "test.h"
 
 using namespace std;
@@ -22,9 +20,6 @@ const unsigned long long PROGRESSES_NUMBER = 1ULL << PROGRESS_BITS;
 const unsigned long long SUBBLOCKS_NUMBER  = 1ULL << SUBBLOCK_BITS;
 const unsigned long long GROUPS_PER_PROGRESS = THREADS_NUMBER * SUBBLOCKS_NUMBER;
 
-unsigned long long sha256Counter = 0;
-unsigned long long ripemd160Counter = 0;
-
 int code = 0;
 int block;
 int threadsProgresses[THREADS_NUMBER] = { 0 };
@@ -32,11 +27,33 @@ mutex mutex_;
 Point threadsPoints[THREADS_NUMBER + 1];
 Timer timer;
 
+void print(unsigned char digit)
+{
+    cout << (char)(digit < 10 ? '0' + digit : 'A' + digit - 10);
+}
+
+void print(unsigned long long key)
+{
+    for (int i = 0; i < 16; i++)
+        print((unsigned char)(key >> 4 * (15 - i) & 0xF));
+}
+
+void print(unsigned* address)
+{
+    for (int i = 0; i < 5; i++)
+        for (int j = 0; j < 4; j++)
+        {
+            unsigned char byte = *((unsigned char*)(address + i) + j);
+            print((unsigned char)((byte & 0xF0) >> 4));
+            print((unsigned char)(byte & 0x0F));
+        }
+}
+
 void* thread(void* id) 
 {
 	Point center(threadsPoints[*(int*)id]);
-	unsigned char compression[64];
-	memcpy(compression + 33, Point::COMPRESSION_ENDING, sizeof(Point::COMPRESSION_ENDING));
+	unsigned compression[64];
+	memcpy(compression + 9, Point::COMPRESSION_ENDING, sizeof(Point::COMPRESSION_ENDING));
 	for (int i = 0; i < PROGRESSES_NUMBER; i++)
 	{
 		for (int j = 0; j < SUBBLOCKS_NUMBER; j++)
@@ -46,15 +63,17 @@ void* thread(void* id)
 			for (int k = 0; k < Key::GROUP_SIZE; k++)
 			{
 				points[k].compress(compression);
-				unsigned char sha256Output[32];
+				unsigned sha256Output[8];
 				sha256(compression, sha256Output);
-				unsigned char address[20];
+				unsigned address[5];
 				ripemd160(sha256Output, address);
-				if (Point::check(address))
+				if (address[0] == Point::ADDRESS0)
 				{
 					mutex_.lock();
-					code = 1;
-					cout << points[k].key << endl;
+					print(points[k].key); // 0xA7525A280001AD5A
+					cout << " ";
+					print(address);
+					cout << endl;
 					mutex_.unlock();
 				}
 			}
@@ -67,7 +86,7 @@ void* thread(void* id)
 		for (int t = 0; t < THREADS_NUMBER; t++)
 			log &= threadsProgresses[t] >= threadsProgresses[*(int*)id];
 		if (log)
-            cout << "Progress = " << (i + 1) * 100.0 / PROGRESSES_NUMBER << " % [" << (int)(GROUPS_PER_PROGRESS * Key::GROUP_SIZE / 1000 / timer.stop()) << " Kkeys/second]" << endl;
+            cout << "Progress = " << (i + 1) * 100.0 / PROGRESSES_NUMBER << " %   [" << (int)(GROUPS_PER_PROGRESS * Key::GROUP_SIZE / 1000 / timer.stop()) << " Kkeys/second]" << endl;
 		mutex_.unlock();
 #endif
 	}
