@@ -1,88 +1,21 @@
-/*
- * FIPS 180-2 SHA-224/256/384/512 implementation
- * Last update: 02/02/2007
- * Issue date:  04/30/2005
- *
- * Copyright (C) 2013, Con Kolivas <kernel@kolivas.org>
- * Copyright (C) 2005, 2007 Olivier Gay <olivier.gay@a3.epfl.ch>
- * All rights reserved.
- *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions
- * are met:
- * 1. Redistributions of source code must retain the above copyright
- *    notice, this list of conditions and the following disclaimer.
- * 2. Redistributions in binary form must reproduce the above copyright
- *    notice, this list of conditions and the following disclaimer in the
- *    documentation and/or other materials provided with the distribution.
- * 3. Neither the name of the project nor the names of its contributors
- *    may be used to endorse or promote products derived from this software
- *    without specific prior written permission.
- *
- * THIS SOFTWARE IS PROVIDED BY THE PROJECT AND CONTRIBUTORS ``AS IS'' AND
- * ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
- * ARE DISCLAIMED.  IN NO EVENT SHALL THE PROJECT OR CONTRIBUTORS BE LIABLE
- * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
- * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS
- * OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
- * HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
- * LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
- * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
- * SUCH DAMAGE.
- */
+#define ADD2(state1, state2) __asm("ADD %w[s1], %w[s1], %w[s2]" : [s1] "+r" (state1) : [s2] "r" (state2))
+#define ADD3(state1, state2, state3) __asm("ADD %w[s1], %w[s1], %w[s2]\n\t ADD %w[s1], %w[s1], %w[s3]" : [s1] "+r" (state1) : [s2] "r" (state2), [s3] "r" (state3))
+#define ADD4(state1, state2, state3, state4) __asm("ADD %w[s1], %w[s1], %w[s2]\n\t ADD %w[s1], %w[s1], %w[s3]\n\t ADD %w[s1], %w[s1], %w[s4]" : [s1] "+r" (state1) : [s2] "r" (state2), [s3] "r" (state3), [s4] "r" (state4))
+#define ADD5(state1, state2, state3, state4, state5) __asm("ADD %w[s1], %w[s1], %w[s2]\n\t ADD %w[s1], %w[s1], %w[s3]\n\t ADD %w[s1], %w[s1], %w[s4]\n\t ADD %w[s1], %w[s1], %w[s5]" : [s1] "+r" (state1) : [s2] "r" (state2), [s3] "r" (state3), [s4] "r" (state4), [s5] "r" (state5))
+#define F(input, output, shift1, shift2, shift3) __asm("MOV %w[o], %w[i], ROR #" shift1 "\n\t EOR %w[o], %w[o], %w[i], ROR #" shift2 "\n\t EOR %w[o], %w[o], %w[i], ROR #" shift3 : [o] "+r" (output) :  [i] "r" (input))
+#define F_(input, output, shift1, shift2, shift3) __asm("MOV %w[o], %w[i], ROR #" shift1 "\n\t EOR %w[o], %w[o], %w[i], ROR #" shift2 "\n\t EOR %w[o], %w[o], %w[i], LSR #" shift3 : [o] "+r" (output) :  [i] "r" (input))
+#define F1(input, output) F(input, output, "2", "13", "22")
+#define F2(input, output) F(input, output, "6", "11", "25")
+#define F3(input, output) F_(input, output, "7", "18", "3")
+#define F4(input, output) F_(input, output, "17", "19", "10")
+#define CH(input1, input2, input3, output) { unsigned temp_; __asm("AND %w[o], %w[i1], %w[i2]\n\t BIC %w[t], %w[i3], %w[i1]\n\t EOR %w[o], %w[o], %w[t]" : [o] "+r" (output), [t] "+r" (temp_) : [i1] "r" (input1), [i2] "r" (input2), [i3] "r" (input3)); }
+#define MA(input1, input2, input3, output) { unsigned temp_; __asm("AND %w[o], %w[i1], %w[i2]\n\t AND %w[t], %w[i1], %w[i3]\n\t EOR %w[o], %w[o], %w[t]\n\t AND %w[t], %w[i2], %w[i3]\n\t EOR %w[o], %w[o], %w[t]" : [o] "+r" (output), [t] "+r" (temp_) : [i1] "r" (input1), [i2] "r" (input2), [i3] "r" (input3)); }
+#define INPUT(input, i, temp) F3(input[i - 15], input[i]); F4(input[i - 2], temp); ADD4(input[i], temp, input[i - 7], input[i - 16]);
+#define ROUND(states, input, i, temp1, temp2, temp) F2(states[4], temp1); CH(states[4], states[5], states[6], temp); ADD5(temp1, states[7], temp, K[i], input[i]); F1(states[0], temp2); MA(states[0], states[1], states[2], temp); ADD2(temp2, temp); states[7] = states[6]; states[6] = states[5]; states[5] = states[4]; states[4] = states[3] + temp1; states[3] = states[2]; states[2] = states[1]; states[1] = states[0]; states[0] = temp1 + temp2;
 
-//#include "config.h"
-//#include "miner.h"
-
-#ifndef SHA2_H
-#define SHA2_H
-
-#define SHA256_DIGEST_SIZE ( 256 / 8)
-#define SHA256_BLOCK_SIZE  ( 512 / 8)
-
-#define SHFR(x, n)    (x >> n)
-#define ROTR(x, n)   ((x >> n) | (x << ((sizeof(x) << 3) - n)))
-#define CH(x, y, z)  ((x & y) ^ (~x & z))
-#define MAJ(x, y, z) ((x & y) ^ (x & z) ^ (y & z))
-
-#define SHA256_F1(x) (ROTR(x,  2) ^ ROTR(x, 13) ^ ROTR(x, 22))
-#define SHA256_F2(x) (ROTR(x,  6) ^ ROTR(x, 11) ^ ROTR(x, 25))
-#define SHA256_F3(x) (ROTR(x,  7) ^ ROTR(x, 18) ^ SHFR(x,  3))
-#define SHA256_F4(x) (ROTR(x, 17) ^ ROTR(x, 19) ^ SHFR(x, 10))
-
-#define UNPACK32(x, str)                      \
-{                                             \
-    *((str) + 3) = (unsigned char) ((x)      );       \
-    *((str) + 2) = (unsigned char)((x) >>  8); \
-    *((str) + 1) = (unsigned char)((x) >> 16); \
-    *((str) + 0) = (unsigned char)((x) >> 24); \
-}
-
-
-#define PACK32(str, x)                        \
-{                                             \
-    *(x) =   ((unsigned) *((str) + 3)      )    \
-           | ((unsigned) *((str) + 2) <<  8)    \
-           | ((unsigned) *((str) + 1) << 16)    \
-           | ((unsigned) *((str) + 0) << 24);   \
-}
-
-
-#define SHA256_SCR(message, i)                         \
-{                                             \
-    message[i] =  SHA256_F4(message[i -  2]) + message[i -  7]  \
-          + SHA256_F3(message[i - 15]) + message[i - 16]; \
-}
-
-
-#define LEN 33
-
-extern unsigned sha256_k[64];
+extern const unsigned K[64];
 #ifdef COUNT_TEST
-extern static unsigned long long sha256Counter;
+extern unsigned long long sha256Counter;
 #endif
 
 void sha256(unsigned* input, unsigned* output);
-
-#endif 

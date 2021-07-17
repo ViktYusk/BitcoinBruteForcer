@@ -5,7 +5,7 @@
 #define COMPARE_BLOCKS(block1, block2) if (block1 > block2) return 1; if (block1 < block2) return -1;
 #define ADD_BLOCKS(command, block1, block2) __asm(command " %[b1], %[b1], %[b2]" : [b1] "+r" (block1) : [b2] "r" (block2));
 #define SUBTRACT_BLOCKS(command, block1, block2) __asm(command " %[b1], %[b1], %[b2]" : [b1] "+r" (block1) : [b2] "r" (block2));
-#define MULTIPLY_BLOCKS(a, b, r1, r2, r3) "MUL %[t_l], %[a" a "], %[b" b "]\n\t UMULH %[t_h], %[a" a "], %[b" b "]\n\t ADDS %[r" r1 "], %[r" r1 "], %[t_l]\n\t ADCS %[r" r2 "], %[r" r2 "], %[z]\n\t ADC %[r" r3 "], %[r" r3 "], %[z]\n\t ADDS %[r" r2 "], %[r" r2 "], %[t_h]\n\t ADC %[r" r3 "], %[r" r3 "], %[z]\n\t"
+#define MULTIPLY_BLOCKS(a, b, r1, r2, r3) "MUL %[t_l], %[a" a "], %[b" b "]\n\t UMULH %[t_h], %[a" a "], %[b" b "]\n\t ADDS %[r" r1 "], %[r" r1 "], %[t_l]\n\t ADCS %[r" r2 "], %[r" r2 "], xzr\n\t ADC %[r" r3 "], %[r" r3 "], xzr\n\t ADDS %[r" r2 "], %[r" r2 "], %[t_h]\n\t ADC %[r" r3 "], %[r" r3 "], xzr\n\t"
 
 //using namespace std;
 

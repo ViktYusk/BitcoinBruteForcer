@@ -254,6 +254,7 @@ bool Key::subtract(const Key& key)
 	return carry;
 }
 
+// TODO: можно ли использовать SIMD-регистры (128-битные) для более быстрого умножения?
 void Key::multiply(const Key& key)
 {
 #ifdef COUNT_TEST
@@ -261,16 +262,15 @@ void Key::multiply(const Key& key)
 #endif
     unsigned long long tempLow;
     unsigned long long tempHigh;
-    unsigned long long zero;
-    __asm("MOV %[z], #0\n\t MOV %[r2], #0\n\t MOV %[r3], #0\n\t MOV %[r4], #0\n\t MOV %[r5], #0\n\t MOV %[r6], #0\n\t MOV %[r7], #0\n\t"
+    __asm("MOV %[r2], #0\n\t MOV %[r3], #0\n\t MOV %[r4], #0\n\t MOV %[r5], #0\n\t MOV %[r6], #0\n\t MOV %[r7], #0\n\t"
           "MUL %[r0], %[a0], %[b0]\n\t UMULH %[r1], %[a0], %[b0]\n\t"
           MULTIPLY_BLOCKS("1", "0", "1", "2", "3") MULTIPLY_BLOCKS("0", "1", "1", "2", "3")
           MULTIPLY_BLOCKS("2", "0", "2", "3", "4") MULTIPLY_BLOCKS("1", "1", "2", "3", "4") MULTIPLY_BLOCKS("0", "2", "2", "3", "4")
           MULTIPLY_BLOCKS("3", "0", "3", "4", "5") MULTIPLY_BLOCKS("2", "1", "3", "4", "5") MULTIPLY_BLOCKS("1", "2", "3", "4", "5") MULTIPLY_BLOCKS("0", "3", "3", "4", "5")
           MULTIPLY_BLOCKS("3", "1", "4", "5", "6") MULTIPLY_BLOCKS("2", "2", "4", "5", "6") MULTIPLY_BLOCKS("1", "3", "4", "5", "6")
           MULTIPLY_BLOCKS("3", "2", "5", "6", "7") MULTIPLY_BLOCKS("2", "3", "5", "6", "7")
-          "MUL %[t_l], %[a3], %[b3]\n\t UMULH %[t_h], %[a3], %[b3]\n\t ADDS %[r6], %[r6], %[t_l]\n\t ADC %[r7], %[r7], %[z]\n\t ADD %[r7], %[r7], %[t_h]"
-          : [t_l] "+r" (tempLow), [t_h] "+r" (tempHigh), [z] "+r" (zero), [r0] "+r" (blocks[0]), [r1] "+r" (blocks[1]), [r2] "+r" (blocks[2]), [r3] "+r" (blocks[3]), [r4] "+r" (blocks[4]), [r5] "+r" (blocks[5]), [r6] "+r" (blocks[6]), [r7] "+r" (blocks[7])
+          "MUL %[t_l], %[a3], %[b3]\n\t UMULH %[t_h], %[a3], %[b3]\n\t ADDS %[r6], %[r6], %[t_l]\n\t ADC %[r7], %[r7], xzr\n\t ADD %[r7], %[r7], %[t_h]"
+          : [t_l] "+r" (tempLow), [t_h] "+r" (tempHigh), [r0] "+r" (blocks[0]), [r1] "+r" (blocks[1]), [r2] "+r" (blocks[2]), [r3] "+r" (blocks[3]), [r4] "+r" (blocks[4]), [r5] "+r" (blocks[5]), [r6] "+r" (blocks[6]), [r7] "+r" (blocks[7])
           : [a0] "r" (blocks[0]), [a1] "r" (blocks[1]), [a2] "r" (blocks[2]), [a3] "r" (blocks[3]), [b0] "r" (key.blocks[0]), [b1] "r" (key.blocks[1]), [b2] "r" (key.blocks[2]), [b3] "r" (key.blocks[3]));
 }
 
@@ -282,12 +282,12 @@ void Key::multiplyByR2()
     unsigned long long tempLow;
     unsigned long long tempHigh;
     unsigned long long zero;
-    __asm("MOV %[z], #0\n\t MOV %[r2], #0\n\t MOV %[r3], #0\n\t MOV %[r4], #0\n\t MOV %[r5], #0\n\t MOV %[r6], #0\n\t MOV %[r7], #0\n\t"
+    __asm("MOV %[r2], #0\n\t MOV %[r3], #0\n\t MOV %[r4], #0\n\t MOV %[r5], #0\n\t MOV %[r6], #0\n\t MOV %[r7], #0\n\t"
           "MUL %[r0], %[a0], %[b0]\n\t UMULH %[r1], %[a0], %[b0]\n\t"
-          MULTIPLY_BLOCKS("1", "0", "1", "2", "3") "ADDS %[r1], %[r1], %[a0]\n\t ADCS %[r2], %[r2], %[z]\n\t ADC %[r3], %[r3], %[z]\n\t"
-          MULTIPLY_BLOCKS("2", "0", "2", "3", "4") "ADDS %[r2], %[r2], %[a1]\n\t ADCS %[r3], %[r3], %[z]\n\t ADC %[r4], %[r4], %[z]\n\t"
-          MULTIPLY_BLOCKS("3", "0", "3", "4", "5") "ADDS %[r3], %[r3], %[a2]\n\t ADCS %[r4], %[r4], %[z]\n\t ADC %[r5], %[r5], %[z]\n\t"
-          "ADDS %[r4], %[r4], %[a3]\n\t ADC %[r5], %[r5], %[z]"
+          MULTIPLY_BLOCKS("1", "0", "1", "2", "3") "ADDS %[r1], %[r1], %[a0]\n\t ADCS %[r2], %[r2], xzr\n\t ADC %[r3], %[r3], xzr\n\t"
+          MULTIPLY_BLOCKS("2", "0", "2", "3", "4") "ADDS %[r2], %[r2], %[a1]\n\t ADCS %[r3], %[r3], xzr\n\t ADC %[r4], %[r4], xzr\n\t"
+          MULTIPLY_BLOCKS("3", "0", "3", "4", "5") "ADDS %[r3], %[r3], %[a2]\n\t ADCS %[r4], %[r4], xzr\n\t ADC %[r5], %[r5], xzr\n\t"
+          "ADDS %[r4], %[r4], %[a3]\n\t ADC %[r5], %[r5], xzr"
     : [t_l] "+r" (tempLow), [t_h] "+r" (tempHigh), [z] "+r" (zero), [r0] "+r" (blocks[0]), [r1] "+r" (blocks[1]), [r2] "+r" (blocks[2]), [r3] "+r" (blocks[3]), [r4] "+r" (blocks[4]), [r5] "+r" (blocks[5]), [r6] "+r" (blocks[6]), [r7] "+r" (blocks[7])
     : [a0] "r" (blocks[0]), [a1] "r" (blocks[1]), [a2] "r" (blocks[2]), [a3] "r" (blocks[3]), [b0] "r" (R2.blocks[0]));
 
