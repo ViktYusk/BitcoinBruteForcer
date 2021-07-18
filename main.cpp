@@ -7,7 +7,7 @@
 #include "sha256.h"
 #include "ripemd160.h"
 #include "test.h"
-
+// TODO: заменить все временные переменные в __asm на clobbered registers
 using namespace std;
 using namespace chrono;
 
@@ -90,7 +90,7 @@ void* thread(void* id)
 		mutex_.unlock();
 #endif
 	}
-	if (!(center == threadsPoints[*(int*)id + 1]))
+	if (!(center == threadsPoints[*(int*)id + 1])) // TODO: протестировать, что защита работает
 	{
 		mutex_.lock();
 		code = -1;

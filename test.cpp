@@ -53,9 +53,6 @@ bool check(unsigned* array1, unsigned* array2, int length)
 
 long long test()
 {
-    //unsigned input = 0x00000108;
-    //unsigned output;
-    //F3(input, output);
     unsigned long long time;
 	unsigned long long sha256Time;
 	unsigned long long ripemd160Time;
@@ -63,20 +60,46 @@ long long test()
 	unsigned long long compressTime;
 	unsigned long long groupTime;
 	cout << "TESTING:" << endl;
-	{
-        unsigned input[64] = { 0x56F5256A, 0xEE7B1105, 0x09C359AB, 0xFE5671A5, 0x12618F3D, 0xDB1B8451, 0xDB003795, 0x4525A1B0, 0x58800000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000108 };
-		unsigned output[8] = { 0xAC588C77, 0x586252E2, 0xB56709C2, 0xA47282DE, 0x8C045439, 0x569DB942, 0x7262E432, 0x2A98A0CE };
-		unsigned testInput[64];
+	/*
+    {
+        unsigned word00 = 0x91827AAC;
+        unsigned word01 = 0xC7238471;
+        unsigned word02 = 0x19283764;
+        unsigned word03 = 0x19482738;
+        unsigned word10 = 0x75273845;
+        unsigned word11 = 0x91882734;
+        unsigned word12 = 0x12746283;
+        unsigned word13 = 0x75886372;
+        __asm(
+        "MOV v0.s[0], %w[w00]\n\t MOV v0.s[1], %w[w01]\n\t MOV v0.s[2], %w[w02]\n\t MOV v0.s[3], %w[w03]\n\t"
+        "MOV v1.s[0], %w[w10]\n\t MOV v1.s[1], %w[w11]\n\t MOV v1.s[2], %w[w12]\n\t MOV v1.s[3], %w[w13]\n\t"
+        //"ADD v0.4s, v0.4s, v1.4s\n\t"
+        //"EOR v0.16b, v0.16b, v1.16b\n\t"
+        "MOV %w[w00], v0.s[0]\n\t MOV %w[w01], v0.s[1]\n\t MOV %w[w02], v0.s[2]\n\t MOV %w[w03], v0.s[3]"
+        : [w00] "+r" (word00), [w01] "+r" (word01), [w02] "+r" (word02), [w03] "+r" (word03)
+        : [w10] "r" (word10), [w11] "r" (word11), [w12] "r" (word12), [w13] "r" (word13));
+    }
+    */
+    {
+        unsigned input0[64] = { 0x56F5256A, 0xEE7B1105, 0x09C359AB, 0xFE5671A5, 0x12618F3D, 0xDB1B8451, 0xDB003795, 0x4525A1B0, 0x58800000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000108 };
+		unsigned input1[64] = { 0xD61C0C73, 0x45E9D99D, 0x0835F946, 0x18F6F060, 0x6314E91C, 0xB8CD396D, 0x7E456DD7, 0xCB1954B2, 0x13800000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000108 };
+        unsigned input2[64] = { 0x6B882009, 0x877C5BBF, 0x92FCD6FC, 0x0AE7741F, 0xC0B8148C, 0x5484F5D4, 0xEFDF78A0, 0x50C619ED, 0x13800000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000108 };
+		unsigned input3[64] = { 0x7FA8302F, 0x0146D868, 0x3EEA6ABF, 0xCA32DA5C, 0x1E9A151B, 0xD3AAF8F5, 0xE1EA9433, 0x1606122F, 0x13800000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000108 };
+        unsigned output0[8] = { 0xD61C0C73, 0x45E9D99D, 0x0835F946, 0x18F6F060, 0x6314E91C, 0xB8CD396D, 0x7E456DD7, 0xCB1954B2 };
+        unsigned output1[8] = { 0x6B882009, 0x877C5BBF, 0x92FCD6FC, 0x0AE7741F, 0xC0B8148C, 0x5484F5D4, 0xEFDF78A0, 0x50C619ED };
+		unsigned output2[8] = { 0x7FA8302F, 0x0146D868, 0x3EEA6ABF, 0xCA32DA5C, 0x1E9A151B, 0xD3AAF8F5, 0xE1EA9433, 0x1606122F };
+        unsigned output3[8] = { 0xE0C660E5, 0x8C0134D1, 0x362B7730, 0x9DA5F38E, 0x9320E07E, 0x186BA9F9, 0x90DE1179, 0x35D6A81A };
 		unsigned testOutput[8];
-		memcpy(testInput, input, sizeof(testInput));
-		for (int i = 0; i < 5; i++)
-		{
-			sha256(testInput, testOutput);
-			memcpy(testInput, testOutput, sizeof(testOutput));
-            ((unsigned char*)testInput)[35] = 0x13;
-
-		}
-		TEST("sha256", check(testOutput, output, 8), 1000000, sha256(input, testOutput), sha256Time)
+		bool result = true;
+        sha256(input0, testOutput);
+        result &= check(testOutput, output0, 8);
+        sha256(input1, testOutput);
+        result &= check(testOutput, output1, 8);
+        sha256(input2, testOutput);
+        result &= check(testOutput, output2, 8);
+        sha256(input3, testOutput);
+        result &= check(testOutput, output3, 8);
+		TEST("sha256", result, 1000000, sha256(input0, testOutput), sha256Time)
 	}
 	{
         unsigned input[8] = { 0x68656C6C, 0x6F2C206D, 0x79206E61, 0x6D652069, 0x73205669, 0x6B746F72, 0x20597573, 0x6B6F7679 };

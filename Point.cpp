@@ -186,6 +186,7 @@ void Point::compress(unsigned* output)
     output[6] = ((unsigned)x.blocks[1] << 24) + (unsigned)(x.blocks[0] >> 40);
     output[7] = x.blocks[0] >> 8;
     output[8] = (x.blocks[0] << 24) + 0x00800000;
+
     /*
 	for (int i = 0; i < 4; i++)
 		for (int j = 0; j < 8; j++)

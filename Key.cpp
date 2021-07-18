@@ -212,7 +212,7 @@ bool Key::add(const Key& key)
 #ifdef COUNT_TEST
     addCounter++;
 #endif
-	unsigned long long carry = 0;
+	unsigned long long carry = 0; // TODO: возможно, распараллелить с помощью SIMD
 	ADD_BLOCKS("ADDS", blocks[0], key.blocks[0]);
 	ADD_BLOCKS("ADCS", blocks[1], key.blocks[1]);
 	ADD_BLOCKS("ADCS", blocks[2], key.blocks[2]);
