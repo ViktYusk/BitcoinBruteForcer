@@ -16,29 +16,15 @@ const unsigned K[64] =
 unsigned long long sha256Counter = 0;
 #endif
 
-// TODO: изучить инструкции AdvSIMD (NEON не поддерживается процессором)
-void sha256(unsigned* input, unsigned* output)
+void sha256(unsigned input[], unsigned output[])
 {
 #ifdef COUNT_TEST
     sha256Counter++;
 #endif
-    unsigned temp1, temp2, temp3, temp4;
-    F3(input[1], input[16]); ADD2(input[16], input[0]);
-    F3(input[2], input[17]); ADD3(input[17], input[1], 0x00A50000);
-    F3(input[3], input[18]); F4(input[16], temp1); ADD3(input[18], temp1, input[2]);
-    F3(input[4], input[19]); F4(input[17], temp2); ADD3(input[19], temp2, input[3]);
-    F3(input[5], input[20]); F4(input[18], temp3); ADD3(input[20], temp3, input[4]);
-    F3(input[6], input[21]); F4(input[19], temp4); ADD3(input[21], temp4, input[5]);
-    F3(input[7], input[22]); F4(input[20], temp1); ADD4(input[22], temp1, input[6], 0x00000108);
-    INPUT(input, 23);
-    F4(input[22], input[24]); ADD3(input[24], input[8], input[17]);
-    F4(input[23], input[25]); ADD2(input[25], input[18]);
-    F4(input[24], input[26]); ADD2(input[26], input[19]);
-    F4(input[25], input[27]); ADD2(input[27], input[20]);
-    F4(input[26], input[28]); ADD2(input[28], input[21]);
-    F4(input[27], input[29]); ADD2(input[29], input[22]);
-    F4(input[28], input[30]); ADD3(input[30], input[23], 0x10420023);
-    F3(input[16], input[31]); F4(input[29], temp1); ADD4(input[31], temp1, input[24], 0x00000108);
+    INPUT_16(input); INPUT_17(input); INPUT_18_21(input, 18); INPUT_18_21(input, 19);
+    INPUT_18_21(input, 20); INPUT_18_21(input, 21); INPUT(input, 22); INPUT(input, 23);
+    INPUT_24(input); INPUT_25_29(input, 25); INPUT_25_29(input, 26); INPUT_25_29(input, 27);
+    INPUT_25_29(input, 28); INPUT_25_29(input, 29); INPUT_30(input); INPUT(input, 31);
     INPUT(input, 32); INPUT(input, 33); INPUT(input, 34); INPUT(input, 35);
     INPUT(input, 36); INPUT(input, 37); INPUT(input, 38); INPUT(input, 39);
     INPUT(input, 40); INPUT(input, 41); INPUT(input, 42); INPUT(input, 43);
@@ -56,122 +42,73 @@ void sha256(unsigned* input, unsigned* output)
     output[5] = words[5] = 0x9B05688C;
     output[6] = words[6] = 0x1F83D9AB;
     output[7] = words[7] = 0x5BE0CD19;
-    ROUND(words, input, 0); ROUND(words, input, 1);
-    ROUND(words, input, 2); ROUND(words, input, 3);
-    ROUND(words, input, 4); ROUND(words, input, 5);
-    ROUND(words, input, 6); ROUND(words, input, 7);
-    ROUND(words, input, 8); ROUND(words, input, 9);
-    ROUND(words, input, 10); ROUND(words, input, 11);
-    ROUND(words, input, 12); ROUND(words, input, 13);
-    ROUND(words, input, 14); ROUND(words, input, 15);
-    ROUND(words, input, 16); ROUND(words, input, 17);
-    ROUND(words, input, 18); ROUND(words, input, 19);
-    ROUND(words, input, 20); ROUND(words, input, 21);
-    ROUND(words, input, 22); ROUND(words, input, 23);
-    ROUND(words, input, 24); ROUND(words, input, 25);
-    ROUND(words, input, 26); ROUND(words, input, 27);
-    ROUND(words, input, 28); ROUND(words, input, 29);
-    ROUND(words, input, 30); ROUND(words, input, 31);
-    ROUND(words, input, 32); ROUND(words, input, 33);
-    ROUND(words, input, 34); ROUND(words, input, 35);
-    ROUND(words, input, 36); ROUND(words, input, 37);
-    ROUND(words, input, 38); ROUND(words, input, 39);
-    ROUND(words, input, 40); ROUND(words, input, 41);
-    ROUND(words, input, 42); ROUND(words, input, 43);
-    ROUND(words, input, 44); ROUND(words, input, 45);
-    ROUND(words, input, 46); ROUND(words, input, 47);
-    ROUND(words, input, 48); ROUND(words, input, 49);
-    ROUND(words, input, 50); ROUND(words, input, 51);
-    ROUND(words, input, 52); ROUND(words, input, 53);
-    ROUND(words, input, 54); ROUND(words, input, 55);
-    ROUND(words, input, 56); ROUND(words, input, 57);
-    ROUND(words, input, 58); ROUND(words, input, 59);
-    ROUND(words, input, 60); ROUND(words, input, 61);
-    ROUND(words, input, 62); ROUND(words, input, 63);
-    ADD2_SIMD(output[0], output[1], output[2], output[3], words[0], words[1], words[2], words[3]);
-    ADD2_SIMD(output[4], output[5], output[6], output[7], words[4], words[5], words[6], words[7]);
+    ROUND(input, words, 0); ROUND(input, words, 1); ROUND(input, words, 2); ROUND(input, words, 3);
+    ROUND(input, words, 4); ROUND(input, words, 5); ROUND(input, words, 6); ROUND(input, words, 7);
+    ROUND(input, words, 8); ROUND(input, words, 9); ROUND(input, words, 10); ROUND(input, words, 11);
+    ROUND(input, words, 12); ROUND(input, words, 13); ROUND(input, words, 14); ROUND(input, words, 15);
+    ROUND(input, words, 16); ROUND(input, words, 17); ROUND(input, words, 18); ROUND(input, words, 19);
+    ROUND(input, words, 20); ROUND(input, words, 21); ROUND(input, words, 22); ROUND(input, words, 23);
+    ROUND(input, words, 24); ROUND(input, words, 25); ROUND(input, words, 26); ROUND(input, words, 27);
+    ROUND(input, words, 28); ROUND(input, words, 29); ROUND(input, words, 30); ROUND(input, words, 31);
+    ROUND(input, words, 32); ROUND(input, words, 33); ROUND(input, words, 34); ROUND(input, words, 35);
+    ROUND(input, words, 36); ROUND(input, words, 37); ROUND(input, words, 38); ROUND(input, words, 39);
+    ROUND(input, words, 40); ROUND(input, words, 41); ROUND(input, words, 42); ROUND(input, words, 43);
+    ROUND(input, words, 44); ROUND(input, words, 45); ROUND(input, words, 46); ROUND(input, words, 47);
+    ROUND(input, words, 48); ROUND(input, words, 49); ROUND(input, words, 50); ROUND(input, words, 51);
+    ROUND(input, words, 52); ROUND(input, words, 53); ROUND(input, words, 54); ROUND(input, words, 55);
+    ROUND(input, words, 56); ROUND(input, words, 57); ROUND(input, words, 58); ROUND(input, words, 59);
+    ROUND(input, words, 60); ROUND(input, words, 61); ROUND(input, words, 62); ROUND(input, words, 63);
+    ADD(output[0], words[0]); ADD(output[1], words[1]); ADD(output[2], words[2]); ADD(output[3], words[3]);
+    ADD(output[4], words[4]); ADD(output[5], words[5]); ADD(output[6], words[6]); ADD(output[7], words[7]);
 }
 
+
 /*
-void sha256(unsigned* input0, unsigned* input1, unsigned* input2, unsigned* input3, unsigned* output0, unsigned* output1, unsigned* output2, unsigned* output3)
+void sha256(unsigned inputs[][64], unsigned outputs[][8])
 {
 #ifdef COUNT_TEST
 sha256Counter++;
 #endif
-    unsigned temp0;
-    F3_SIMD(input0[1], input1[1], input2[1], input3[1], input0[16], input1[16], input2[16], input3[16]); ADD2_SIMD(input0[16], input1[16], input2[16], input3[16], input0[0], input1[0], input2[0], input3[0]);
-    F3_SIMD(input0[2], input1[2], input2[2], input3[2], input0[17], input1[17], input2[17], input3[17]); ADD3_SIMD(input0[17], input1[17], input2[17], input3[17], input0[1], input1[1], input2[1], input3[1], 0x00A50000, 0x00A50000, 0x00A50000, 0x00A50000);
-    F3_SIMD(input0[3], input1[3], input2[3], input3[3], input0[18], input1[18], input2[18], input3[18]); F4_SIMD(input0[16], input1[16], input2[16], input3[16], temp0); ADD3_SIMD(input0[18], input1[18], input2[18], input3[18], temp0, input0[2], input1[2], input2[2], input3[2]);
-    F3_SIMD(input0[4], input1[4], input2[4], input3[4], input0[19], input1[19], input2[19], input3[19]); F4_SIMD(input0[17], input1[17], input2[17], input3[17], temp0); ADD3_SIMD(input0[19], input1[19], input2[19], input3[19], temp0, input0[3], input1[3], input2[3], input3[3]);
-    F3_SIMD(input0[5], input1[5], input2[5], input3[5], input0[20], input1[20], input2[20], input3[20]); F4_SIMD(input0[18], input1[18], input2[18], input3[18], temp0); ADD3_SIMD(input0[20], input1[20], input2[20], input3[20], temp0, input0[4], input1[4], input2[4], input3[4]);
-    F3_SIMD(input0[6], input1[6], input2[6], input3[6], input0[21], input1[21], input2[21], input3[21]); F4_SIMD(input0[19], input1[19], input2[19], input3[19], temp0); ADD3_SIMD(input0[21], input1[21], input2[21], input3[21], temp0, input0[5], input1[5], input2[5], input3[5]);
-    F3_SIMD(input0[7], input1[7], input2[7], input3[7], input0[22], input1[22], input2[22], input3[22]); F4_SIMD(input0[20], input1[20], input2[20], input3[20], temp0); ADD4_SIMD(input0[22], input1[22], input2[22], input3[22], temp0, input0[6], input1[6], input2[6], input3[6], 0x00000108, 0x00000108, 0x00000108, 0x00000108);
-    INPUT_SIMD(input0, input1, input2, input3, 23, temp0)
-    F4_SIMD(input0[22], input1[22], input2[22], input3[22], input0[24], input1[24], input2[24], input3[24]); ADD3_SIMD(input0[24], input1[24], input2[24], input3[24], input0[8], input1[8], input2[8], input3[8], input0[17], input1[17], input2[17], input3[17]);
-    F4_SIMD(input0[23], input1[23], input2[23], input3[23], input0[25], input1[25], input2[25], input3[25]); ADD2_SIMD(input0[25], input1[25], input2[25] ,input3[25], input0[18], input1[18], input2[18], input3[18]);
-    F4_SIMD(input0[24], input1[24], input2[24], input3[24], input0[26], input1[26], input2[26], input3[26]); ADD2_SIMD(input0[26], input1[26], input2[26], input3[26], input0[19], input1[19], input2[19], input3[19]);
-    F4_SIMD(input0[25], input1[25], input2[25], input3[25], input0[27], input1[27], input2[27], input3[27]); ADD2_SIMD(input0[27], input1[27], input2[27], input3[27], input0[20], input1[20], input2[20], input3[20]);
-    F4_SIMD(input0[26], input1[26], input2[26], input3[26], input0[28], input1[28], input2[28], input3[28]); ADD2_SIMD(input0[28], input1[28], input2[28], input3[28], input0[21], input1[21], input2[21], input3[21]);
-    F4_SIMD(input0[27], input1[27], input2[27], input3[27], input0[29], input1[29], input2[29], input3[29]); ADD2_SIMD(input0[29], input1[29], input2[29], input3[29], input0[22], input1[22], input2[22], input3[22]);
-    F4_SIMD(input0[28], input1[28], input2[28], input3[28], input0[30], input1[30], input2[30], input3[30]); ADD3_SIMD(input0[30], input1[30], input2[30], input3[30], input0[23], input1[23], input2[23], input3[23], 0x10420023, 0x10420023, 0x10420023, 0x10420023);
-    F3_SIMD(input0[16], input1[16], input2[16], input3[16], input0[31], input1[31], input2[31], input3[31]); F4_SIMD(input0[29], input1[29], input2[29], input3[29], temp0); ADD4_SIMD(input0[31], input1[31], input2[31], input3[31], temp0,input0[24], input1[24], input2[24], input3[24], 0x00000108, 0x00000108, 0x00000108, 0x00000108);
-    INPUT_SIMD(input0, input1, input2, input3, 32, temp0) INPUT_SIMD(input0, input1, input2, input3, 33, temp0) INPUT_SIMD(input0, input1, input2, input3, 34, temp0) INPUT_SIMD(input0, input1, input2, input3, 35, temp0)
-    INPUT_SIMD(input0, input1, input2, input3, 36, temp0) INPUT_SIMD(input0, input1, input2, input3, 37, temp0) INPUT_SIMD(input0, input1, input2, input3, 38, temp0) INPUT_SIMD(input0, input1, input2, input3, 39, temp0)
-    INPUT_SIMD(input0, input1, input2, input3, 40, temp0) INPUT_SIMD(input0, input1, input2, input3, 41, temp0) INPUT_SIMD(input0, input1, input2, input3, 42, temp0) INPUT_SIMD(input0, input1, input2, input3, 43, temp0)
-    INPUT_SIMD(input0, input1, input2, input3, 44, temp0) INPUT_SIMD(input0, input1, input2, input3, 45, temp0) INPUT_SIMD(input0, input1, input2, input3, 46, temp0) INPUT_SIMD(input0, input1, input2, input3, 47, temp0)
-    INPUT_SIMD(input0, input1, input2, input3, 48, temp0) INPUT_SIMD(input0, input1, input2, input3, 49, temp0) INPUT_SIMD(input0, input1, input2, input3, 50, temp0) INPUT_SIMD(input0, input1, input2, input3, 51, temp0)
-    INPUT_SIMD(input0, input1, input2, input3, 52, temp0) INPUT_SIMD(input0, input1, input2, input3, 53, temp0) INPUT_SIMD(input0, input1, input2, input3, 54, temp0) INPUT_SIMD(input0, input1, input2, input3, 55, temp0)
-    INPUT_SIMD(input0, input1, input2, input3, 56, temp0) INPUT_SIMD(input0, input1, input2, input3, 57, temp0) INPUT_SIMD(input0, input1, input2, input3, 58, temp0) INPUT_SIMD(input0, input1, input2, input3, 59, temp0)
-    INPUT_SIMD(input0, input1, input2, input3, 60, temp0) INPUT_SIMD(input0, input1, input2, input3, 61, temp0) INPUT_SIMD(input0, input1, input2, input3, 62, temp0) INPUT_SIMD(input0, input1, input2, input3, 63, temp0)
-    unsigned words0[8], words1[8], words2[8], words3[8];
-    output0[0] = output1[0] = output2[0] = output3[0] = words0[0] = words1[0] = words2[0] = words3[0] = 0x6A09E667;
-    output0[1] = output1[1] = output2[1] = output3[1] = words0[1] = words1[1] = words2[1] = words3[1] = 0xBB67AE85;
-    output0[2] = output1[2] = output2[2] = output3[2] = words0[2] = words1[2] = words2[2] = words3[2] = 0x3C6EF372;
-    output0[3] = output1[3] = output2[3] = output3[3] = words0[3] = words1[3] = words2[3] = words3[3] = 0xA54FF53A;
-    output0[4] = output1[4] = output2[4] = output3[4] = words0[4] = words1[4] = words2[4] = words3[4] = 0x510E527F;
-    output0[5] = output1[5] = output2[5] = output3[5] = words0[5] = words1[5] = words2[5] = words3[5] = 0x9B05688C;
-    output0[6] = output1[6] = output2[6] = output3[6] = words0[6] = words1[6] = words2[6] = words3[6] = 0x1F83D9AB;
-    output0[7] = output1[7] = output2[7] = output3[7] = words0[7] = words1[7] = words2[7] = words3[7] = 0x5BE0CD19;
-    unsigned temp00, temp01, temp02, temp03, temp10, temp11, temp12, temp13;
-    ROUND_SIMD(words0, words1, words2, words3, input0, input1, input2, input3, 0, temp00, temp01, temp02, temp03, temp10, temp11, temp12, temp13, temp0) ROUND_SIMD(words0, words1, words2, words3, input0, input1, input2, input3, 1, temp00, temp01, temp02, temp03, temp10, temp11, temp12, temp13, temp0)
-    ROUND_SIMD(words0, words1, words2, words3, input0, input1, input2, input3, 2, temp00, temp01, temp02, temp03, temp10, temp11, temp12, temp13, temp0) ROUND_SIMD(words0, words1, words2, words3, input0, input1, input2, input3, 3, temp00, temp01, temp02, temp03, temp10, temp11, temp12, temp13, temp0)
-    ROUND_SIMD(words0, words1, words2, words3, input0, input1, input2, input3, 4, temp00, temp01, temp02, temp03, temp10, temp11, temp12, temp13, temp0) ROUND_SIMD(words0, words1, words2, words3, input0, input1, input2, input3, 5, temp00, temp01, temp02, temp03, temp10, temp11, temp12, temp13, temp0)
-    ROUND_SIMD(words0, words1, words2, words3, input0, input1, input2, input3, 6, temp00, temp01, temp02, temp03, temp10, temp11, temp12, temp13, temp0) ROUND_SIMD(words0, words1, words2, words3, input0, input1, input2, input3, 7, temp00, temp01, temp02, temp03, temp10, temp11, temp12, temp13, temp0)
-    ROUND_SIMD(words0, words1, words2, words3, input0, input1, input2, input3, 8, temp00, temp01, temp02, temp03, temp10, temp11, temp12, temp13, temp0) ROUND_SIMD(words0, words1, words2, words3, input0, input1, input2, input3, 9, temp00, temp01, temp02, temp03, temp10, temp11, temp12, temp13, temp0)
-    ROUND_SIMD(words0, words1, words2, words3, input0, input1, input2, input3, 10, temp00, temp01, temp02, temp03, temp10, temp11, temp12, temp13, temp0) ROUND_SIMD(words0, words1, words2, words3, input0, input1, input2, input3, 11, temp00, temp01, temp02, temp03, temp10, temp11, temp12, temp13, temp0)
-    ROUND_SIMD(words0, words1, words2, words3, input0, input1, input2, input3, 12, temp00, temp01, temp02, temp03, temp10, temp11, temp12, temp13, temp0) ROUND_SIMD(words0, words1, words2, words3, input0, input1, input2, input3, 13, temp00, temp01, temp02, temp03, temp10, temp11, temp12, temp13, temp0)
-    ROUND_SIMD(words0, words1, words2, words3, input0, input1, input2, input3, 14, temp00, temp01, temp02, temp03, temp10, temp11, temp12, temp13, temp0) ROUND_SIMD(words0, words1, words2, words3, input0, input1, input2, input3, 15, temp00, temp01, temp02, temp03, temp10, temp11, temp12, temp13, temp0)
-    ROUND_SIMD(words0, words1, words2, words3, input0, input1, input2, input3, 16, temp00, temp01, temp02, temp03, temp10, temp11, temp12, temp13, temp0) ROUND_SIMD(words0, words1, words2, words3, input0, input1, input2, input3, 17, temp00, temp01, temp02, temp03, temp10, temp11, temp12, temp13, temp0)
-    ROUND_SIMD(words0, words1, words2, words3, input0, input1, input2, input3, 18, temp00, temp01, temp02, temp03, temp10, temp11, temp12, temp13, temp0) ROUND_SIMD(words0, words1, words2, words3, input0, input1, input2, input3, 19, temp00, temp01, temp02, temp03, temp10, temp11, temp12, temp13, temp0)
-    ROUND_SIMD(words0, words1, words2, words3, input0, input1, input2, input3, 20, temp00, temp01, temp02, temp03, temp10, temp11, temp12, temp13, temp0) ROUND_SIMD(words0, words1, words2, words3, input0, input1, input2, input3, 21, temp00, temp01, temp02, temp03, temp10, temp11, temp12, temp13, temp0)
-    ROUND_SIMD(words0, words1, words2, words3, input0, input1, input2, input3, 22, temp00, temp01, temp02, temp03, temp10, temp11, temp12, temp13, temp0) ROUND_SIMD(words0, words1, words2, words3, input0, input1, input2, input3, 23, temp00, temp01, temp02, temp03, temp10, temp11, temp12, temp13, temp0)
-    ROUND_SIMD(words0, words1, words2, words3, input0, input1, input2, input3, 24, temp00, temp01, temp02, temp03, temp10, temp11, temp12, temp13, temp0) ROUND_SIMD(words0, words1, words2, words3, input0, input1, input2, input3, 25, temp00, temp01, temp02, temp03, temp10, temp11, temp12, temp13, temp0)
-    ROUND_SIMD(words0, words1, words2, words3, input0, input1, input2, input3, 26, temp00, temp01, temp02, temp03, temp10, temp11, temp12, temp13, temp0) ROUND_SIMD(words0, words1, words2, words3, input0, input1, input2, input3, 27, temp00, temp01, temp02, temp03, temp10, temp11, temp12, temp13, temp0)
-    ROUND_SIMD(words0, words1, words2, words3, input0, input1, input2, input3, 28, temp00, temp01, temp02, temp03, temp10, temp11, temp12, temp13, temp0) ROUND_SIMD(words0, words1, words2, words3, input0, input1, input2, input3, 29, temp00, temp01, temp02, temp03, temp10, temp11, temp12, temp13, temp0)
-    ROUND_SIMD(words0, words1, words2, words3, input0, input1, input2, input3, 30, temp00, temp01, temp02, temp03, temp10, temp11, temp12, temp13, temp0) ROUND_SIMD(words0, words1, words2, words3, input0, input1, input2, input3, 31, temp00, temp01, temp02, temp03, temp10, temp11, temp12, temp13, temp0)
-    ROUND_SIMD(words0, words1, words2, words3, input0, input1, input2, input3, 32, temp00, temp01, temp02, temp03, temp10, temp11, temp12, temp13, temp0) ROUND_SIMD(words0, words1, words2, words3, input0, input1, input2, input3, 33, temp00, temp01, temp02, temp03, temp10, temp11, temp12, temp13, temp0)
-    ROUND_SIMD(words0, words1, words2, words3, input0, input1, input2, input3, 34, temp00, temp01, temp02, temp03, temp10, temp11, temp12, temp13, temp0) ROUND_SIMD(words0, words1, words2, words3, input0, input1, input2, input3, 35, temp00, temp01, temp02, temp03, temp10, temp11, temp12, temp13, temp0)
-    ROUND_SIMD(words0, words1, words2, words3, input0, input1, input2, input3, 36, temp00, temp01, temp02, temp03, temp10, temp11, temp12, temp13, temp0) ROUND_SIMD(words0, words1, words2, words3, input0, input1, input2, input3, 37, temp00, temp01, temp02, temp03, temp10, temp11, temp12, temp13, temp0)
-    ROUND_SIMD(words0, words1, words2, words3, input0, input1, input2, input3, 38, temp00, temp01, temp02, temp03, temp10, temp11, temp12, temp13, temp0) ROUND_SIMD(words0, words1, words2, words3, input0, input1, input2, input3, 39, temp00, temp01, temp02, temp03, temp10, temp11, temp12, temp13, temp0)
-    ROUND_SIMD(words0, words1, words2, words3, input0, input1, input2, input3, 40, temp00, temp01, temp02, temp03, temp10, temp11, temp12, temp13, temp0) ROUND_SIMD(words0, words1, words2, words3, input0, input1, input2, input3, 41, temp00, temp01, temp02, temp03, temp10, temp11, temp12, temp13, temp0)
-    ROUND_SIMD(words0, words1, words2, words3, input0, input1, input2, input3, 42, temp00, temp01, temp02, temp03, temp10, temp11, temp12, temp13, temp0) ROUND_SIMD(words0, words1, words2, words3, input0, input1, input2, input3, 43, temp00, temp01, temp02, temp03, temp10, temp11, temp12, temp13, temp0)
-    ROUND_SIMD(words0, words1, words2, words3, input0, input1, input2, input3, 44, temp00, temp01, temp02, temp03, temp10, temp11, temp12, temp13, temp0) ROUND_SIMD(words0, words1, words2, words3, input0, input1, input2, input3, 45, temp00, temp01, temp02, temp03, temp10, temp11, temp12, temp13, temp0)
-    ROUND_SIMD(words0, words1, words2, words3, input0, input1, input2, input3, 46, temp00, temp01, temp02, temp03, temp10, temp11, temp12, temp13, temp0) ROUND_SIMD(words0, words1, words2, words3, input0, input1, input2, input3, 47, temp00, temp01, temp02, temp03, temp10, temp11, temp12, temp13, temp0)
-    ROUND_SIMD(words0, words1, words2, words3, input0, input1, input2, input3, 48, temp00, temp01, temp02, temp03, temp10, temp11, temp12, temp13, temp0) ROUND_SIMD(words0, words1, words2, words3, input0, input1, input2, input3, 49, temp00, temp01, temp02, temp03, temp10, temp11, temp12, temp13, temp0)
-    ROUND_SIMD(words0, words1, words2, words3, input0, input1, input2, input3, 50, temp00, temp01, temp02, temp03, temp10, temp11, temp12, temp13, temp0) ROUND_SIMD(words0, words1, words2, words3, input0, input1, input2, input3, 51, temp00, temp01, temp02, temp03, temp10, temp11, temp12, temp13, temp0)
-    ROUND_SIMD(words0, words1, words2, words3, input0, input1, input2, input3, 52, temp00, temp01, temp02, temp03, temp10, temp11, temp12, temp13, temp0) ROUND_SIMD(words0, words1, words2, words3, input0, input1, input2, input3, 53, temp00, temp01, temp02, temp03, temp10, temp11, temp12, temp13, temp0)
-    ROUND_SIMD(words0, words1, words2, words3, input0, input1, input2, input3, 54, temp00, temp01, temp02, temp03, temp10, temp11, temp12, temp13, temp0) ROUND_SIMD(words0, words1, words2, words3, input0, input1, input2, input3, 55, temp00, temp01, temp02, temp03, temp10, temp11, temp12, temp13, temp0)
-    ROUND_SIMD(words0, words1, words2, words3, input0, input1, input2, input3, 56, temp00, temp01, temp02, temp03, temp10, temp11, temp12, temp13, temp0) ROUND_SIMD(words0, words1, words2, words3, input0, input1, input2, input3, 57, temp00, temp01, temp02, temp03, temp10, temp11, temp12, temp13, temp0)
-    ROUND_SIMD(words0, words1, words2, words3, input0, input1, input2, input3, 58, temp00, temp01, temp02, temp03, temp10, temp11, temp12, temp13, temp0) ROUND_SIMD(words0, words1, words2, words3, input0, input1, input2, input3, 59, temp00, temp01, temp02, temp03, temp10, temp11, temp12, temp13, temp0)
-    ROUND_SIMD(words0, words1, words2, words3, input0, input1, input2, input3, 60, temp00, temp01, temp02, temp03, temp10, temp11, temp12, temp13, temp0) ROUND_SIMD(words0, words1, words2, words3, input0, input1, input2, input3, 61, temp00, temp01, temp02, temp03, temp10, temp11, temp12, temp13, temp0)
-    ROUND_SIMD(words0, words1, words2, words3, input0, input1, input2, input3, 62, temp00, temp01, temp02, temp03, temp10, temp11, temp12, temp13, temp0) ROUND_SIMD(words0, words1, words2, words3, input0, input1, input2, input3, 63, temp00, temp01, temp02, temp03, temp10, temp11, temp12, temp13, temp0)
-    ADD2_SIMD(output0[0], output1[0], output2[0], output3[0], words0[0], words1[0], words2[0], words3[0]);
-    ADD2_SIMD(output0[1], output1[1], output2[1], output3[1], words0[1], words1[1], words2[1], words3[1]);
-    ADD2_SIMD(output0[2], output1[2], output2[2], output3[2], words0[2], words1[2], words2[2], words3[2]);
-    ADD2_SIMD(output0[3], output1[3], output2[3], output3[3], words0[3], words1[3], words2[3], words3[3]);
-    ADD2_SIMD(output0[4], output1[4], output2[4], output3[4], words0[4], words1[4], words2[4], words3[4]);
-    ADD2_SIMD(output0[5], output1[5], output2[5], output3[5], words0[5], words1[5], words2[5], words3[5]);
-    ADD2_SIMD(output0[6], output1[6], output2[6], output3[6], words0[6], words1[6], words2[6], words3[6]);
-    ADD2_SIMD(output0[7], output1[7], output2[7], output3[7], words0[7], words1[7], words2[7], words3[7]);
+    INPUT_16_SIMD(); INPUT_17_SIMD(); INPUT_18_21_SIMD(18); INPUT_18_21_SIMD(19);
+    INPUT_18_21_SIMD(20); INPUT_18_21_SIMD(21); INPUT_SIMD(22); INPUT_SIMD(23);
+    INPUT_24_SIMD(); INPUT_25_29_SIMD(25); INPUT_25_29_SIMD(26); INPUT_25_29_SIMD(27);
+    INPUT_25_29_SIMD(28); INPUT_25_29_SIMD(29); INPUT_30_SIMD(); INPUT_SIMD(31);
+    INPUT_SIMD(32); INPUT_SIMD(33); INPUT_SIMD(34); INPUT_SIMD(35);
+    INPUT_SIMD(36); INPUT_SIMD(37); INPUT_SIMD(38); INPUT_SIMD(39);
+    INPUT_SIMD(40); INPUT_SIMD(41); INPUT_SIMD(42); INPUT_SIMD(43);
+    INPUT_SIMD(44); INPUT_SIMD(45); INPUT_SIMD(46); INPUT_SIMD(47);
+    INPUT_SIMD(48); INPUT_SIMD(49); INPUT_SIMD(50); INPUT_SIMD(51);
+    INPUT_SIMD(52); INPUT_SIMD(53); INPUT_SIMD(54); INPUT_SIMD(55);
+    INPUT_SIMD(56); INPUT_SIMD(57); INPUT_SIMD(58); INPUT_SIMD(59);
+    INPUT_SIMD(60); INPUT_SIMD(61); INPUT_SIMD(62); INPUT_SIMD(63);
+    unsigned words[4][8];
+    outputs[0][0] = outputs[1][0] = outputs[2][0] = outputs[3][0] = words[0][0] = words[1][0] = words[2][0] = words[3][0] = 0x6A09E667;
+    outputs[0][1] = outputs[1][1] = outputs[2][1] = outputs[3][1] = words[0][1] = words[1][1] = words[2][1] = words[3][1] = 0xBB67AE85;
+    outputs[0][2] = outputs[1][2] = outputs[2][2] = outputs[3][2] = words[0][2] = words[1][2] = words[2][2] = words[3][2] = 0x3C6EF372;
+    outputs[0][3] = outputs[1][3] = outputs[2][3] = outputs[3][3] = words[0][3] = words[1][3] = words[2][3] = words[3][3] = 0xA54FF53A;
+    outputs[0][4] = outputs[1][4] = outputs[2][4] = outputs[3][4] = words[0][4] = words[1][4] = words[2][4] = words[3][4] = 0x510E527F;
+    outputs[0][5] = outputs[1][5] = outputs[2][5] = outputs[3][5] = words[0][5] = words[1][5] = words[2][5] = words[3][5] = 0x9B05688C;
+    outputs[0][6] = outputs[1][6] = outputs[2][6] = outputs[3][6] = words[0][6] = words[1][6] = words[2][6] = words[3][6] = 0x1F83D9AB;
+    outputs[0][7] = outputs[1][7] = outputs[2][7] = outputs[3][7] = words[0][7] = words[1][7] = words[2][7] = words[3][7] = 0x5BE0CD19;
+    ROUND_SIMD(0); ROUND_SIMD(1); ROUND_SIMD(2); ROUND_SIMD(3);
+    ROUND_SIMD(4); ROUND_SIMD(5); ROUND_SIMD(6); ROUND_SIMD(7);
+    ROUND_SIMD(8); ROUND_SIMD(9); ROUND_SIMD(10); ROUND_SIMD(11);
+    ROUND_SIMD(12); ROUND_SIMD(13); ROUND_SIMD(14); ROUND_SIMD(15);
+    ROUND_SIMD(16); ROUND_SIMD(17); ROUND_SIMD(18); ROUND_SIMD(19);
+    ROUND_SIMD(20); ROUND_SIMD(21); ROUND_SIMD(22); ROUND_SIMD(23);
+    ROUND_SIMD(24); ROUND_SIMD(25); ROUND_SIMD(26); ROUND_SIMD(27);
+    ROUND_SIMD(28); ROUND_SIMD(29); ROUND_SIMD(30); ROUND_SIMD(31);
+    ROUND_SIMD(32); ROUND_SIMD(33); ROUND_SIMD(34); ROUND_SIMD(35);
+    ROUND_SIMD(36); ROUND_SIMD(37); ROUND_SIMD(38); ROUND_SIMD(39);
+    ROUND_SIMD(40); ROUND_SIMD(41); ROUND_SIMD(42); ROUND_SIMD(43);
+    ROUND_SIMD(44); ROUND_SIMD(45); ROUND_SIMD(46); ROUND_SIMD(47);
+    ROUND_SIMD(48); ROUND_SIMD(49); ROUND_SIMD(50); ROUND_SIMD(51);
+    ROUND_SIMD(52); ROUND_SIMD(53); ROUND_SIMD(54); ROUND_SIMD(55);
+    ROUND_SIMD(56); ROUND_SIMD(57); ROUND_SIMD(58); ROUND_SIMD(59);
+    ROUND_SIMD(60); ROUND_SIMD(61); ROUND_SIMD(62); ROUND_SIMD(63);
+    ADD_SIMD(outputs[0][0], outputs[0][1], outputs[0][2], outputs[0][3], words[0][0], words[0][1], words[0][2], words[0][3]); ADD_SIMD(outputs[0][4], outputs[0][5], outputs[0][6], outputs[0][7], words[0][4], words[0][5], words[0][6], words[0][7]);
+    ADD_SIMD(outputs[1][0], outputs[1][1], outputs[1][2], outputs[1][3], words[1][0], words[1][1], words[1][2], words[1][3]); ADD_SIMD(outputs[1][4], outputs[1][5], outputs[1][6], outputs[1][7], words[1][4], words[1][5], words[1][6], words[1][7]);
+    ADD_SIMD(outputs[2][0], outputs[2][1], outputs[2][2], outputs[2][3], words[2][0], words[2][1], words[2][2], words[2][3]); ADD_SIMD(outputs[2][4], outputs[2][5], outputs[2][6], outputs[2][7], words[2][4], words[2][5], words[2][6], words[2][7]);
+    ADD_SIMD(outputs[3][0], outputs[3][1], outputs[3][2], outputs[3][3], words[3][0], words[3][1], words[3][2], words[3][3]); ADD_SIMD(outputs[3][4], outputs[3][5], outputs[3][6], outputs[3][7], words[3][4], words[3][5], words[3][6], words[3][7]);
 }
 */

@@ -10,7 +10,7 @@ struct Timer
 	
 	Timer();
 	unsigned long long stop(int iterations);
-	unsigned long long stop();
+	double stop();
 };
 
 bool check(unsigned char* array1, unsigned char* array2, int length);

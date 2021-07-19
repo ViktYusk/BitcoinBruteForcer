@@ -6,7 +6,7 @@ using namespace std;
 
 #ifdef DEBUG
 // TODO: выбрать больший ключ
-const unsigned Point::ADDRESS0 = 0xE8A7A92B; // 2BA9A7E8EB1134F8F8B7703A8B183F722C840371
+const unsigned Point::ADDRESS0 = 0xE8A7A92B; // 0xA7525A280001AD5A 2BA9A7E8EB1134F8F8B7703A8B183F722C840371
 #else
 const unsigned Point::ADDRESS0 = 0x3D13E43E; // 3EE4133D991F52FDF6A25C9834E0745AC74248A4
 #endif
@@ -194,7 +194,7 @@ void Point::compress(unsigned* output)
      */
 }
 
-void Point::group(Point* points)
+void Point::group(Point* points) // TODO: реализовать прямо в main, без повторного прохода по массиву
 {
 #ifdef COUNT_TEST
     groupCounter++;

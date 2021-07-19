@@ -207,12 +207,13 @@ int Key::compareExtended(const Key& key)
 	return 0;
 }
 
+// TODO: возможно, оптимизировать с помощью SIMD
 bool Key::add(const Key& key)
 {
 #ifdef COUNT_TEST
     addCounter++;
 #endif
-	unsigned long long carry = 0; // TODO: возможно, распараллелить с помощью SIMD
+	unsigned long long carry = 0;
 	ADD_BLOCKS("ADDS", blocks[0], key.blocks[0]);
 	ADD_BLOCKS("ADCS", blocks[1], key.blocks[1]);
 	ADD_BLOCKS("ADCS", blocks[2], key.blocks[2]);
@@ -221,6 +222,7 @@ bool Key::add(const Key& key)
 	return carry;
 }
 
+// TODO: возможно, оптимизировать с помощью SIMD
 bool Key::addExtended(const Key& key)
 {
 #ifdef COUNT_TEST
@@ -239,12 +241,12 @@ bool Key::addExtended(const Key& key)
 	return carry;
 }
 
+// TODO: возможно, оптимизировать с помощью SIMD
 bool Key::subtract(const Key& key)
 {
 #ifdef COUNT_TEST
     subtractCounter++;
 #endif
-
     unsigned long long carry = 0;
 	SUBTRACT_BLOCKS("SUBS", blocks[0], key.blocks[0]);
 	SUBTRACT_BLOCKS("SBCS", blocks[1], key.blocks[1]);
@@ -254,24 +256,28 @@ bool Key::subtract(const Key& key)
 	return carry;
 }
 
-// TODO: можно ли использовать SIMD-регистры (128-битные) для более быстрого умножения?
+// TODO: возможно, оптимизировать с помощью SIMD
 void Key::multiply(const Key& key)
 {
 #ifdef COUNT_TEST
     multiplyCounter++;
 #endif
-    unsigned long long tempLow;
-    unsigned long long tempHigh;
-    __asm("MOV %[r2], #0\n\t MOV %[r3], #0\n\t MOV %[r4], #0\n\t MOV %[r5], #0\n\t MOV %[r6], #0\n\t MOV %[r7], #0\n\t"
-          "MUL %[r0], %[a0], %[b0]\n\t UMULH %[r1], %[a0], %[b0]\n\t"
-          MULTIPLY_BLOCKS("1", "0", "1", "2", "3") MULTIPLY_BLOCKS("0", "1", "1", "2", "3")
-          MULTIPLY_BLOCKS("2", "0", "2", "3", "4") MULTIPLY_BLOCKS("1", "1", "2", "3", "4") MULTIPLY_BLOCKS("0", "2", "2", "3", "4")
-          MULTIPLY_BLOCKS("3", "0", "3", "4", "5") MULTIPLY_BLOCKS("2", "1", "3", "4", "5") MULTIPLY_BLOCKS("1", "2", "3", "4", "5") MULTIPLY_BLOCKS("0", "3", "3", "4", "5")
-          MULTIPLY_BLOCKS("3", "1", "4", "5", "6") MULTIPLY_BLOCKS("2", "2", "4", "5", "6") MULTIPLY_BLOCKS("1", "3", "4", "5", "6")
-          MULTIPLY_BLOCKS("3", "2", "5", "6", "7") MULTIPLY_BLOCKS("2", "3", "5", "6", "7")
-          "MUL %[t_l], %[a3], %[b3]\n\t UMULH %[t_h], %[a3], %[b3]\n\t ADDS %[r6], %[r6], %[t_l]\n\t ADC %[r7], %[r7], xzr\n\t ADD %[r7], %[r7], %[t_h]"
-          : [t_l] "+r" (tempLow), [t_h] "+r" (tempHigh), [r0] "+r" (blocks[0]), [r1] "+r" (blocks[1]), [r2] "+r" (blocks[2]), [r3] "+r" (blocks[3]), [r4] "+r" (blocks[4]), [r5] "+r" (blocks[5]), [r6] "+r" (blocks[6]), [r7] "+r" (blocks[7])
-          : [a0] "r" (blocks[0]), [a1] "r" (blocks[1]), [a2] "r" (blocks[2]), [a3] "r" (blocks[3]), [b0] "r" (key.blocks[0]), [b1] "r" (key.blocks[1]), [b2] "r" (key.blocks[2]), [b3] "r" (key.blocks[3]));
+    __asm(
+        "MUL %[r0], %[a0], %[b0]\n\t UMULH %[r1], %[a0], %[b0]\n\t MUL x11, %[a1], %[b0]\n\t UMULH %[r2], %[a1], %[b0]\n\t MUL x12, %[a2], %[b0]\n\t UMULH %[r3], %[a2], %[b0]\n\t MUL x13, %[a3], %[b0]\n\t UMULH %[r4], %[a3], %[b0]\n\t"
+        "ADDS %[r1], %[r1], x11\n\t ADCS %[r2], %[r2], x12\n\t ADCS %[r3], %[r3], x13\n\t ADC %[r4], %[r4], xzr\n\t"
+        "MUL x0, %[a0], %[b1]\n\t UMULH x1, %[a0], %[b1]\n\t MUL x11, %[a1], %[b1]\n\t UMULH x2, %[a1], %[b1]\n\t MUL x12, %[a2], %[b1]\n\t UMULH x3, %[a2], %[b1]\n\t MUL x13, %[a3], %[b1]\n\t UMULH x4, %[a3], %[b1]\n\t"
+        "ADDS x1, x1, x11\n\t ADCS x2, x2, x12\n\t ADCS x3, x3, x13\n\t ADC x4, x4, xzr\n\t"
+        "ADDS %[r1], %[r1], x0\n\t ADCS %[r2], %[r2], x1\n\t ADCS %[r3], %[r3], x2\n\t ADCS %[r4], %[r4], x3\n\t ADC %[r5], x4, xzr\n\t"
+        "MUL x0, %[a0], %[b2]\n\t UMULH x1, %[a0], %[b2]\n\t MUL x11, %[a1], %[b2]\n\t UMULH x2, %[a1], %[b2]\n\t MUL x12, %[a2], %[b2]\n\t UMULH x3, %[a2], %[b2]\n\t MUL x13, %[a3], %[b2]\n\t UMULH x4, %[a3], %[b2]\n\t"
+        "ADDS x1, x1, x11\n\t ADCS x2, x2, x12\n\t ADCS x3, x3, x13\n\t ADC x4, x4, xzr\n\t"
+        "ADDS %[r2], %[r2], x0\n\t ADCS %[r3], %[r3], x1\n\t ADCS %[r4], %[r4], x2\n\t ADCS %[r5], %[r5], x3\n\t ADC %[r6], x4, xzr\n\t"
+        "MUL x0, %[a0], %[b3]\n\t UMULH x1, %[a0], %[b3]\n\t MUL x11, %[a1], %[b3]\n\t UMULH x2, %[a1], %[b3]\n\t MUL x12, %[a2], %[b3]\n\t UMULH x3, %[a2], %[b3]\n\t MUL x13, %[a3], %[b3]\n\t UMULH x4, %[a3], %[b3]\n\t"
+        "ADDS x1, x1, x11\n\t ADCS x2, x2, x12\n\t ADCS x3, x3, x13\n\t ADC x4, x4, xzr\n\t"
+        "ADDS %[r3], %[r3], x0\n\t ADCS %[r4], %[r4], x1\n\t ADCS %[r5], %[r5], x2\n\t ADCS %[r6], %[r6], x3\n\t ADC %[r7], x4, xzr"
+        : [r0] "+r" (blocks[0]), [r1] "+r" (blocks[1]), [r2] "+r" (blocks[2]), [r3] "+r" (blocks[3]), [r4] "+r" (blocks[4]), [r5] "+r" (blocks[5]), [r6] "+r" (blocks[6]), [r7] "+r" (blocks[7])
+        : [a0] "r" (blocks[0]), [a1] "r" (blocks[1]), [a2] "r" (blocks[2]), [a3] "r" (blocks[3]), [b0] "r" (key.blocks[0]), [b1] "r" (key.blocks[1]), [b2] "r" (key.blocks[2]), [b3] "r" (key.blocks[3])
+        : "x0", "x1", "x2", "x3", "x4", "x11", "x12", "x13"
+    );
 }
 
 void Key::multiplyByR2()
@@ -279,54 +285,16 @@ void Key::multiplyByR2()
 #ifdef COUNT_TEST
     multiplyByR2Counter++;
 #endif
-    unsigned long long tempLow;
-    unsigned long long tempHigh;
-    unsigned long long zero;
-    __asm("MOV %[r2], #0\n\t MOV %[r3], #0\n\t MOV %[r4], #0\n\t MOV %[r5], #0\n\t MOV %[r6], #0\n\t MOV %[r7], #0\n\t"
-          "MUL %[r0], %[a0], %[b0]\n\t UMULH %[r1], %[a0], %[b0]\n\t"
-          MULTIPLY_BLOCKS("1", "0", "1", "2", "3") "ADDS %[r1], %[r1], %[a0]\n\t ADCS %[r2], %[r2], xzr\n\t ADC %[r3], %[r3], xzr\n\t"
-          MULTIPLY_BLOCKS("2", "0", "2", "3", "4") "ADDS %[r2], %[r2], %[a1]\n\t ADCS %[r3], %[r3], xzr\n\t ADC %[r4], %[r4], xzr\n\t"
-          MULTIPLY_BLOCKS("3", "0", "3", "4", "5") "ADDS %[r3], %[r3], %[a2]\n\t ADCS %[r4], %[r4], xzr\n\t ADC %[r5], %[r5], xzr\n\t"
-          "ADDS %[r4], %[r4], %[a3]\n\t ADC %[r5], %[r5], xzr"
-    : [t_l] "+r" (tempLow), [t_h] "+r" (tempHigh), [z] "+r" (zero), [r0] "+r" (blocks[0]), [r1] "+r" (blocks[1]), [r2] "+r" (blocks[2]), [r3] "+r" (blocks[3]), [r4] "+r" (blocks[4]), [r5] "+r" (blocks[5]), [r6] "+r" (blocks[6]), [r7] "+r" (blocks[7])
-    : [a0] "r" (blocks[0]), [a1] "r" (blocks[1]), [a2] "r" (blocks[2]), [a3] "r" (blocks[3]), [b0] "r" (R2.blocks[0]));
-
+    __asm(
+        "MUL %[r0], %[a0], %[b0]\n\t UMULH %[r1], %[a0], %[b0]\n\t MUL x11, %[a1], %[b0]\n\t UMULH %[r2], %[a1], %[b0]\n\t MUL x12, %[a2], %[b0]\n\t UMULH %[r3], %[a2], %[b0]\n\t MUL x13, %[a3], %[b0]\n\t UMULH %[r4], %[a3], %[b0]\n\t"
+        "ADDS %[r1], %[r1], x11\n\t ADCS %[r2], %[r2], x12\n\t ADCS %[r3], %[r3], x13\n\t ADC %[r4], %[r4], xzr\n\t"
+        "ADDS %[r1], %[r1], %[a0]\n\t ADCS %[r2], %[r2], %[a1]\n\t ADCS %[r3], %[r3], %[a2]\n\t ADCS %[r4], %[r4], %[a3]\n\t ADC %[r5], xzr, xzr"
+        : [r0] "+r" (blocks[0]), [r1] "+r" (blocks[1]), [r2] "+r" (blocks[2]), [r3] "+r" (blocks[3]), [r4] "+r" (blocks[4]), [r5] "+r" (blocks[5])
+        : [a0] "r" (blocks[0]), [a1] "r" (blocks[1]), [a2] "r" (blocks[2]), [a3] "r" (blocks[3]), [b0] "r" (R2.blocks[0])
+        : "x11", "x12", "x13"
+    );
+    blocks[6] = blocks[7] = 0;
 }
-/*
-void Key::multiplyByR2(const unsigned block)
-{
-
-	unsigned results[16] = { 0x00000000 };
-	unsigned tempLow;
-	unsigned tempHigh;
-	__asm("MULTIPLY_BLOCKS %[r0], %[r1], %[a0], %[b0]"
-		: [r0] "=r" (results[0]), [r1] "=r" (results[1]) 
-		: [a0] "r" (blocks[0]), [b0] "r" (block));
-	__asm("MULTIPLY_BLOCKS %[t_l], %[t_h], %[a1], %[b0]\n\t ADDS %[r1], %[r1], %[t_l]\n\t ADC %[r2], %[r2], $0\n\t ADD %[r2], %[r2], %[t_h]"
-		: [r1] "+r" (results[1]), [r2] "+r" (results[2]), [t_l] "+&r" (tempLow), [t_h] "+&r" (tempHigh) 
-		: [a1] "r" (blocks[1]), [b0] "r" (block));
-	__asm("MULTIPLY_BLOCKS %[t_l], %[t_h], %[a2], %[b0]\n\t ADDS %[r2], %[r2], %[t_l]\n\t ADC %[r3], %[r3], $0\n\t ADD %[r3], %[r3], %[t_h]"
-		: [r2] "+r" (results[2]), [r3] "+r" (results[3]), [t_l] "+&r" (tempLow), [t_h] "+&r" (tempHigh) 
-		: [a2] "r" (blocks[2]), [b0] "r" (block));
-	__asm("MULTIPLY_BLOCKS %[t_l], %[t_h], %[a3], %[b0]\n\t ADDS %[r3], %[r3], %[t_l]\n\t ADC %[r4], %[r4], $0\n\t ADD %[r4], %[r4], %[t_h]"
-		: [r3] "+r" (results[3]), [r4] "+r" (results[4]), [t_l] "+&r" (tempLow), [t_h] "+&r" (tempHigh) 
-		: [a3] "r" (blocks[3]), [b0] "r" (block));
-	__asm("MULTIPLY_BLOCKS %[t_l], %[t_h], %[a4], %[b0]\n\t ADDS %[r4], %[r4], %[t_l]\n\t ADC %[r5], %[r5], $0\n\t ADD %[r5], %[r5], %[t_h]"
-		: [r4] "+r" (results[4]), [r5] "+r" (results[5]), [t_l] "+&r" (tempLow), [t_h] "+&r" (tempHigh) 
-		: [a4] "r" (blocks[4]), [b0] "r" (block));
-	__asm("MULTIPLY_BLOCKS %[t_l], %[t_h], %[a5], %[b0]\n\t ADDS %[r5], %[r5], %[t_l]\n\t ADC %[r6], %[r6], $0\n\t ADD %[r6], %[r6], %[t_h]"
-		: [r5] "+r" (results[5]), [r6] "+r" (results[6]), [t_l] "+&r" (tempLow), [t_h] "+&r" (tempHigh) 
-		: [a5] "r" (blocks[5]), [b0] "r" (block));
-	__asm("MULTIPLY_BLOCKS %[t_l], %[t_h], %[a6], %[b0]\n\t ADDS %[r6], %[r6], %[t_l]\n\t ADC %[r7], %[r7], $0\n\t ADD %[r7], %[r7], %[t_h]"
-		: [r6] "+r" (results[6]), [r7] "+r" (results[7]), [t_l] "+&r" (tempLow), [t_h] "+&r" (tempHigh) 
-		: [a6] "r" (blocks[6]), [b0] "r" (block));
-	__asm("MULTIPLY_BLOCKS %[t_l], %[t_h], %[a7], %[b0]\n\t ADDS %[r7], %[r7], %[t_l]\n\t ADC %[r8], %[r8], $0\n\t ADD %[r8], %[r8], %[t_h]"
-		: [r7] "+r" (results[7]), [r8] "+r" (results[8]), [t_l] "+&r" (tempLow), [t_h] "+&r" (tempHigh) 
-		: [a7] "r" (blocks[7]), [b0] "r" (block));
-	memcpy(blocks, results, 64);
-
-}
- */
 
 void Key::reduce()
 {

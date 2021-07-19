@@ -7,7 +7,7 @@
 #include "sha256.h"
 #include "ripemd160.h"
 #include "test.h"
-// TODO: заменить все временные переменные в __asm на clobbered registers
+
 using namespace std;
 using namespace chrono;
 
@@ -59,24 +59,24 @@ void* thread(void* id)
 		for (int j = 0; j < SUBBLOCKS_NUMBER; j++)
 		{
 			Point points[Key::GROUP_SIZE + 1];
-			center.group(points);
-			for (int k = 0; k < Key::GROUP_SIZE; k++)
-			{
-				points[k].compress(compression);
-				unsigned sha256Output[8];
-				sha256(compression, sha256Output);
-				unsigned address[5];
-				ripemd160(sha256Output, address);
-				if (address[0] == Point::ADDRESS0)
-				{
-					mutex_.lock();
-					print(points[k].key); // 0xA7525A280001AD5A
-					cout << " ";
-					print(address);
-					cout << endl;
-					mutex_.unlock();
-				}
-			}
+            center.group(points);
+            for (auto& point : points)
+            {
+                point.compress(compression);
+                unsigned output[8];
+                sha256(compression, output);
+                unsigned address[5];
+                ripemd160(output, address);
+                if (address[0] == Point::ADDRESS0)
+                {
+                    mutex_.lock();
+                    print(point.key);
+                    cout << " ";
+                    print(address);
+                    cout << endl;
+                    mutex_.unlock();
+                }
+            }
 			center = points[Key::GROUP_SIZE];
 		}
 #ifdef DEBUG
@@ -86,7 +86,7 @@ void* thread(void* id)
 		for (int t = 0; t < THREADS_NUMBER; t++)
 			log &= threadsProgresses[t] >= threadsProgresses[*(int*)id];
 		if (log)
-            cout << "Progress = " << (i + 1) * 100.0 / PROGRESSES_NUMBER << " %   [" << (int)(GROUPS_PER_PROGRESS * Key::GROUP_SIZE / 1000 / timer.stop()) << " Kkeys/second]" << endl;
+            cout << "Progress = " << (i + 1) * 100.0 / PROGRESSES_NUMBER << " %   [" << (int)(GROUPS_PER_PROGRESS * Key::GROUP_SIZE / timer.stop() / 1000) << " Kkeys/second]" << endl;
 		mutex_.unlock();
 #endif
 	}
