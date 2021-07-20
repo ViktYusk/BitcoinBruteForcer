@@ -11,7 +11,7 @@
 
 struct Key
 {
-	static const int GROUP_BITS = 12; // TODO: ещё раз оптимизировать после остальных оптимизаций
+	static const int GROUP_BITS = 12;
 	static const int GROUP_SIZE = 1 << GROUP_BITS;
 	
 	static const Key ZERO;
@@ -43,7 +43,8 @@ struct Key
     static unsigned long long divideCounter;
     static unsigned long long invertCounter;
 #endif
-	
+
+
 	static void gcd(Key a, Key b, Key& x, Key& y);
 	static void invertGroup(Key* keys);
 
@@ -66,7 +67,7 @@ struct Key
 	bool add(const Key& key);
 	bool addExtended(const Key& key);
 	bool subtract(const Key& key);
-	void multiply(const Key& key);
+    void multiply(const Key& key, Key& result);
 	void multiplyByR2();
 	//void multiply(const unsigned block);
 	void reduce();

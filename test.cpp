@@ -7,7 +7,7 @@
 #include "test.h"
 
 
-#define TEST(name, result, iterations, call, time) if (result) { cout << "* Passed test: " << name; Timer timer; if (iterations) { for (int i = 0; i < iterations; i++) call; time = timer.stop(iterations); cout << " [" << time << " ns]"; } cout << endl; } else { cout << "* Failed test: " << name << endl; return -1; }
+#define TEST(name, result, iterations, call) if (result) { cout << "* Passed test: " << name; Timer timer; if (iterations) { for (int i = 0; i < iterations; i++) call; cout << " [" << timer.stop(iterations) << " ns]"; } cout << endl; } else { cout << "* Failed test: " << name << endl; return -1; }
 
 using namespace std;
 using namespace chrono;
@@ -63,12 +63,6 @@ long long test()
     unsigned long long h;
     __asm("UMULL %w[l], %w[h], %w[a], %w[b]" : [l] "=r" (l), [h] "=r" (h) : [a] "r" (a), [b] "r" (b));
      */
-    unsigned long long time;
-	unsigned long long sha256Time;
-	unsigned long long ripemd160Time;
-	unsigned long long checkTime;
-	unsigned long long compressTime;
-	unsigned long long groupTime;
     cout << "TESTING:" << endl;
     {
         unsigned inputs[4][64] =
@@ -92,7 +86,7 @@ long long test()
             sha256(inputs[i], testOutputs[i]);
 		    result &= check(testOutputs[i], outputs[i], 8);
         }
-		TEST("sha256", result, 1000000, sha256(inputs[0], testOutputs[0]), sha256Time)
+		TEST("sha256", result, 1000000, sha256(inputs[0], testOutputs[0]))
 		//sha256Time /= 4;
 	}
 	{
@@ -113,7 +107,7 @@ long long test()
 			testInput[6] = 0x04050607;
 			testInput[7] = 0x08090A0B;
 		}
-		TEST("ripemd160", check(testOutput, output, 5), 1000000, ripemd160(testInput, testOutput), ripemd160Time)
+		TEST("ripemd160", check(testOutput, output, 5), 1000000, ripemd160(testInput, testOutput))
 	}
 	{
 		unsigned long long blocks[4] = {0x59F2815B16F81798, 0x029BFCDB2DCE28D9, 0x55A06295CE870B07, 0x79BE667EF9DCBBAC};
@@ -121,7 +115,7 @@ long long test()
 		bool result = true;
 		for (int b = 0; b < 4; b++)
 			result &= key.blocks[b] == blocks[b];
-		TEST("Key(4 * unsigned long long)", result, 0, Key(blocks[0], blocks[1], blocks[2], blocks[3]), time)
+		TEST("Key(4 * unsigned long long)", result, 0, Key(blocks[0], blocks[1], blocks[2], blocks[3]))
 	}
 	{
 		unsigned long long blocks[8] = {0x59F2815B16F81798, 0x029BFCDB2DCE28D9, 0x55A06295CE870B07, 0x79BE667EF9DCBBAC, 0x9C47D08FFB10D4B8, 0xFD17B448A6855419, 0x5DA4FBFC0E1108A8, 0x483ADA7726A3C465 };
@@ -129,25 +123,25 @@ long long test()
 		bool result = true;
 		for (int b = 0; b < 8; b++)
 			result &= key.blocks[b] == blocks[b];
-		TEST("Key(8 * unsigned long long)", result, 0, Key(blocks[0], blocks[1], blocks[2], blocks[3], blocks[4], blocks[5], blocks[6], blocks[7]), time)
+		TEST("Key(8 * unsigned long long)", result, 0, Key(blocks[0], blocks[1], blocks[2], blocks[3], blocks[4], blocks[5], blocks[6], blocks[7]))
 	}
     {
         Key key1(0x59F2815B16F81798, 0x029BFCDB2DCE28D9, 0x55A06295CE870B07, 0x79BE667EF9DCBBAC);
         Key key2(0x9C47D08FFB10D4B8, 0xFD17B448A6855419, 0x5DA4FBFC0E1108A8, 0x483ADA7726A3C465);
         Key key3(0x9C47D08FFB10D4B8, 0xFD17B448A6855419, 0x5DA4FBFC0E1108A8, 0x483ADA7726A3C465);
-        TEST("Key::compare", key1.compare(key2) > 0 && key2.compare(key1) < 0 && key2.compare(key3) == 0, 1000000, key2.compare(key3), time)
+        TEST("Key::compare", key1.compare(key2) > 0 && key2.compare(key1) < 0 && key2.compare(key3) == 0, 1000000, key2.compare(key3))
     }
     {
         Key key1(0x9C47D08FFB10D4B8, 0xFD17B448A6855419, 0x5DA4FBFC0E1108A8, 0x483ADA7726A3C465, 0x59F2815B16F81798, 0x029BFCDB2DCE28D9, 0x55A06295CE870B07, 0x79BE667EF9DCBBAC);
         Key key2(0x59F2815B16F81798, 0x029BFCDB2DCE28D9, 0x55A06295CE870B07, 0x79BE667EF9DCBBAC, 0x9C47D08FFB10D4B8, 0xFD17B448A6855419, 0x5DA4FBFC0E1108A8, 0x483ADA7726A3C465);
         Key key3(0x59F2815B16F81798, 0x029BFCDB2DCE28D9, 0x55A06295CE870B07, 0x79BE667EF9DCBBAC, 0x9C47D08FFB10D4B8, 0xFD17B448A6855419, 0x5DA4FBFC0E1108A8, 0x483ADA7726A3C465);
-        TEST("Key::compareExtended", key1.compareExtended(key2) > 0 && key2.compareExtended(key1) < 0 && key2.compareExtended(key3) == 0, 0, key2.compareExtended(key3), time)
+        TEST("Key::compareExtended", key1.compareExtended(key2) > 0 && key2.compareExtended(key1) < 0 && key2.compareExtended(key3) == 0, 0, key2.compareExtended(key3))
     }
     {
         Key key1(0x59F2815B16F81798, 0x029BFCDB2DCE28D9, 0x55A06295CE870B07, 0x79BE667EF9DCBBAC, 0x9C47D08FFB10D4B8, 0xFD17B448A6855419, 0x5DA4FBFC0E1108A8, 0x483ADA7726A3C465);
         Key key2(0x9C47D08FFB10D4B8, 0xFD17B448A6855419, 0x5DA4FBFC0E1108A8, 0x483ADA7726A3C465, 0x59F2815B16F81798, 0x029BFCDB2DCE28D9, 0x55A06295CE870B07, 0x79BE667EF9DCBBAC);
         Key key3(0x9C47D08FFB10D4B8, 0xFD17B448A6855419, 0x5DA4FBFC0E1108A8, 0x483ADA7726A3C465, 0x59F2815B16F81798, 0x029BFCDB2DCE28D9, 0x55A06295CE870B07, 0x79BE667EF9DCBBAC);
-        TEST("Key::operator==", !(key1 == key2) && !(key2 == key1) && key2 == key3, 1000000, key2 == key3, time)
+        TEST("Key::operator==", !(key1 == key2) && !(key2 == key1) && key2 == key3, 1000000, key2 == key3)
     }
     {
         Key key1(0x59F2815B16F81798, 0x029BFCDB2DCE28D9, 0x55A06295CE870B07, 0x79BE667EF9DCBBAC);
@@ -156,7 +150,7 @@ long long test()
         int iterations = 10000000;
         for (int i = 0; i < iterations; i++)
             key1.add(key2);
-        TEST("Key::add", key1 == key3, iterations, key1.add(key2), time)
+        TEST("Key::add", key1 == key3, iterations, key1.add(key2))
     }
     {
         Key key1(0x9C47D08FFB10D4B8, 0xFD17B448A6855419, 0x5DA4FBFC0E1108A8, 0x483ADA7726A3C465, 0x59F2815B16F81798, 0x029BFCDB2DCE28D9, 0x55A06295CE870B07, 0x79BE667EF9DCBBAC);
@@ -165,7 +159,7 @@ long long test()
         int iterations = 10000000;
         for (int i = 0; i < iterations; i++)
             key1.addExtended(key2);
-        TEST("Key::addExtended", key1.compareExtended(key3) == 0, iterations, key1.addExtended(key2), time)
+        TEST("Key::addExtended", key1.compareExtended(key3) == 0, iterations, key1.addExtended(key2))
     }
     {
         Key key1(0x59F2815B16F81798, 0x029BFCDB2DCE28D9, 0x55A06295CE870B07, 0x79BE667EF9DCBBAC);
@@ -174,7 +168,7 @@ long long test()
         int iterations = 10000000;
         for (int i = 0; i < iterations; i++)
             key1.subtract(key2);
-        TEST("Key::subtract", key1 == key3, iterations, key1.subtract(key2), time)
+        TEST("Key::subtract", key1 == key3, iterations, key1.subtract(key2))
     }
 	/*
 	{
@@ -196,7 +190,7 @@ long long test()
 		int iterations = 10000000;
 		for (int i = 0; i < iterations; i++)
 			key1 += key2;
-		TEST("Key::operator+=", key1 == key3 && key4 == key6, 0, key1 += key2, time)
+		TEST("Key::operator+=", key1 == key3 && key4 == key6, 0, key1 += key2)
 	}
 	{
 		Key key1(0x59F2815B16F81798, 0x029BFCDB2DCE28D9, 0x55A06295CE870B07, 0x79BE667EF9DCBBAC);
@@ -205,30 +199,30 @@ long long test()
 		int iterations = 10000000;
 		for (int i = 0; i < iterations; i++)
 			key1 -= key2;
-		TEST("Key::operator-=", key1 == key3, iterations, key1 -= key2, time)
+		TEST("Key::operator-=", key1 == key3, iterations, key1 -= key2)
 	}
 	{
 		Key key1(0x59F2815B16F81798, 0x029BFCDB2DCE28D9, 0x55A06295CE870B07, 0x79BE667EF9DCBBAC);
 		Key key2(0x9C47D08FFB10D4B9, 0xFD17B448A6855419, 0x5DA4FBFC0E1108A8, 0x483ADA7726A3C465);
 		Key key3(0xCB7E46648E52ECD8, 0x7F8A35359E58E71D, 0xC4717BD6F876BC58, 0xA31070A04A66455C, 0x61167D213C1F060D, 0x55B1DC22E97AF112, 0x319CA3EED777A46F, 0x225989DBBC349B6F);
 		Key key4(0xDBEBF0133A2D2798, 0x352388C741DA4DE2, 0x47028045AEE1BC71, 0xA3A91A2749B03DA2, 0x2A640C92C21C9C1C, 0xDAD1BD6CA1C22F43, 0xAC8BDA2A53B2E97A, 0x17B0ED2BC3D07BB8);
-		key1.multiply(key2);
+		key1.multiply(key2, key1);
 		bool result1 = key1.compareExtended(key3) == 0;
 		int iterations = 999999;
 		for (int i = 0; i < iterations; i++)
-			key1.multiply(key2);
+			key1.multiply(key2, key1);
 		bool result2 = key1.compareExtended(key4) == 0;
-		TEST("Key::multiply", result1 && result2, iterations, key1.multiply(key2), time)
+		TEST("Key::multiply", result1 && result2, iterations, key1.multiply(key2, key1))
 	}
     {
         Key key1(0x59F2815B16F81798, 0x029BFCDB2DCE28D9, 0x55A06295CE870B07, 0x79BE667EF9DCBBAC);
         Key key2(0x59F2815B16F81798, 0x029BFCDB2DCE28D9, 0x55A06295CE870B07, 0x79BE667EF9DCBBAC);
         int iterations = 1000000;
         for (int i = 0; i < iterations; i++)
-           key1.multiply(Key::R2);
+           key1.multiply(Key::R2, key1);
         for (int i = 0; i < iterations; i++)
             key2.multiplyByR2();
-        TEST("Key::multiplyByR2()", key1.compareExtended(key2) == 0, iterations, key2.multiplyByR2(), time)
+        TEST("Key::multiplyByR2()", key1.compareExtended(key2) == 0, iterations, key2.multiplyByR2())
     }
     /*
     {
@@ -241,7 +235,7 @@ long long test()
            key1.multiply(block);
            answer.multiply(key2);
         }
-        TEST("Key::multiply(unsigned)", key1.compareExtended(answer) == 0, 1000000, key1.multiply(block), time)
+        TEST("Key::multiply(unsigned)", key1.compareExtended(answer) == 0, 1000000, key1.multiply(block))
     }
      */
     {
@@ -256,7 +250,7 @@ long long test()
             key1.blocks[6] = key1.blocks[2];
             key1.blocks[7] = key1.blocks[3];
         }
-        TEST("Key::reduce", key1 == key2, iterations, key1.reduce(), time)
+        TEST("Key::reduce", key1 == key2, iterations, key1.reduce())
     }
     {
         Key key1(0x59F2815B16F81798, 0x029BFCDB2DCE28D9, 0x55A06295CE870B07, 0x79BE667EF9DCBBAC);
@@ -265,7 +259,7 @@ long long test()
         int iterations = 100000;
         for (int i = 0; i < iterations; i++)
             key1 *= key2;
-        TEST("Key::operator*=", key1 == key3, iterations, key1 *= key2, time)
+        TEST("Key::operator*=", key1 == key3, iterations, key1 *= key2)
     }
     {
         Key key1(0x59F2815B16F81798, 0x029BFCDB2DCE28D9, 0x55A06295CE870B07, 0x79BE667EF9DCBBAC);
@@ -274,7 +268,7 @@ long long test()
         for (int p = 0; p < 256; p++)
             if (key1.getBit(p) != bits[p] - '0')
                 result = false;
-        TEST("Key::getBit", result, 1000000, key1.getBit(126), time)
+        TEST("Key::getBit", result, 1000000, key1.getBit(126))
     }
     {
         Key key1 = Key::ZERO;
@@ -284,7 +278,7 @@ long long test()
             if (bits[p] - '0')
             key1.setBit(p);
         bool result = key1 == key2;
-        TEST("Key::setBit", result, 1000000, key1.setBit(126), time)
+        TEST("Key::setBit", result, 1000000, key1.setBit(126))
     }
 	/*
 	{
@@ -302,7 +296,7 @@ long long test()
 		int iterations = 1000000;
 		for (int i = 0; i < iterations; i++)
 			key1.shiftLeft();
-		TEST("Key::shiftLeft", result, iterations, key1.shiftLeft(), time)
+		TEST("Key::shiftLeft", result, iterations, key1.shiftLeft())
 	}
 	*/
 	/*
@@ -321,7 +315,7 @@ long long test()
 		int iterations = 1000000;
 		for (int i = 0; i < iterations; i++)
 			key1.shiftLeft32();
-		TEST("Key::shiftLeft32", result, iterations, key1.shiftLeft32(), time)
+		TEST("Key::shiftLeft32", result, iterations, key1.shiftLeft32())
 	}
 	*/
     {
@@ -335,7 +329,7 @@ long long test()
                     result = false;
             key1.rightShift();
         }
-        TEST("Key::rightShift", result, 1000000, key1.rightShift(), time)
+        TEST("Key::rightShift", result, 1000000, key1.rightShift())
     }
     {
         char bits[257] = "0001100111101000000111110110100011011010100000010100111110011010100110110001010001110011101101001101101100111111110110010100000011100000110100001110000101110011101010010100011000000101101010100011010111011101001110111001111101111110011001100111110110011110";
@@ -351,7 +345,7 @@ long long test()
                 break;
         }
         Key key1(0x59F2815B16F81798, 0x029BFCDB2DCE28D9, 0x55A06295CE870B07, 0x79BE667EF9DCBBAC);
-        TEST("Key::operator<<=", result, 1000000, key1 <<= 3, time)
+        TEST("Key::operator<<=", result, 1000000, key1 <<= 3)
     }
     {
         Key dividend1(0x59F2815B16F81798, 0x029BFCDB2DCE28D9, 0x55A06295CE870B07, 0x79BE667EF9DCBBAC);
@@ -370,7 +364,7 @@ long long test()
         Key remainder2(0x4C1AFD48D20FCCFF, 0xFAC80649A463AE4D, 0x54BF3AD462F1E9F1, 0x0C8333020C4688A7);
         dividend2.divide(divisor2, quotient_2);
         bool result2 = divisor2 == divisorCopy2 && dividend2 == remainder2 && quotient_2 == quotient2;
-        TEST("Key::divide", result1 && result2, 10000, dividend1.divide(divisor1, quotient_1), time)
+        TEST("Key::divide", result1 && result2, 10000, dividend1.divide(divisor1, quotient_1))
     }
     {
         Key a1(0x0000000000000003, 0x0000000000000000, 0x0000000000000000, 0x0000000000000000);
@@ -389,7 +383,7 @@ long long test()
         Key y_2;
         Key::gcd(a2, b2, x_2, y_2);
         bool result2 = x_2 == x2 && y_2 == y2;
-        TEST("Key::gcd", result1 && result2, 100, Key::gcd(a2, b2, x_2, y_2), time)
+        TEST("Key::gcd", result1 && result2, 100, Key::gcd(a2, b2, x_2, y_2))
     }
     {
         Key key1(0x59F2815B16F81798, 0x029BFCDB2DCE28D9, 0x55A06295CE870B07, 0x79BE667EF9DCBBAC);
@@ -400,7 +394,7 @@ long long test()
         result &= key == key2;
         key.invert();
         result &= key == key1;
-        TEST("Key::invert", result, 100, key.invert(), time)
+        TEST("Key::invert", result, 100, key.invert())
     }
     {
         Key inputs1[Key::GROUP_SIZE / 2 + 1];
@@ -420,78 +414,81 @@ long long test()
             inputs1[k].invert();
             result &= inputs1[k] == inputs2[k];
         }
-        TEST("Key::invertGroup", result, 1, Key::invertGroup(inputs2), time)
+        TEST("Key::invertGroup", result, 10, Key::invertGroup(inputs2))
     }
     {
-        unsigned long long key = 1;
+        //unsigned long long key = 1;
         Key x(0x59F2815B16F81798, 0x029BFCDB2DCE28D9, 0x55A06295CE870B07, 0x79BE667EF9DCBBAC);
         Key y(0x9C47D08FFB10D4B8, 0xFD17B448A6855419, 0x5DA4FBFC0E1108A8, 0x483ADA7726A3C465);
-        Point point(key, x, y);
-        TEST("Point(unsigned long long, Key, Key)", point.key == key && point.x == x && point.y == y, 0, Point(key, x, y), time)
+        Point point(x, y);
+        TEST("Point(unsigned long long, Key, Key)", point.x == x && point.y == y, 0, Point(x, y))
     }
     {
-        Point point1 = Point(1, Key(0x59F2815B16F81798, 0x029BFCDB2DCE28D9, 0x55A06295CE870B07, 0x79BE667EF9DCBBAC), Key(0x9C47D08FFB10D4B8, 0xFD17B448A6855419, 0x5DA4FBFC0E1108A8, 0x483ADA7726A3C465));
+        Point point1 = Point(/*1, */Key(0x59F2815B16F81798, 0x029BFCDB2DCE28D9, 0x55A06295CE870B07, 0x79BE667EF9DCBBAC), Key(0x9C47D08FFB10D4B8, 0xFD17B448A6855419, 0x5DA4FBFC0E1108A8, 0x483ADA7726A3C465));
         Point point2 = point1;
-        Point point3 = Point(1025, Key(0x8304214FE4985A86, 0x640D2464C7FE0AC4, 0x066535A04DBF563A, 0x635CD7A05064D3BC), Key(0xE0453E27E9E3AE1F, 0xE8D5F047F3281A4C, 0x46735CFCAF9E2F30, 0x00E40265913E77F6));
-        TEST("Point::operator==", point1 == point2 && !(point1 == point3), 0, point1 == point2, time)
+        Point point3 = Point(/*1025, */Key(0x8304214FE4985A86, 0x640D2464C7FE0AC4, 0x066535A04DBF563A, 0x635CD7A05064D3BC), Key(0xE0453E27E9E3AE1F, 0xE8D5F047F3281A4C, 0x46735CFCAF9E2F30, 0x00E40265913E77F6));
+        TEST("Point::operator==", point1 == point2 && !(point1 == point3), 0, point1 == point2)
     }
     {
-        Point point1 = Point(1, Key(0x59F2815B16F81798, 0x029BFCDB2DCE28D9, 0x55A06295CE870B07, 0x79BE667EF9DCBBAC), Key(0x9C47D08FFB10D4B8, 0xFD17B448A6855419, 0x5DA4FBFC0E1108A8, 0x483ADA7726A3C465));
-        Point point2 = Point(0, Key(0x9C47D08FFB10D4B8, 0xFD17B448A6855419, 0x5DA4FBFC0E1108A8, 0x483ADA7726A3C465), Key(0x59F2815B16F81799, 0x029BFCDB2DCE28D9, 0x55A06295CE870B07, 0x79BE667EF9DCBBAC));
+        Point point1 = Point(/*1, */Key(0x59F2815B16F81798, 0x029BFCDB2DCE28D9, 0x55A06295CE870B07, 0x79BE667EF9DCBBAC), Key(0x9C47D08FFB10D4B8, 0xFD17B448A6855419, 0x5DA4FBFC0E1108A8, 0x483ADA7726A3C465));
+        Point point2 = Point(/*0, */Key(0x9C47D08FFB10D4B8, 0xFD17B448A6855419, 0x5DA4FBFC0E1108A8, 0x483ADA7726A3C465), Key(0x59F2815B16F81799, 0x029BFCDB2DCE28D9, 0x55A06295CE870B07, 0x79BE667EF9DCBBAC));
         unsigned compression1[9] = { 0x0279BE66, 0x7EF9DCBB, 0xAC55A062, 0x95CE870B, 0x07029BFC, 0xDB2DCE28, 0xD959F281, 0x5B16F817, 0x98800000 };
         unsigned compression2[9] = { 0x03483ADA, 0x7726A3C4, 0x655DA4FB, 0xFC0E1108, 0xA8FD17B4, 0x48A68554, 0x199C47D0, 0x8FFB10D4, 0xB8800000 };
         unsigned testCompression1[9];
         unsigned testCompression2[9];
         point1.compress(testCompression1);
         point2.compress(testCompression2);
-        TEST("Point::compress", check(testCompression1, compression1, 9) && check(testCompression2, compression2, 9), 1000000, point1.compress(testCompression1), compressTime)
+        TEST("Point::compress", check(testCompression1, compression1, 9) && check(testCompression2, compression2, 9), 1000000, point1.compress(testCompression1))
     }
     {
-        Point point1 = Point(1024, Key(0xD5B901B2E285131F, 0xAAEC6ECDC813B088, 0xD664A18F66AD6240, 0x241FEBB8E23CBD77), Key(0xABB3E66F2750026D, 0xCD50FD0FBD0CB5AF, 0xD6C420BD13981DF8, 0x513378D9FF94F8D3));
-        Point point2 = Point(1025, Key(0x8304214FE4985A86, 0x640D2464C7FE0AC4, 0x066535A04DBF563A, 0x635CD7A05064D3BC), Key(0xE0453E27E9E3AE1F, 0xE8D5F047F3281A4C, 0x46735CFCAF9E2F30, 0x00E40265913E77F6));
+        Point point1 = Point(/*1024, */Key(0xD5B901B2E285131F, 0xAAEC6ECDC813B088, 0xD664A18F66AD6240, 0x241FEBB8E23CBD77), Key(0xABB3E66F2750026D, 0xCD50FD0FBD0CB5AF, 0xD6C420BD13981DF8, 0x513378D9FF94F8D3));
+        Point point2 = Point(/*1025, */Key(0x8304214FE4985A86, 0x640D2464C7FE0AC4, 0x066535A04DBF563A, 0x635CD7A05064D3BC), Key(0xE0453E27E9E3AE1F, 0xE8D5F047F3281A4C, 0x46735CFCAF9E2F30, 0x00E40265913E77F6));
         Key inverse = Point::G.x;
         inverse -= point1.x;
         inverse.invert();
-        point1.add(Point::G, inverse);
-        TEST("Point::add", point1 == point2, 10000, point1.add(Point::G, inverse), time)
+        Point temp;
+        point1.add(Point::G, inverse, temp);
+        TEST("Point::add", temp == point2, 10000, point1.add(Point::G, inverse, temp))
     }
     {
-        Point point1 = Point(1025, Key(0x8304214FE4985A86, 0x640D2464C7FE0AC4, 0x066535A04DBF563A, 0x635CD7A05064D3BC), Key(0xE0453E27E9E3AE1F, 0xE8D5F047F3281A4C, 0x46735CFCAF9E2F30, 0x00E40265913E77F6));
-        Point point2 = Point(1024, Key(0xD5B901B2E285131F, 0xAAEC6ECDC813B088, 0xD664A18F66AD6240, 0x241FEBB8E23CBD77), Key(0xABB3E66F2750026D, 0xCD50FD0FBD0CB5AF, 0xD6C420BD13981DF8, 0x513378D9FF94F8D3));
+        Point point1 = Point(/*1025, */Key(0x8304214FE4985A86, 0x640D2464C7FE0AC4, 0x066535A04DBF563A, 0x635CD7A05064D3BC), Key(0xE0453E27E9E3AE1F, 0xE8D5F047F3281A4C, 0x46735CFCAF9E2F30, 0x00E40265913E77F6));
+        Point point2 = Point(/*1024, */Key(0xD5B901B2E285131F, 0xAAEC6ECDC813B088, 0xD664A18F66AD6240, 0x241FEBB8E23CBD77), Key(0xABB3E66F2750026D, 0xCD50FD0FBD0CB5AF, 0xD6C420BD13981DF8, 0x513378D9FF94F8D3));
         Key inverse = Point::G.x;
         inverse -= point1.x;
         inverse.invert();
-        point1.subtract(Point::G, inverse);
-        TEST("Point::subtract", point1 == point2, 10000, point1.subtract(Point::G, inverse), time)
+        Point temp;
+        point1.subtract(Point::G, inverse, temp);
+        TEST("Point::subtract", temp == point2, 10000, point1.subtract(Point::G, inverse, temp))
     }
     {
-        Point point1 = Point(1024, Key(0xD5B901B2E285131F, 0xAAEC6ECDC813B088, 0xD664A18F66AD6240, 0x241FEBB8E23CBD77), Key(0xABB3E66F2750026D, 0xCD50FD0FBD0CB5AF, 0xD6C420BD13981DF8, 0x513378D9FF94F8D3));
-        Point point2 = Point(1025, Key(0x8304214FE4985A86, 0x640D2464C7FE0AC4, 0x066535A04DBF563A, 0x635CD7A05064D3BC), Key(0xE0453E27E9E3AE1F, 0xE8D5F047F3281A4C, 0x46735CFCAF9E2F30, 0x00E40265913E77F6));
+        Point point1 = Point(/*1024, */Key(0xD5B901B2E285131F, 0xAAEC6ECDC813B088, 0xD664A18F66AD6240, 0x241FEBB8E23CBD77), Key(0xABB3E66F2750026D, 0xCD50FD0FBD0CB5AF, 0xD6C420BD13981DF8, 0x513378D9FF94F8D3));
+        Point point2 = Point(/*1025, */Key(0x8304214FE4985A86, 0x640D2464C7FE0AC4, 0x066535A04DBF563A, 0x635CD7A05064D3BC), Key(0xE0453E27E9E3AE1F, 0xE8D5F047F3281A4C, 0x46735CFCAF9E2F30, 0x00E40265913E77F6));
         point1 += Point::G;
-        TEST("Point::operator+=", point1 == point2, 0, point1 += Point::G, time)
+        TEST("Point::operator+=", point1 == point2, 0, point1 += Point::G)
     }
     {
         Point point1 = Point::G;
-        Point point2 = Point(1024, Key(0xD5B901B2E285131F, 0xAAEC6ECDC813B088, 0xD664A18F66AD6240, 0x241FEBB8E23CBD77), Key(0xABB3E66F2750026D, 0xCD50FD0FBD0CB5AF, 0xD6C420BD13981DF8, 0x513378D9FF94F8D3));
+        Point point2 = Point(/*1024, */Key(0xD5B901B2E285131F, 0xAAEC6ECDC813B088, 0xD664A18F66AD6240, 0x241FEBB8E23CBD77), Key(0xABB3E66F2750026D, 0xCD50FD0FBD0CB5AF, 0xD6C420BD13981DF8, 0x513378D9FF94F8D3));
         for (int i = 0; i < 10; i++)
             point1.double_();
-        TEST("Point::double_", point1 == point2, 0, point1.double_(), time)
+        TEST("Point::double_", point1 == point2, 0, point1.double_())
     }
     {
-        Point gPower46 = Point(70368744177664, Key(0x87EDA8BAB4E218DA, 0x0F4C85F152686050, 0xE68F17D8FF41C259, 0x13D1FFC481509BEE), Key(0xE0DB419DDB191C19, 0xA4AD01206D5BD127, 0xCECB9337B1B758BD, 0x6008391FA991961D));
-        Point gMultiple81 = Point(82, Key(0x9E594FECC13B59DF, 0xBE89B397B454C8B5, 0x0A37C28E771C6CB4, 0xE35BC6BB1B05B213), Key(0xC128B757CDD92ACB, 0x358EB4E66A331B76, 0x9C4D07D56A198DEC, 0x21868874CC2CB5A7));
+        Point gPower46 = Point(/*70368744177664, */Key(0x87EDA8BAB4E218DA, 0x0F4C85F152686050, 0xE68F17D8FF41C259, 0x13D1FFC481509BEE), Key(0xE0DB419DDB191C19, 0xA4AD01206D5BD127, 0xCECB9337B1B758BD, 0x6008391FA991961D));
+        Point gMultiple81 = Point(/*82, */Key(0x9E594FECC13B59DF, 0xBE89B397B454C8B5, 0x0A37C28E771C6CB4, 0xE35BC6BB1B05B213), Key(0xC128B757CDD92ACB, 0x358EB4E66A331B76, 0x9C4D07D56A198DEC, 0x21868874CC2CB5A7));
         Point::initialize();
-        TEST("Point::initialize", Point::gPowers[46] == gPower46 && Point::gMultiples[81] == gMultiple81, 0, Point::initialize(), time)
+        TEST("Point::initialize", Point::gPowers[46] == gPower46 && Point::gMultiples[81] == gMultiple81, 0, Point::initialize())
     }
     {
         unsigned long long key = 0xA6CB2E5A34934C75;
         Point point1(key);
         Point point2;
-        point2.key = key;
+        //point2.key = key;
         point2.x = Key(0x16B16A4B7CDD836E, 0x9C54414F3FFD46BD, 0x22E04C5F74753CF8, 0xB74CDBB3469D900F);
         point2.y = Key(0x3DB3590975F08733, 0x54299F35E9C79C77, 0x2107FFF206C80EF1, 0x6A952BA15E247C7C);
-        TEST("Point(Key)", point1 == point2, 0, point1 = Point(key), time)
+        TEST("Point(Key)", point1 == point2, 0, point1 = Point(key))
     }
+    /*
     {
         Point point = Point::G;
         for (int i = 0; i < 20; i++)
@@ -516,8 +513,7 @@ long long test()
         TEST("Point::group", result, 1, center.group(points), groupTime);
         groupTime /= Key::GROUP_SIZE;
     }
-    time = sha256Time + ripemd160Time + checkTime + compressTime + groupTime;
-    cout << "Estimated speed = " << (int)(4 * 1000000 / time) << " Kkeys/second for 4 threads" << endl;
+     */
 #ifdef COUNT_TEST
     Sha256Counter::counter = 0;
     Ripemd160Counter::counter = 0;

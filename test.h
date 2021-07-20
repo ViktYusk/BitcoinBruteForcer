@@ -14,4 +14,5 @@ struct Timer
 };
 
 bool check(unsigned char* array1, unsigned char* array2, int length);
+int round(double number, int digits);
 long long test();

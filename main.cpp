@@ -11,16 +11,15 @@
 using namespace std;
 using namespace chrono;
 
-const int BLOCK_BITS    = 26;
+const int BLOCK_BITS    = 38; // 26
 const int THREAD_BITS   = 2;
-const int PROGRESS_BITS = 16;
+const int PROGRESS_BITS = 2; // 14
 const int SUBBLOCK_BITS = 63 - BLOCK_BITS - THREAD_BITS - PROGRESS_BITS - Key::GROUP_BITS;
-const unsigned long long THREADS_NUMBER    = 1ULL << THREAD_BITS;
-const unsigned long long PROGRESSES_NUMBER = 1ULL << PROGRESS_BITS;
-const unsigned long long SUBBLOCKS_NUMBER  = 1ULL << SUBBLOCK_BITS;
-const unsigned long long GROUPS_PER_PROGRESS = THREADS_NUMBER * SUBBLOCKS_NUMBER;
+const int THREADS_NUMBER    = 1 << THREAD_BITS;
+const int PROGRESSES_NUMBER = 1 << PROGRESS_BITS;
+const int SUBBLOCKS_NUMBER  = 1 << SUBBLOCK_BITS;
+const int GROUPS_PER_PROGRESS = THREADS_NUMBER * SUBBLOCKS_NUMBER;
 
-int code = 0;
 int block;
 int threadsProgresses[THREADS_NUMBER] = { 0 };
 mutex mutex_;
@@ -51,17 +50,29 @@ void print(unsigned* address)
 
 void* thread(void* id) 
 {
-	Point center(threadsPoints[*(int*)id]);
+    Point point;
+    Point center(threadsPoints[*(int*)id]);
 	unsigned compression[64];
 	memcpy(compression + 9, Point::COMPRESSION_ENDING, sizeof(Point::COMPRESSION_ENDING));
-	for (int i = 0; i < PROGRESSES_NUMBER; i++)
+	for (int p = 0; p < PROGRESSES_NUMBER; p++)
 	{
-		for (int j = 0; j < SUBBLOCKS_NUMBER; j++)
+	    for (int s = 0; s < SUBBLOCKS_NUMBER; s++)
 		{
-			Point points[Key::GROUP_SIZE + 1];
-            center.group(points);
-            for (auto& point : points)
+            Key inverses[Key::GROUP_SIZE / 2 + 1];
+            for (int i = 0; i <= Key::GROUP_SIZE / 2; i++)
             {
+                inverses[i] = Point::gMultiples[i].x;
+                inverses[i] -= center.x;
+            }
+            Key::invertGroup(inverses);
+            for (int i = 0; i < Key::GROUP_SIZE; i++)
+            {
+                if (i < Key::GROUP_SIZE / 2)
+                    center.subtract(Point::gMultiples[Key::GROUP_SIZE / 2 - 1 - i], inverses[Key::GROUP_SIZE / 2 - 1 - i], point);
+                else if (i > Key::GROUP_SIZE / 2)
+                    center.add(Point::gMultiples[i - (Key::GROUP_SIZE / 2 + 1)], inverses[i - (Key::GROUP_SIZE / 2 + 1)], point);
+                else
+                    point = center;
                 point.compress(compression);
                 unsigned output[8];
                 sha256(compression, output);
@@ -70,30 +81,30 @@ void* thread(void* id)
                 if (address[0] == Point::ADDRESS0)
                 {
                     mutex_.lock();
-                    print(point.key);
+                    print((((((((((1ULL << BLOCK_BITS) + block) << THREAD_BITS) + *(int*)id) << PROGRESS_BITS) + p) << SUBBLOCK_BITS) + s) << Key::GROUP_BITS) + i);
                     cout << " ";
                     print(address);
                     cout << endl;
                     mutex_.unlock();
                 }
             }
-			center = points[Key::GROUP_SIZE];
+			center.add(Point::gMultiples[Key::GROUP_SIZE / 2], inverses[Key::GROUP_SIZE / 2], point);
+            center = point;
 		}
 #ifdef DEBUG
 		mutex_.lock();
 		threadsProgresses[*(int*)id]++;
 		bool log = true;
-		for (int t = 0; t < THREADS_NUMBER; t++)
-			log &= threadsProgresses[t] >= threadsProgresses[*(int*)id];
+		for (int threadProgress : threadsProgresses)
+			log &= threadProgress >= threadsProgresses[*(int*)id];
 		if (log)
-            cout << "Progress = " << (i + 1) * 100.0 / PROGRESSES_NUMBER << " %   [" << (int)(GROUPS_PER_PROGRESS * Key::GROUP_SIZE / timer.stop() / 1000) << " Kkeys/second]" << endl;
+            cout << "Progress = " << (p + 1) * 100.0 / PROGRESSES_NUMBER << " %   [" << (int)(GROUPS_PER_PROGRESS * Key::GROUP_SIZE / timer.stop() / 1000) << " Kkeys/second]" << endl;
 		mutex_.unlock();
 #endif
 	}
-	if (!(center == threadsPoints[*(int*)id + 1])) // TODO: протестировать, что защита работает
+	if (!(center == threadsPoints[*(int*)id + 1]))
 	{
 		mutex_.lock();
-		code = -1;
 		cout << "Wrong finish point for thread # " << *(int*)id << endl;
 		mutex_.unlock();
 	}
@@ -118,7 +129,7 @@ int main(int argc, char* argv[])
 			return -1;
 		}
 	block = atoi(argv[1]);
-	if (block < 0 || block >= 1 << BLOCK_BITS)
+	if (block < 0 || block >= 1ULL << BLOCK_BITS)
 	{
 		cout << "Block is not in range" << endl;
 		return -1;
@@ -157,5 +168,5 @@ int main(int argc, char* argv[])
 			cout << "Error while joining thread" << endl;
 			return -1;
 		}
-	return code;
+	return 0;
 }

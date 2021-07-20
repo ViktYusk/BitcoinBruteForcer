@@ -4,7 +4,6 @@
 unsigned long long ripemd160Counter = 0;
 #endif
 
-// TODO: оптимизировать с учётом особенностей входных данных
 void ripemd160(unsigned* input, unsigned* output)
 {
 #ifdef COUNT_TEST

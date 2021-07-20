@@ -5,7 +5,6 @@
 using namespace std;
 
 #ifdef DEBUG
-// TODO: выбрать больший ключ
 const unsigned Point::ADDRESS0 = 0xE8A7A92B; // 0xA7525A280001AD5A 2BA9A7E8EB1134F8F8B7703A8B183F722C840371
 #else
 const unsigned Point::ADDRESS0 = 0x3D13E43E; // 3EE4133D991F52FDF6A25C9834E0745AC74248A4
@@ -13,7 +12,7 @@ const unsigned Point::ADDRESS0 = 0x3D13E43E; // 3EE4133D991F52FDF6A25C9834E0745A
 
 const unsigned Point::COMPRESSION_ENDING[7] = { 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000108 };
 
-const Point Point::G = Point(1, Key(0x59F2815B16F81798, 0x029BFCDB2DCE28D9, 0x55A06295CE870B07, 0x79BE667EF9DCBBAC), Key(0x9C47D08FFB10D4B8, 0xFD17B448A6855419, 0x5DA4FBFC0E1108A8, 0x483ADA7726A3C465));  // (55066263022277343669578718895168534326250603453777594175500187360389116729240, 32670510020758816978083085130507043184471273380659243275938904335757337482424)
+const Point Point::G = Point(Key(0x59F2815B16F81798, 0x029BFCDB2DCE28D9, 0x55A06295CE870B07, 0x79BE667EF9DCBBAC), Key(0x9C47D08FFB10D4B8, 0xFD17B448A6855419, 0x5DA4FBFC0E1108A8, 0x483ADA7726A3C465));  // (55066263022277343669578718895168534326250603453777594175500187360389116729240, 32670510020758816978083085130507043184471273380659243275938904335757337482424)
 
 Point Point::gPowers[64] = {};
 Point Point::gMultiples[Key::GROUP_SIZE / 2 + 1] = {};
@@ -52,7 +51,7 @@ Point::Point()
 
 Point::Point(unsigned long long key)
 {
-	this->key = key;
+	//this->key = key;
 	int bit = 0;
 	while (!(key & 1ULL << bit))
 		bit++;
@@ -62,59 +61,55 @@ Point::Point(unsigned long long key)
 			operator+=(gPowers[bit]);
 }
 
-Point::Point(unsigned long long key, Key x, Key y)
+Point::Point(Key x, Key y)
 {
-	this->key = key;
+	//this->key = key;
 	this->x = x;
 	this->y = y;
 }
 
-void Point::add(const Point& point, Key inverse)
+void Point::add(const Point& point, Key& inverse, Point& result)
 {
 #ifdef COUNT_TEST
     addCounter++;
 #endif
-	key += point.key;
-	Key slope = point.y;
-	slope -= y;
-	slope *= inverse;
-	Key result_x = slope;
-	result_x *= slope;
-	result_x -= x;
-	result_x -= point.x;
-	Key result_y = x;
-	result_y -= result_x;
-	result_y *= slope;
-	result_y -= y;
-	x = result_x;
-	y = result_y;
+    //key += point.key;
+    Key slope = point.y;
+    slope -= y;
+    slope *= inverse;
+    result.x = slope;
+    result.x *= slope;
+    result.x -= x;
+    result.x -= point.x;
+    result.y = x;
+    result.y -= result.x;
+    result.y *= slope;
+    result.y -= y;
 }
 
-void Point::subtract(const Point& point, Key inverse)
+void Point::subtract(const Point& point, Key& inverse, Point& result)
 {
 #ifdef COUNT_TEST
     subtractCounter++;
 #endif
-	key -= point.key;
-	Key slope = Key::P;
-	slope.subtract(point.y);
-	slope -= y;
-	slope *= inverse;
-	Key result_x = slope;
-	result_x *= slope;
-	result_x -= x;
-	result_x -= point.x;
-	Key result_y = x;
-	result_y -= result_x;
-	result_y *= slope;
-	result_y -= y;
-	x = result_x;
-	y = result_y;
+    //key -= point.key;
+    Key slope = Key::P;
+    slope.subtract(point.y);
+    slope -= y;
+    slope *= inverse;
+    result.x = slope;
+    result.x *= slope;
+    result.x -= x;
+    result.x -= point.x;
+    result.y = x;
+    result.y -= result.x;
+    result.y *= slope;
+    result.y -= y;
 }
 
 bool Point::operator==(const Point& point)
 {
-	return key == point.key && x == point.x && y == point.y;
+	return x == point.x && y == point.y;
 }
 
 void Point::operator+=(const Point& point)
@@ -122,7 +117,9 @@ void Point::operator+=(const Point& point)
 	Key inverse = point.x;
 	inverse -= x;
 	inverse.invert();
-	add(point, inverse);
+	Point temp;
+	add(point, inverse, temp);
+	*this = temp;
 	/*
 	key += point.key;
 	Key dx = point.x;
@@ -153,7 +150,7 @@ void Point::operator++()
 
 void Point::double_()
 {
-	key += key;
+	//key += key;
 	Key slope = y;
 	slope += y;
 	slope.invert();
@@ -194,12 +191,12 @@ void Point::compress(unsigned* output)
      */
 }
 
-void Point::group(Point* points) // TODO: реализовать прямо в main, без повторного прохода по массиву
+/*
+void Point::group(Point* points)
 {
 #ifdef COUNT_TEST
     groupCounter++;
 #endif
-	points[Key::GROUP_SIZE / 2] = *this;
 	Key inverses[Key::GROUP_SIZE / 2 + 1];
 	for (int i = 0; i <= Key::GROUP_SIZE / 2; i++)
 	{
@@ -207,16 +204,29 @@ void Point::group(Point* points) // TODO: реализовать прямо в m
 		inverses[i] -= x;
 	}
 	Key::invertGroup(inverses);
-	for (int i = 0; i < Key::GROUP_SIZE / 2 - 1; i++)
+	for (int i = 0; i <= Key::GROUP_SIZE; i++)
+    {
+        points[i] = *this;
+	    if (i < Key::GROUP_SIZE / 2)
+            points[i].subtract(gMultiples[Key::GROUP_SIZE / 2 - 1 - i], inverses[Key::GROUP_SIZE / 2 - 1 - i]);
+	    else if (i == Key::GROUP_SIZE / 2);
+	    else if (i < Key::GROUP_SIZE)
+            points[i].add(gMultiples[i - (Key::GROUP_SIZE / 2 + 1)], inverses[i - (Key::GROUP_SIZE / 2 + 1)]);
+	    else
+            points[Key::GROUP_SIZE].add(gMultiples[Key::GROUP_SIZE / 2], inverses[Key::GROUP_SIZE / 2]);
+    }
+    for (int i = 0; i < Key::GROUP_SIZE / 2; i++)
+    {
+        points[i] = *this;
+        points[i].subtract(gMultiples[Key::GROUP_SIZE / 2 - 1 - i], inverses[Key::GROUP_SIZE / 2 - 1 - i]);
+    }
+    points[Key::GROUP_SIZE / 2] = *this;
+	for (int i = Key::GROUP_SIZE / 2 + 1; i < Key::GROUP_SIZE; i++)
 	{
-		points[Key::GROUP_SIZE / 2 + 1 + i] = *this;
-		points[Key::GROUP_SIZE / 2 + 1 + i].add(gMultiples[i], inverses[i]);
+		points[i] = *this;
+		points[i].add(gMultiples[i - (Key::GROUP_SIZE / 2 + 1)], inverses[i - (Key::GROUP_SIZE / 2 + 1)]);
 	}
 	points[Key::GROUP_SIZE] = *this;
 	points[Key::GROUP_SIZE].add(gMultiples[Key::GROUP_SIZE / 2], inverses[Key::GROUP_SIZE / 2]);
-	for (int i = 0; i < Key::GROUP_SIZE / 2; i++)
-	{
-		points[Key::GROUP_SIZE / 2 - 1 - i] = *this;
-		points[Key::GROUP_SIZE / 2 - 1 - i].subtract(gMultiples[i], inverses[i]);
-	}
 }
+*/
