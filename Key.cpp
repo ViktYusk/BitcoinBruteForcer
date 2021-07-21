@@ -160,7 +160,7 @@ void Key::operator*=(const Key& key)
 #ifdef COUNT_TEST
     operatorMultiplicationAssignmentCounter++;
 #endif
-    multiplyByR2();
+    multiplyByR2(*this);
 	reduce();
 	multiply(key, *this);
 	reduce();
@@ -276,7 +276,7 @@ void Key::multiply(const Key& key, Key& result)
     );
 }
 
-void Key::multiplyByR2()
+void Key::multiplyByR2(Key& result)
 {
 #ifdef COUNT_TEST
     multiplyByR2Counter++;
@@ -284,12 +284,12 @@ void Key::multiplyByR2()
     __asm(
         "MUL %[r0], %[a0], %[b0]\n\t UMULH %[r1], %[a0], %[b0]\n\t MUL x11, %[a1], %[b0]\n\t UMULH %[r2], %[a1], %[b0]\n\t MUL x12, %[a2], %[b0]\n\t UMULH %[r3], %[a2], %[b0]\n\t MUL x13, %[a3], %[b0]\n\t UMULH %[r4], %[a3], %[b0]\n\t"
         "ADDS %[r1], %[r1], x11\n\t ADCS %[r2], %[r2], x12\n\t ADCS %[r3], %[r3], x13\n\t ADC %[r4], %[r4], xzr\n\t"
-        "ADDS %[r1], %[r1], %[a0]\n\t ADCS %[r2], %[r2], %[a1]\n\t ADCS %[r3], %[r3], %[a2]\n\t ADCS %[r4], %[r4], %[a3]\n\t ADC %[r5], xzr, xzr"
-        : [r0] "+r" (blocks[0]), [r1] "+r" (blocks[1]), [r2] "+r" (blocks[2]), [r3] "+r" (blocks[3]), [r4] "+r" (blocks[4]), [r5] "+r" (blocks[5])
+        "ADDS %[r1], %[r1], %[a0]\n\t ADCS %[r2], %[r2], %[a1]\n\t ADCS %[r3], %[r3], %[a2]\n\t ADCS %[r4], %[r4], %[a3]\n\t ADC %[r5], xzr, xzr\n\t"
+        "MOV %[r6], #0\n\t MOV %[r7], #0"
+        : [r0] "+r" (result.blocks[0]), [r1] "+r" (result.blocks[1]), [r2] "+r" (result.blocks[2]), [r3] "+r" (result.blocks[3]), [r4] "+r" (result.blocks[4]), [r5] "+r" (result.blocks[5]), [r6] "=r" (result.blocks[6]), [r7] "=r" (result.blocks[7])
         : [a0] "r" (blocks[0]), [a1] "r" (blocks[1]), [a2] "r" (blocks[2]), [a3] "r" (blocks[3]), [b0] "r" (R2.blocks[0])
         : "x11", "x12", "x13"
     );
-    blocks[6] = blocks[7] = 0;
 }
 
 void Key::reduce()

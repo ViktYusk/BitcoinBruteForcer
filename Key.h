@@ -68,7 +68,7 @@ struct Key
 	bool addExtended(const Key& key);
 	bool subtract(const Key& key);
     void multiply(const Key& key, Key& result);
-	void multiplyByR2();
+	void multiplyByR2(Key& result);
 	//void multiply(const unsigned block);
 	void reduce();
 	bool getBit(int position);

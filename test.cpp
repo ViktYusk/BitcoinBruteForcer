@@ -219,10 +219,10 @@ long long test()
         Key key2(0x59F2815B16F81798, 0x029BFCDB2DCE28D9, 0x55A06295CE870B07, 0x79BE667EF9DCBBAC);
         int iterations = 1000000;
         for (int i = 0; i < iterations; i++)
-           key1.multiply(Key::R2, key1);
+            key1.multiply(Key::R2, key1);
         for (int i = 0; i < iterations; i++)
-            key2.multiplyByR2();
-        TEST("Key::multiplyByR2()", key1.compareExtended(key2) == 0, iterations, key2.multiplyByR2())
+            key2.multiplyByR2(key2);
+        TEST("Key::multiplyByR2()", key1.compareExtended(key2) == 0, iterations, key2.multiplyByR2(key2))
     }
     /*
     {

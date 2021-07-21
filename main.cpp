@@ -11,9 +11,9 @@
 using namespace std;
 using namespace chrono;
 
-const int BLOCK_BITS    = 38; // 26
+const int BLOCK_BITS    = 26;
 const int THREAD_BITS   = 2;
-const int PROGRESS_BITS = 2; // 14
+const int PROGRESS_BITS = 14;
 const int SUBBLOCK_BITS = 63 - BLOCK_BITS - THREAD_BITS - PROGRESS_BITS - Key::GROUP_BITS;
 const int THREADS_NUMBER    = 1 << THREAD_BITS;
 const int PROGRESSES_NUMBER = 1 << PROGRESS_BITS;
@@ -129,7 +129,7 @@ int main(int argc, char* argv[])
 			return -1;
 		}
 	block = atoi(argv[1]);
-	if (block < 0 || block >= 1ULL << BLOCK_BITS)
+	if (block < 0 || block >= 1 << BLOCK_BITS)
 	{
 		cout << "Block is not in range" << endl;
 		return -1;
