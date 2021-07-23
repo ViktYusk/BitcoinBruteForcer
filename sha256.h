@@ -155,9 +155,6 @@ ROUND(inputs[3], words[3], index)
 */
 
 extern const unsigned K[64];
-#ifdef COUNT_TEST
-extern unsigned long long sha256Counter;
-#endif
 
 void sha256(unsigned* input, unsigned* output);
 //void sha256(unsigned inputs[][64], unsigned outputs[][8]);

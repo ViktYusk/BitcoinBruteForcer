@@ -1,14 +1,7 @@
 #include "ripemd160.h"
 
-#ifdef COUNT_TEST
-unsigned long long ripemd160Counter = 0;
-#endif
-
 void ripemd160(unsigned* input, unsigned* output)
 {
-#ifdef COUNT_TEST
-ripemd160Counter++;
-#endif
     output[0] = 0x67452301;
     output[1] = 0xEFCDAB89;
     output[2] = 0x98BADCFE;

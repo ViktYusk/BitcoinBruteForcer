@@ -1,53 +1,40 @@
-#include <iostream>
-
 #include "Point.h"
 
-using namespace std;
-
 #ifdef DEBUG
-const unsigned Point::ADDRESS0 = 0xE8A7A92B; // 0xA7525A280001AD5A 2BA9A7E8EB1134F8F8B7703A8B183F722C840371
+const unsigned Point::ADDRESS0 = 0xE8A7A92B; // A7525A280001AD5A 2BA9A7E8EB1134F8F8B7703A8B183F722C840371
 #else
-const unsigned Point::ADDRESS0 = 0x3D13E43E; // 3EE4133D991F52FDF6A25C9834E0745AC74248A4
+const unsigned Point::ADDRESS0 = 0x3D13E43E; // ???????????????? 3EE4133D991F52FDF6A25C9834E0745AC74248A4
 #endif
 
 const unsigned Point::COMPRESSION_ENDING[7] = { 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000108 };
 
-const Point Point::G = Point(Key(0x59F2815B16F81798, 0x029BFCDB2DCE28D9, 0x55A06295CE870B07, 0x79BE667EF9DCBBAC), Key(0x9C47D08FFB10D4B8, 0xFD17B448A6855419, 0x5DA4FBFC0E1108A8, 0x483ADA7726A3C465));  // (55066263022277343669578718895168534326250603453777594175500187360389116729240, 32670510020758816978083085130507043184471273380659243275938904335757337482424)
+const Point Point::G = Point(Key(0x59F2815B16F81798, 0x029BFCDB2DCE28D9, 0x55A06295CE870B07, 0x79BE667EF9DCBBAC), Key(0x9C47D08FFB10D4B8, 0xFD17B448A6855419, 0x5DA4FBFC0E1108A8, 0x483ADA7726A3C465)); // (55066263022277343669578718895168534326250603453777594175500187360389116729240, 32670510020758816978083085130507043184471273380659243275938904335757337482424) NOLINT(cert-err58-cpp)
 
 Point Point::gPowers[64] = {};
 Point Point::gMultiples[Key::GROUP_SIZE / 2 + 1] = {};
 
-#ifdef COUNT_TEST
-unsigned long long Point::checkCounter = 0;
-unsigned long long Point::addCounter = 0;
-unsigned long long Point::subtractCounter = 0;
-unsigned long long Point::compressCounter = 0;
-unsigned long long Point::groupCounter = 0;
-#endif
-
 void Point::initialize()
 {
-	gPowers[0] = G;
+    gPowers[0] = G;
 	for (int i = 1; i < 64; i++)
 	{
 		gPowers[i] = gPowers[i - 1];
 		gPowers[i].double_();
 	}
-	gMultiples[0] = Point::G;
+	gMultiples[0] = G;
 	gMultiples[1] = gMultiples[0];
 	gMultiples[1].double_();
 	for (int i = 2; i < Key::GROUP_SIZE / 2; i++)
 	{
 		gMultiples[i] = gMultiples[i - 1];
-		gMultiples[i] += Point::G;
+		gMultiples[i] += G;
 	}
 	gMultiples[Key::GROUP_SIZE / 2] = gMultiples[Key::GROUP_SIZE / 2 - 1];
 	gMultiples[Key::GROUP_SIZE / 2].double_();
 }
 
 Point::Point()
-{
-}
+= default;
 
 Point::Point(unsigned long long key)
 {
@@ -68,11 +55,8 @@ Point::Point(Key x, Key y)
 	this->y = y;
 }
 
-void Point::add(const Point& point, Key& inverse, Point& result)
+void Point::add(const Point& point, Key& inverse, Point& result) const
 {
-#ifdef COUNT_TEST
-    addCounter++;
-#endif
     //key += point.key;
     Key slope = point.y;
     slope -= y;
@@ -87,11 +71,8 @@ void Point::add(const Point& point, Key& inverse, Point& result)
     result.y -= y;
 }
 
-void Point::subtract(const Point& point, Key& inverse, Point& result)
+void Point::subtract(const Point& point, Key& inverse, Point& result) const
 {
-#ifdef COUNT_TEST
-    subtractCounter++;
-#endif
     //key -= point.key;
     Key slope = Key::P;
     slope.subtract(point.y);
@@ -171,9 +152,6 @@ void Point::double_()
 
 void Point::compress(unsigned* output)
 {
-#ifdef COUNT_TEST
-    compressCounter++;
-#endif
 	output[0] = ((0x02 + (unsigned)y.blocks[0] % 2) << 24) + (unsigned)(x.blocks[3] >> 40);
 	output[1] = x.blocks[3] >> 8;
     output[2] = ((unsigned)x.blocks[3] << 24) + (unsigned)(x.blocks[2] >> 40);
@@ -194,9 +172,6 @@ void Point::compress(unsigned* output)
 /*
 void Point::group(Point* points)
 {
-#ifdef COUNT_TEST
-    groupCounter++;
-#endif
 	Key inverses[Key::GROUP_SIZE / 2 + 1];
 	for (int i = 0; i <= Key::GROUP_SIZE / 2; i++)
 	{

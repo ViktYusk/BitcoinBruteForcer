@@ -12,15 +12,8 @@ const unsigned K[64] =
     0x748F82EE, 0x78A5636F, 0x84C87814, 0x8CC70208, 0x90BEFFFA, 0xA4506CEB, 0xBEF9A3F7, 0xC67178F2
 };
 
-#ifdef COUNT_TEST
-unsigned long long sha256Counter = 0;
-#endif
-
 void sha256(unsigned input[], unsigned output[])
 {
-#ifdef COUNT_TEST
-    sha256Counter++;
-#endif
     INPUT_16(input); INPUT_17(input); INPUT_18_21(input, 18); INPUT_18_21(input, 19);
     INPUT_18_21(input, 20); INPUT_18_21(input, 21); INPUT(input, 22); INPUT(input, 23);
     INPUT_24(input); INPUT_25_29(input, 25); INPUT_25_29(input, 26); INPUT_25_29(input, 27);
@@ -66,9 +59,6 @@ void sha256(unsigned input[], unsigned output[])
 /*
 void sha256(unsigned inputs[][64], unsigned outputs[][8])
 {
-#ifdef COUNT_TEST
-sha256Counter++;
-#endif
     INPUT_16_SIMD(); INPUT_17_SIMD(); INPUT_18_21_SIMD(18); INPUT_18_21_SIMD(19);
     INPUT_18_21_SIMD(20); INPUT_18_21_SIMD(21); INPUT_SIMD(22); INPUT_SIMD(23);
     INPUT_24_SIMD(); INPUT_25_29_SIMD(25); INPUT_25_29_SIMD(26); INPUT_25_29_SIMD(27);

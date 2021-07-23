@@ -370,8 +370,4 @@ static void compress(uint32_t* MDbuf, uint32_t* X)
 
 #define REVERSE(input, output) *((unsigned char*)output + 3) = input; *((unsigned char*)output + 2) = input >> 8; *((unsigned char*)output + 1) = input >> 16; *(unsigned char*)output = input >> 24;
 
-#ifdef COUNT_TEST
-extern static unsigned long long ripemd160Counter;
-#endif
-
 void ripemd160(unsigned* input, unsigned* output);

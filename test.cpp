@@ -61,7 +61,7 @@ long long test()
     unsigned long long b = 0xFEDCBA9876543210;
     unsigned long long l;
     unsigned long long h;
-    __asm("UMULL %w[l], %w[h], %w[a], %w[b]" : [l] "=r" (l), [h] "=r" (h) : [a] "r" (a), [b] "r" (b));
+    __asm("UMULL %w[l], %w[h], %w[a], %w[b]" : [l] "=R" (l), [h] "=R" (h) : [a] "R" (a), [b] "R" (b));
      */
     cout << "TESTING:" << endl;
     {
@@ -514,74 +514,5 @@ long long test()
         groupTime /= Key::GROUP_SIZE;
     }
      */
-#ifdef COUNT_TEST
-    Sha256Counter::counter = 0;
-    Ripemd160Counter::counter = 0;
-    Key::gcdCounter = 0;
-    Key::invertGroupCounter = 0;
-    Key::operatorEqualToCounter = 0;
-    Key::operatorBitwiseLeftShiftAssignmentCounter = 0;
-    Key::operatorSubtractionAssignmentCounter = 0;
-    Key::operatorMultiplicationAssignmentCounter = 0;
-    Key::compareCounter = 0;
-    Key::addCounter = 0;
-    Key::addExtendedCounter = 0;
-    Key::subtractCounter = 0;
-    Key::multiplyCounter = 0;
-    Key::multiplyByR2Counter = 0;
-    Key::reduceCounter = 0;
-    Key::setBitCounter = 0;
-    Key::getBitCounter = 0;
-    Key::rightShiftCounter = 0;
-    Key::divideCounter = 0;
-    Key::invertCounter = 0;
-    Point::checkCounter = 0;
-    Point::addCounter = 0;
-    Point::subtractCounter = 0;
-    Point::compressCounter = 0;
-    Point::groupCounter = 0;
-    Point center(70368744177664, Key(0x87EDA8BAB4E218DA, 0x0F4C85F152686050, 0xE68F17D8FF41C259, 0x13D1FFC481509BEE), Key(0xE0DB419DDB191C19, 0xA4AD01206D5BD127, 0xCECB9337B1B758BD, 0x6008391FA991961D));
-    unsigned char compression[64];
-    memcpy(compression + 33, Point::COMPRESSION_ENDING, sizeof(Point::COMPRESSION_ENDING));
-    Point points[Key::GROUP_SIZE + 1];
-    center.group(points);
-    for (int k = 0; k < Key::GROUP_SIZE; k++)
-    {
-        points[k].compress(compression);
-        unsigned char sha256Output[32];
-        sha256(compression, sha256Output);
-        unsigned char address[20];
-        ripemd160(sha256Output, address);
-        if (Point::check(address))
-            cout << "Key found: " << points[k].key << endl;
-    }
-    center = points[Key::GROUP_SIZE];
-    cout << "COUNT_TEST:" << endl;
-    cout << "* sha256                      = " << (double)Sha256Counter::counter / Key::GROUP_SIZE << endl;
-    cout << "* ripemd160                   = " << (double)Ripemd160Counter::counter / Key::GROUP_SIZE << endl;
-    cout << "* Key::gcd                    = " << (double)Key::gcdCounter / Key::GROUP_SIZE << endl;
-    cout << "* Key::invertGroup            = " << (double)Key::invertGroupCounter / Key::GROUP_SIZE << endl;
-    cout << "* Key::operator==             = " << (double)Key::operatorEqualToCounter / Key::GROUP_SIZE << endl;
-    cout << "* Key::operator<<=            = " << (double)Key::operatorBitwiseLeftShiftAssignmentCounter / Key::GROUP_SIZE << endl;
-    cout << "* Key::operator-=             = " << (double)Key::operatorSubtractionAssignmentCounter / Key::GROUP_SIZE << endl;
-    cout << "* Key::operator*=             = " << (double)Key::operatorMultiplicationAssignmentCounter / Key::GROUP_SIZE << endl;
-    cout << "* Key::compare                = " << (double)Key::compareCounter / Key::GROUP_SIZE << endl;
-    cout << "* Key::add                    = " << (double)Key::gcdCounter / Key::GROUP_SIZE << endl;
-    cout << "* Key::addExtended            = " << (double)Key::addExtendedCounter / Key::GROUP_SIZE << endl;
-    cout << "* Key::subtract               = " << (double)Key::subtractCounter / Key::GROUP_SIZE << endl;
-    cout << "* Key::multiply               = " << (double)Key::multiplyCounter / Key::GROUP_SIZE << endl;
-    cout << "* Key::multiplyByR2           = " << (double)Key::multiplyByR2Counter / Key::GROUP_SIZE << endl;
-    cout << "* Key::reduce                 = " << (double)Key::reduceCounter / Key::GROUP_SIZE << endl;
-    cout << "* Key::setBit                 = " << (double)Key::setBitCounter / Key::GROUP_SIZE << endl;
-    cout << "* Key::getBit                 = " << (double)Key::getBitCounter / Key::GROUP_SIZE << endl;
-    cout << "* Key::rightShift             = " << (double)Key::rightShiftCounter / Key::GROUP_SIZE << endl;
-    cout << "* Key::divide                 = " << (double)Key::divideCounter / Key::GROUP_SIZE << endl;
-    cout << "* Key::invert                 = " << (double)Key::invertCounter / Key::GROUP_SIZE << endl;
-    cout << "* Point::check                = " << (double)Point::checkCounter / Key::GROUP_SIZE << endl;
-    cout << "* Point::add                  = " << (double)Point::addCounter / Key::GROUP_SIZE << endl;
-    cout << "* Point::subtract             = " << (double)Point::subtractCounter / Key::GROUP_SIZE << endl;
-    cout << "* Point::compress             = " << (double)Point::compressCounter / Key::GROUP_SIZE << endl;
-    cout << "* Point::group                = " << (double)Point::groupCounter / Key::GROUP_SIZE << endl;
-#endif
     return 0;
 }
