@@ -54,7 +54,7 @@ bool check(unsigned* array1, unsigned* array2, int length)
     return true;
 }
 
-long long test()
+int test()
 {
     /*
     unsigned long long a = 0x0123456789ABCDEF;
@@ -214,6 +214,17 @@ long long test()
 		bool result2 = key1.compareExtended(key4) == 0;
 		TEST("Key::multiply", result1 && result2, iterations, key1.multiply(key2, key1))
 	}
+    {
+        Key key1(0x59F2815B16F81798, 0x029BFCDB2DCE28D9, 0x55A06295CE870B07, 0x79BE667EF9DCBBAC);
+        Key key2(0x59F2815B16F81798, 0x029BFCDB2DCE28D9, 0x55A06295CE870B07, 0x79BE667EF9DCBBAC);
+        Key key3(0x9C47D08FFB10D4B8, 0xFD17B448A6855419, 0x5DA4FBFC0E1108A8, 0x483ADA7726A3C465);
+        int iterations = 1000000;
+        for (int i = 0; i < iterations; i++)
+            key1.multiply(key3, key1);
+        for (int i = 0; i < iterations; i++)
+            key2.multiplyReduced(key3, key2);
+        TEST("Key::multiplyReduced()", key1.compare(key2) == 0, iterations, key2.multiplyReduced(key3, key2))
+    }
     {
         Key key1(0x59F2815B16F81798, 0x029BFCDB2DCE28D9, 0x55A06295CE870B07, 0x79BE667EF9DCBBAC);
         Key key2(0x59F2815B16F81798, 0x029BFCDB2DCE28D9, 0x55A06295CE870B07, 0x79BE667EF9DCBBAC);

@@ -13,7 +13,7 @@ using namespace chrono;
 
 const int BLOCK_BITS    = 26;
 const int THREAD_BITS   = 2;
-const int PROGRESS_BITS = 14;
+const int PROGRESS_BITS = 12;
 const int SUBBLOCK_BITS = 63 - BLOCK_BITS - THREAD_BITS - PROGRESS_BITS - Key::GROUP_BITS;
 const int THREADS_NUMBER    = 1 << THREAD_BITS;
 const int PROGRESSES_NUMBER = 1 << PROGRESS_BITS;
@@ -114,14 +114,11 @@ void* thread(void* id)
 int main(int argc, char* argv[])
 {
 #ifdef DEBUG
-	if (test())
-		return -1;
+    if (test())
+        return -1;
 #endif
-	if (argc < 2)
-	{
-		cout << "No argument with block number" << endl;
-		return -1;
-	}
+    if (argc < 2)
+        return test();
 	for (int i = 0; argv[1][i] != 0; i++)
 		if (argv[1][i] < '0' || argv[1][i] > '9')
 		{

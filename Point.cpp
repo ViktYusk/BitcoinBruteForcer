@@ -1,8 +1,8 @@
 #include "Point.h"
 
 #ifdef DEBUG
-const unsigned Point::ADDRESS0 = 0xE8A7A92B; // A7525A280001AD5A 2BA9A7E8EB1134F8F8B7703A8B183F722C840371
-#else
+const unsigned Point::ADDRESS0 = 0xBD493DAA; // A7525A280011AD5A AA3D49BD1B968C1B2E2DD07157D6A9760EA94C1D
+#else // TODO: оставить только это, когда будет найден соответствующий похожий ключ
 const unsigned Point::ADDRESS0 = 0x3D13E43E; // ???????????????? 3EE4133D991F52FDF6A25C9834E0745AC74248A4
 #endif
 
