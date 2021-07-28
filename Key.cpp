@@ -172,37 +172,49 @@ int Key::compareExtended(const Key& key)
 bool Key::add(const Key& key)
 {
     unsigned long long carry;
-    ADD_BLOCKS("ADDS", blocks[0], key.blocks[0]);
-	ADD_BLOCKS("ADCS", blocks[1], key.blocks[1]);
-	ADD_BLOCKS("ADCS", blocks[2], key.blocks[2]);
-	ADD_BLOCKS("ADCS", blocks[3], key.blocks[3]);
-    __asm volatile("ADC %[c], xzr, xzr" : [c] "=r" (carry));
+    __asm(
+        "ADDS %[a0], %[a0], %[b0]\n\t"
+        "ADCS %[a1], %[a1], %[b1]\n\t"
+        "ADCS %[a2], %[a2], %[b2]\n\t"
+        "ADCS %[a3], %[a3], %[b3]\n\t"
+        "ADC %[c], xzr, xzr"
+        : [a0] "+r" (blocks[0]), [a1] "+r" (blocks[1]), [a2] "+r" (blocks[2]), [a3] "+r" (blocks[3]), [c] "=r" (carry)
+        : [b0] "r" (key.blocks[0]), [b1] "r" (key.blocks[1]), [b2] "r" (key.blocks[2]), [b3] "r" (key.blocks[3])
+    );
 	return carry;
 }
 
 bool Key::addExtended(const Key& key)
 {
     unsigned long long carry;
-	ADD_BLOCKS("ADDS", blocks[0], key.blocks[0]);
-	ADD_BLOCKS("ADCS", blocks[1], key.blocks[1]);
-	ADD_BLOCKS("ADCS", blocks[2], key.blocks[2]);
-	ADD_BLOCKS("ADCS", blocks[3], key.blocks[3]);
-	ADD_BLOCKS("ADCS", blocks[4], key.blocks[4]);
-	ADD_BLOCKS("ADCS", blocks[5], key.blocks[5]);
-	ADD_BLOCKS("ADCS", blocks[6], key.blocks[6]);
-	ADD_BLOCKS("ADCS", blocks[7], key.blocks[7]);
-    __asm volatile("ADC %[c], xzr, xzr" : [c] "=r" (carry));
+    __asm(
+        "ADDS %[a0], %[a0], %[b0]\n\t"
+        "ADCS %[a1], %[a1], %[b1]\n\t"
+        "ADCS %[a2], %[a2], %[b2]\n\t"
+        "ADCS %[a3], %[a3], %[b3]\n\t"
+        "ADCS %[a4], %[a4], %[b4]\n\t"
+        "ADCS %[a5], %[a5], %[b5]\n\t"
+        "ADCS %[a6], %[a6], %[b6]\n\t"
+        "ADCS %[a7], %[a7], %[b7]\n\t"
+        "ADC %[c], xzr, xzr"
+        : [a0] "+r" (blocks[0]), [a1] "+r" (blocks[1]), [a2] "+r" (blocks[2]), [a3] "+r" (blocks[3]), [a4] "+r" (blocks[4]), [a5] "+r" (blocks[5]), [a6] "+r" (blocks[6]), [a7] "+r" (blocks[7]), [c] "=r" (carry)
+        : [b0] "r" (key.blocks[0]), [b1] "r" (key.blocks[1]), [b2] "r" (key.blocks[2]), [b3] "r" (key.blocks[3]), [b4] "r" (key.blocks[4]), [b5] "r" (key.blocks[5]), [b6] "r" (key.blocks[6]), [b7] "r" (key.blocks[7])
+    );
 	return carry;
 }
 
 bool Key::subtract(const Key& key)
 {
     unsigned long long carry;
-	SUBTRACT_BLOCKS("SUBS", blocks[0], key.blocks[0]);
-	SUBTRACT_BLOCKS("SBCS", blocks[1], key.blocks[1]);
-	SUBTRACT_BLOCKS("SBCS", blocks[2], key.blocks[2]);
-	SUBTRACT_BLOCKS("SBCS", blocks[3], key.blocks[3]);
-    __asm volatile("SBC %[c], xzr, xzr" : [c] "=r" (carry));
+    __asm(
+        "SUBS %[a0], %[a0], %[b0]\n\t"
+        "SBCS %[a1], %[a1], %[b1]\n\t"
+        "SBCS %[a2], %[a2], %[b2]\n\t"
+        "SBCS %[a3], %[a3], %[b3]\n\t"
+        "SBC %[c], xzr, xzr"
+        : [a0] "+r" (blocks[0]), [a1] "+r" (blocks[1]), [a2] "+r" (blocks[2]), [a3] "+r" (blocks[3]), [a4] "+r" (blocks[4]), [a5] "+r" (blocks[5]), [a6] "+r" (blocks[6]), [a7] "+r" (blocks[7]), [c] "=r" (carry)
+        : [b0] "r" (key.blocks[0]), [b1] "r" (key.blocks[1]), [b2] "r" (key.blocks[2]), [b3] "r" (key.blocks[3]), [b4] "r" (key.blocks[4]), [b5] "r" (key.blocks[5]), [b6] "r" (key.blocks[6]), [b7] "r" (key.blocks[7])
+    );
 	return carry;
 }
 
@@ -221,7 +233,7 @@ void Key::multiply(const Key& key, Key& result)
     "MUL x0, %[a0], %[b3]\n\t UMULH x1, %[a0], %[b3]\n\t MUL x11, %[a1], %[b3]\n\t UMULH x2, %[a1], %[b3]\n\t MUL x12, %[a2], %[b3]\n\t UMULH x3, %[a2], %[b3]\n\t MUL x13, %[a3], %[b3]\n\t UMULH x4, %[a3], %[b3]\n\t"
     "ADDS x1, x1, x11\n\t ADCS x2, x2, x12\n\t ADCS x3, x3, x13\n\t ADC x4, x4, xzr\n\t"
     "ADDS %[r3], %[r3], x0\n\t ADCS %[r4], %[r4], x1\n\t ADCS %[r5], %[r5], x2\n\t ADCS %[r6], %[r6], x3\n\t ADC %[r7], x4, xzr"
-    : [r0] "+r" (result.blocks[0]), [r1] "+r" (result.blocks[1]), [r2] "+r" (result.blocks[2]), [r3] "+r" (result.blocks[3]), [r4] "+r" (result.blocks[4]), [r5] "+r" (result.blocks[5]), [r6] "+r" (result.blocks[6]), [r7] "+r" (result.blocks[7]) // TODO: попробовать использовать дополнительные регистры и не использовать "+r"
+    : [r0] "=&r" (result.blocks[0]), [r1] "+&r" (result.blocks[1]), [r2] "+&r" (result.blocks[2]), [r3] "+&r" (result.blocks[3]), [r4] "+&r" (result.blocks[4]), [r5] "+&r" (result.blocks[5]), [r6] "+&r" (result.blocks[6]), [r7] "=r" (result.blocks[7])
     : [a0] "r" (blocks[0]), [a1] "r" (blocks[1]), [a2] "r" (blocks[2]), [a3] "r" (blocks[3]), [b0] "r" (key.blocks[0]), [b1] "r" (key.blocks[1]), [b2] "r" (key.blocks[2]), [b3] "r" (key.blocks[3])
     : "x0", "x1", "x2", "x3", "x4", "x11", "x12", "x13"
     );
@@ -240,7 +252,7 @@ void Key::multiplyReduced(const Key& key, Key& result)
     "ADDS %[r2], %[r2], x0\n\t ADCS %[r3], %[r3], x1\n\t"
     "MUL x0, %[a0], %[b3]\n\t"
     "ADD %[r3], %[r3], x0"
-    : [r0] "+r" (result.blocks[0]), [r1] "+r" (result.blocks[1]), [r2] "+r" (result.blocks[2]), [r3] "+r" (result.blocks[3])
+    : [r0] "+&r" (result.blocks[0]), [r1] "+&r" (result.blocks[1]), [r2] "+&r" (result.blocks[2]), [r3] "+&r" (result.blocks[3])
     : [a0] "r" (blocks[0]), [a1] "r" (blocks[1]), [a2] "r" (blocks[2]), [a3] "r" (blocks[3]), [b0] "r" (key.blocks[0]), [b1] "r" (key.blocks[1]), [b2] "r" (key.blocks[2]), [b3] "r" (key.blocks[3])
     : "x0", "x1", "x2", "x3", "x4", "x11", "x12", "x13"
     );
@@ -253,14 +265,12 @@ void Key::multiplyByR2(Key& result)
         "ADDS %[r1], %[r1], x11\n\t ADCS %[r2], %[r2], x12\n\t ADCS %[r3], %[r3], x13\n\t ADC %[r4], %[r4], xzr\n\t"
         "ADDS %[r1], %[r1], %[a0]\n\t ADCS %[r2], %[r2], %[a1]\n\t ADCS %[r3], %[r3], %[a2]\n\t ADCS %[r4], %[r4], %[a3]\n\t ADC %[r5], xzr, xzr\n\t"
         "MOV %[r6], #0\n\t MOV %[r7], #0"
-        : [r0] "+r" (result.blocks[0]), [r1] "+r" (result.blocks[1]), [r2] "+r" (result.blocks[2]), [r3] "+r" (result.blocks[3]), [r4] "+r" (result.blocks[4]), [r5] "+r" (result.blocks[5]), [r6] "=r" (result.blocks[6]), [r7] "=r" (result.blocks[7])
+        : [r0] "+&r" (result.blocks[0]), [r1] "+&r" (result.blocks[1]), [r2] "+r" (result.blocks[2]), [r3] "+&r" (result.blocks[3]), [r4] "+&r" (result.blocks[4]), [r5] "+&r" (result.blocks[5]), [r6] "=&r" (result.blocks[6]), [r7] "=&r" (result.blocks[7])
         : [a0] "r" (blocks[0]), [a1] "r" (blocks[1]), [a2] "r" (blocks[2]), [a3] "r" (blocks[3]), [b0] "r" (R2.blocks[0])
         : "x11", "x12", "x13"
     );
 }
 
-#pragma GCC push_options
-#pragma GCC optimize ("O1")
 void Key::reduce()
 {
     Key temp;
@@ -276,7 +286,6 @@ void Key::reduce()
 	else if (compare(P) >= 0)
 		subtract(P);
 }
-#pragma GCC pop_options
 
 bool Key::getBit(int position)
 {
@@ -332,7 +341,7 @@ void Key::rightShift()
 		  "MOV %[b1], %[b1], LSR #1\n\t ADD %[b1], %[b1], %[b2], LSL #63\n\t"
 		  "MOV %[b2], %[b2], LSR #1\n\t ADD %[b2], %[b2], %[b3], LSL #63\n\t"
 		  "MOV %[b3], %[b3], LSR #1\n\t"
-		: [b0] "+r" (blocks[0]), [b1] "+r" (blocks[1]), [b2] "+r" (blocks[2]), [b3] "+r" (blocks[3]));
+		: [b0] "+&r" (blocks[0]), [b1] "+&r" (blocks[1]), [b2] "+&r" (blocks[2]), [b3] "+&r" (blocks[3]));
 }
 
 void Key::divide(Key& divisor, Key& quotient)

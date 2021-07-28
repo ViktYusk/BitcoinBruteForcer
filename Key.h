@@ -1,7 +1,6 @@
 #pragma once
 
 #define COMPARE_BLOCKS(block1, block2) if (block1 > block2) return 1; if (block1 < block2) return -1;
-#define ADD_BLOCKS(command, block1, block2) __asm(command " %[b1], %[b1], %[b2]" : [b1] "+r" (block1) : [b2] "r" (block2))
 #define SUBTRACT_BLOCKS(command, block1, block2) __asm(command " %[b1], %[b1], %[b2]" : [b1] "+r" (block1) : [b2] "r" (block2))
 
 struct Key

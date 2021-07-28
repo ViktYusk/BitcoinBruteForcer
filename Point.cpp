@@ -1,11 +1,6 @@
 #include "Point.h"
 
-#ifdef DEBUG
-const unsigned Point::ADDRESS0 = 0xBD493DAA; // A7525A280011AD5A AA3D49BD1B968C1B2E2DD07157D6A9760EA94C1D
-#else // TODO: оставить только это, когда будет найден соответствующий похожий ключ
-const unsigned Point::ADDRESS0 = 0x3D13E43E; // ???????????????? 3EE4133D991F52FDF6A25C9834E0745AC74248A4
-#endif
-
+const unsigned Point::ADDRESS0 = 0x3D13E43E; // FC9602C002C75EAA 3EE4133DB100C6DEE46F584A1D88BA1533EEEE5D
 const unsigned Point::COMPRESSION_ENDING[7] = { 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000108 };
 
 const Point Point::G = Point(Key(0x59F2815B16F81798, 0x029BFCDB2DCE28D9, 0x55A06295CE870B07, 0x79BE667EF9DCBBAC), Key(0x9C47D08FFB10D4B8, 0xFD17B448A6855419, 0x5DA4FBFC0E1108A8, 0x483ADA7726A3C465)); // (55066263022277343669578718895168534326250603453777594175500187360389116729240, 32670510020758816978083085130507043184471273380659243275938904335757337482424) NOLINT(cert-err58-cpp)
@@ -57,7 +52,6 @@ Point::Point(Key x, Key y)
 
 void Point::add(const Point& point, Key& inverse, Point& result) const
 {
-    //key += point.key;
     Key slope = point.y;
     slope -= y;
     slope *= inverse;
@@ -73,7 +67,6 @@ void Point::add(const Point& point, Key& inverse, Point& result) const
 
 void Point::subtract(const Point& point, Key& inverse, Point& result) const
 {
-    //key -= point.key;
     Key slope = Key::P;
     slope.subtract(point.y);
     slope -= y;

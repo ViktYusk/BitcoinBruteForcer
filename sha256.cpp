@@ -55,7 +55,6 @@ void sha256(unsigned input[], unsigned output[])
     ADD(output[4], words[4]); ADD(output[5], words[5]); ADD(output[6], words[6]); ADD(output[7], words[7]);
 }
 
-
 /*
 void sha256(unsigned inputs[][64], unsigned outputs[][8])
 {

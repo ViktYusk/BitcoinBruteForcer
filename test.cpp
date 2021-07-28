@@ -57,13 +57,14 @@ bool check(unsigned* array1, unsigned* array2, int length)
 int test()
 {
     /*
-    unsigned long long a = 0x0123456789ABCDEF;
-    unsigned long long b = 0xFEDCBA9876543210;
-    unsigned long long l;
-    unsigned long long h;
-    __asm("UMULL %w[l], %w[h], %w[a], %w[b]" : [l] "=R" (l), [h] "=R" (h) : [a] "R" (a), [b] "R" (b));
-     */
     cout << "TESTING:" << endl;
+    {
+        unsigned inputs[4][64];
+        unsigned input[64];
+        TEST("INPUT", true, 10000000, INPUT(input, 28))
+        TEST("INPUT_SIMD", true, 10000000, INPUT_SIMD(28))
+    }
+     */
     {
         unsigned inputs[4][64] =
         {
