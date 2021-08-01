@@ -56,7 +56,7 @@ Bit # 1 | Bits # 2—27 | Bits # 28—29 | Bits # 30—41 | Bits # 42—52 | Bit
 
 The total number of private keys to brute force is 2^63. The whole work is divided into 2^26 = 67 108 864 so called *blocks*, each of them corresponds to *block bits*. Since Raspberry Pi 3B+ has 4 cores, I use 2 bits as *thread bits*, i. e. for the first thread thread bits are `00`, for the second thread thread bits are `01`, etc. When *progress bits* group changes, there prints progress message in Debug configuration. Other bit groups are just being brute-forced.
 
-The compiled program `bitcoin_puzzle` for Linux need an argument with block number in decimal to process. For example, run
+The compiled program `bitcoin_puzzle` for Linux needs an argument with block number in decimal to process. For example, run
 ```
 bitcoin_puzzle 14920854
 ```
@@ -96,7 +96,9 @@ in order to process block # 14920854. With current speed of calculations, it tak
 9C7592D7F3436F0D 3EE4133DFAB903A9A059EF8E265B5C6AE056CD99
 ```
 
-The output is a report which contains partially coinciding addresses with private keys (20%-coincidence is enough to get into a report). Each line is a pare of a key and the corresponding address. The program does not check the exact coincidence. Statistically, each block should have about 32 lines in its report.
+The output is a report which contains partially coinciding addresses with private keys (20%-coincidence is enough to get into a report). Each line is a pair of a key and the corresponding address. The program does not check the exact coincidence. Statistically, each block should have about 32 lines in its report.
+
+There is also finish point check. If the finish point for some thread is wrong (normally, it doesn't happen), then there will be an error message in the report.
 
 ## Contributions and Donations
 
