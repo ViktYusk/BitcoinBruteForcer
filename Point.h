@@ -14,7 +14,6 @@ struct Point
 
 	static void initialize();
 	
-	//unsigned long long key;
 	Key x;
 	Key y;
 	
@@ -22,14 +21,11 @@ struct Point
 	explicit Point(unsigned long long key);
 	Point(Key x, Key y);
 
-    void add(const Point& point, Key& inverse, Point& result) const;
-    void subtract(const Point& point, Key& inverse, Point& result) const;
-	
 	bool operator==(const Point& point);
 	void operator+=(const Point& point);
-	//void operator++();
-	
+
+    void add(const Point& point, Key& inverse, Point& result) const;
+    void subtract(const Point& point, Key& inverse, Point& result) const;
 	void double_();
 	void compress(unsigned* output);
-	//void group(Point* points);
 };

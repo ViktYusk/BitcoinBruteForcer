@@ -76,36 +76,6 @@ bool Key::operator==(const Key& key)
 	return blocks[0] == key.blocks[0] && blocks[1] == key.blocks[1] && blocks[2] == key.blocks[2] && blocks[3] == key.blocks[3];
 }
 
-void Key::operator<<=(int shift)
-{
-	/*
-	blocks[7] = shift < 8 ? blocks[7 - shift] : 0;
-	blocks[6] = shift < 7 ? blocks[6 - shift] : 0;
-	blocks[5] = shift < 6 ? blocks[5 - shift] : 0;
-	blocks[4] = shift < 5 ? blocks[4 - shift] : 0;
-	blocks[3] = shift < 4 ? blocks[3 - shift] : 0;
-	blocks[2] = shift < 3 ? blocks[2 - shift] : 0;
-	blocks[1] = shift < 2 ? blocks[1 - shift] : 0;
-	blocks[0] = shift < 1 ? blocks[0] : 0;
-	*/
-    int shifts64 = shift / 64;
-    if (shifts64)
-    {
-        blocks[3] = shifts64 < 4 ? blocks[3 - shifts64] : 0;
-        blocks[2] = shifts64 < 3 ? blocks[2 - shifts64] : 0;
-        blocks[1] = shifts64 < 2 ? blocks[1 - shifts64] : 0;
-        blocks[0] = shifts64 < 1 ? blocks[0] : 0;
-    }
-    int shifts1 = shift % 64;
-    if (shifts1)
-    {
-        blocks[3] = (blocks[3] << shifts1) + (blocks[2] >> (64 - shifts1));
-        blocks[2] = (blocks[2] << shifts1) + (blocks[1] >> (64 - shifts1));
-        blocks[1] = (blocks[1] << shifts1) + (blocks[0] >> (64 - shifts1));
-        blocks[0] = blocks[0] << shifts1;
-    }
-}
-
 void Key::operator+=(const Key& key)
 {
 	if (add(key))
@@ -130,22 +100,6 @@ void Key::operator*=(const Key& key)
 	reduce();
 }
 #pragma GCC pop_options
-
-/*
-void Key::operator++()
-{
-	unsigned long long result;
-	unsigned carry = 1;
-	int b = 0;
-	while (carry)
-	{
-		result = (unsigned long long)blocks[b] + carry;
-		blocks[b] = result;
-		carry = result >> 32;
-		b++;
-	}
-}
-*/
 
 int Key::compare(const Key& key)
 {
@@ -218,7 +172,7 @@ bool Key::subtract(const Key& key)
 	return carry;
 }
 
-// TODO: попробовать метод Карацубы
+// TODO: метод Карацубы
 void Key::multiply(const Key& key, Key& result)
 {
     __asm(
@@ -287,91 +241,92 @@ void Key::reduce()
 		subtract(P);
 }
 
-bool Key::getBit(int position)
-{
-    return blocks[position / 64] & 1ULL << position % 64;
-}
-
-void Key::setBit(int position)
-{
-	blocks[position / 64] |= 1ULL << position % 64;
-}
-
-/*
-void Key::shiftLeft()
-{
-	blocks[7] = (blocks[7] << 1) + (blocks[6] >> 31);
-	blocks[6] = (blocks[6] << 1) + (blocks[5] >> 31);
-	blocks[5] = (blocks[5] << 1) + (blocks[4] >> 31);
-	blocks[4] = (blocks[4] << 1) + (blocks[3] >> 31);
-	blocks[3] = (blocks[3] << 1) + (blocks[2] >> 31);
-	blocks[2] = (blocks[2] << 1) + (blocks[1] >> 31);
-	blocks[1] = (blocks[1] << 1) + (blocks[0] >> 31);
-	blocks[0] = blocks[0] << 1;
-}
-*/
-
-/*
-void Key::shiftLeft32()
-{
-	blocks[7] = blocks[6];
-	blocks[6] = blocks[5];
-	blocks[5] = blocks[4];
-	blocks[4] = blocks[3];
-	blocks[3] = blocks[2];
-	blocks[2] = blocks[1];
-	blocks[1] = blocks[0];
-	blocks[0] = 0;
-}
-*/
-
-void Key::rightShift()
-{
-	/*
-	blocks[0] = blocks[1];
-	blocks[1] = blocks[2];
-	blocks[2] = blocks[3];
-	blocks[3] = blocks[4];
-	blocks[4] = blocks[5];
-	blocks[5] = blocks[6];
-	blocks[6] = blocks[7];
-	blocks[7] = 0;
-	*/
-	__asm("MOV %[b0], %[b0], LSR #1\n\t ADD %[b0], %[b0], %[b1], LSL #63\n\t"
-		  "MOV %[b1], %[b1], LSR #1\n\t ADD %[b1], %[b1], %[b2], LSL #63\n\t"
-		  "MOV %[b2], %[b2], LSR #1\n\t ADD %[b2], %[b2], %[b3], LSL #63\n\t"
-		  "MOV %[b3], %[b3], LSR #1\n\t"
-		: [b0] "+&r" (blocks[0]), [b1] "+&r" (blocks[1]), [b2] "+&r" (blocks[2]), [b3] "+&r" (blocks[3]));
-}
-
 void Key::divide(Key& divisor, Key& quotient)
 {
-	int shifts = 255;
-	while (!divisor.getBit(shifts))
-		shifts--;
-    shifts = 255 - shifts;
-	divisor <<= shifts;
-	quotient = ZERO;
-	if (compare(divisor) >= 0)
-	{
-		subtract(divisor);
-		quotient.setBit(shifts);
-	}
-	while (--shifts >= 0)
-	{
-        divisor.rightShift();
-		if (compare(divisor) >= 0)
-		{
-			subtract(divisor);
-			quotient.setBit(shifts);
-		}
-	}
+    auto* u = (unsigned*) blocks;
+    auto* v = (unsigned*) divisor.blocks;
+    int m = 8;
+    while (!u[m - 1])
+        m--;
+    int n = 8;
+    while (!v[n - 1])
+        n--;
+    if (m < n)
+    {
+        quotient = ZERO;
+        return;
+    }
+    unsigned s = 32;
+    unsigned x = v[n - 1], y;
+    y = x >> 16; if (y) { s -= 16; x = y; }
+    y = x >> 8; if (y) { s -= 8; x = y; }
+    y = x >> 4; if (y) { s -= 4; x = y; }
+    y = x >> 2; if (y) { s -= 2; x = y; }
+    y = x >> 1; if (y) { s -= 1; x = y; }
+    s -= x;
+    unsigned un[m + 1];
+    un[m] = (unsigned long long)u[m - 1] >> (32 - s);
+    for (int i = m - 1; i > 0; i--)
+        un[i] = u[i] << s | (unsigned long long)u[i - 1] >> (32 - s);
+    un[0] = u[0] << s;
+    unsigned vn[n];
+    for (int i = n - 1; i > 0; i--)
+        vn[i] = v[i] << s | (unsigned long long)v[i - 1] >> (32 - s);
+    vn[0] = v[0] << s;
+    unsigned q[8] = { 0 };
+    for (int j = m - n; j >= 0; j--)
+    {
+        unsigned long long _ = un[n + j] * B + un[n + j - 1];
+        unsigned long long q_ = _ / vn[n - 1];
+        unsigned long long r_ = _ % vn[n - 1];
+        label:
+        if (q_ >= B || (unsigned)q_ * (unsigned long long)vn[n - 2] > B * r_ + un[n + j - 2])
+        {
+            q_--;
+            r_ += vn[n - 1];
+            if (r_ < B)
+                goto label;
+        }
+        long long k = 0, t;
+        for (int i = 0; i < n; i++)
+        {
+            unsigned long long p = (unsigned)q_ * (unsigned long long)vn[i];
+            t = un[i + j] - k - (p & 0xFFFFFFFF);
+            un[i + j] = t;
+            k = (p >> 32) - (t >> 32);
+        }
+        t = un[n + j] - k;
+        un[n + j] = t;
+        q[j] = q_;
+        if (t < 0)
+        {
+            q[j]--;
+            k = 0;
+            for (int i = 0; i < n; i++)
+            {
+                t = (unsigned long long)un[i + j] + vn[i] + k;
+                un[i + j] = t;
+                k = t >> 32;
+            }
+            un[n + j] += k;
+        }
+    }
+    quotient.blocks[0] = q[0] + ((unsigned long long)q[1] << 32);
+    quotient.blocks[1] = q[2] + ((unsigned long long)q[3] << 32);
+    quotient.blocks[2] = q[4] + ((unsigned long long)q[5] << 32);
+    quotient.blocks[3] = q[6] + ((unsigned long long)q[7] << 32);
+    unsigned r[8] = { 0 };
+    for (int i = 0; i < n - 1; i++)
+        r[i] = un[i] >> s | (unsigned long long)un[i + 1] << (32 - s);
+    r[n - 1] = un[n - 1] >> s;
+    blocks[0] = r[0] + ((unsigned long long)r[1] << 32);
+    blocks[1] = r[2] + ((unsigned long long)r[3] << 32);
+    blocks[2] = r[4] + ((unsigned long long)r[5] << 32);
+    blocks[3] = r[6] + ((unsigned long long)r[7] << 32);
 }
-
 
 void Key::invert()
 {
-	///*
 	Key x;
 	Key y;
 	gcd(*this, P, x, y);

@@ -1,5 +1,7 @@
 #include "ripemd160.h"
 
+// TODO: оптимизировать
+// TODO: что если возвращать только output[0]?
 void ripemd160(unsigned* input, unsigned* output)
 {
     output[0] = 0x67452301;

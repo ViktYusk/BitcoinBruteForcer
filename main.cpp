@@ -8,9 +8,6 @@
 #include "ripemd160.h"
 #include "test.h"
 
-using namespace std;
-using namespace chrono;
-
 const int BLOCK_BITS    = 26;
 const int THREAD_BITS   = 2;
 const int PROGRESS_BITS = 12;
@@ -22,13 +19,13 @@ const int GROUPS_PER_PROGRESS = THREADS_NUMBER * SUBBLOCKS_NUMBER;
 
 int block;
 int threadsProgresses[THREADS_NUMBER] = { 0 };
-mutex mutex_;
+std::mutex mutex_;
 Point threadsPoints[THREADS_NUMBER + 1];
 Timer timer;
 
 void print(unsigned char digit)
 {
-    cout << (char)(digit < 10 ? '0' + digit : 'A' + digit - 10);
+    std::cout << (char)(digit < 10 ? '0' + digit : 'A' + digit - 10);
 }
 
 void print(unsigned long long key)
@@ -82,9 +79,9 @@ void* thread(void* id)
                 {
                     mutex_.lock();
                     print((((((((((1ULL << BLOCK_BITS) + block) << THREAD_BITS) + *(int*)id) << PROGRESS_BITS) + p) << SUBBLOCK_BITS) + s) << Key::GROUP_BITS) + i);
-                    cout << " ";
+                    std::cout << " ";
                     print(address);
-                    cout << endl;
+                    std::cout << std::endl;
                     mutex_.unlock();
                 }
             }
@@ -98,14 +95,14 @@ void* thread(void* id)
 		for (int threadProgress : threadsProgresses)
 			log &= threadProgress >= threadsProgresses[*(int*)id];
 		if (log)
-            cout << "Progress = " << (p + 1) * 100.0 / PROGRESSES_NUMBER << " %   [" << (int)(GROUPS_PER_PROGRESS * Key::GROUP_SIZE / timer.stop() / 1000) << " Kkeys/second]" << endl;
+            std::cout << "Progress = " << (p + 1) * 100.0 / PROGRESSES_NUMBER << " %   [" << (int)(GROUPS_PER_PROGRESS * Key::GROUP_SIZE / timer.stop() / 1000) << " Kkeys/second]" << std::endl;
 		mutex_.unlock();
 #endif
 	}
 	if (!(center == threadsPoints[*(int*)id + 1]))
 	{
 		mutex_.lock();
-		cout << "Wrong finish point for thread # " << *(int*)id << endl;
+		std::cout << "Wrong finish point for thread # " << *(int*)id << std::endl;
 		mutex_.unlock();
 	}
 	pthread_exit(0);
@@ -122,13 +119,13 @@ int main(int argc, char* argv[])
 	for (int i = 0; argv[1][i] != 0; i++)
 		if (argv[1][i] < '0' || argv[1][i] > '9')
 		{
-			cout << "Block number must be non-negative integer" << endl;
+			std::cout << "Block number must be non-negative integer" << std::endl;
 			return -1;
 		}
 	block = atoi(argv[1]);
 	if (block < 0 || block >= 1 << BLOCK_BITS)
 	{
-		cout << "Block is not in range" << endl;
+		std::cout << "Block is not in range" << std::endl;
 		return -1;
 	}
 	unsigned long long startKey = 1;
@@ -155,14 +152,14 @@ int main(int argc, char* argv[])
 		thread_ids[id] = id;
 		if (pthread_create(&threads[id], NULL, thread, &thread_ids[id]) != 0)
 		{
-			cout << "Error while creating thread # " << id << endl;
+			std::cout << "Error while creating thread # " << id << std::endl;
 			return -1;
 		}
 	}
 	for (int id = 0; id < THREADS_NUMBER; id++)
 		if (pthread_join(threads[id], NULL) != 0)
 		{
-			cout << "Error while joining thread" << endl;
+			std::cout << "Error while joining thread" << std::endl;
 			return -1;
 		}
 	return 0;

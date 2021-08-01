@@ -33,7 +33,6 @@ Point::Point()
 
 Point::Point(unsigned long long key)
 {
-	//this->key = key;
 	int bit = 0;
 	while (!(key & 1ULL << bit))
 		bit++;
@@ -45,7 +44,6 @@ Point::Point(unsigned long long key)
 
 Point::Point(Key x, Key y)
 {
-	//this->key = key;
 	this->x = x;
 	this->y = y;
 }
@@ -94,33 +92,7 @@ void Point::operator+=(const Point& point)
 	Point temp;
 	add(point, inverse, temp);
 	*this = temp;
-	/*
-	key += point.key;
-	Key dx = point.x;
-	dx -= x;
-	dx.invert();
-	Key slope = point.y;
-	slope -= y;
-	slope *= dx;
-	Key result_x = slope;
-	result_x *= slope;
-	result_x -= x;
-	result_x -= point.x;
-	Key result_y = x;
-	result_y -= result_x;
-	result_y *= slope;
-	result_y -= y;
-	x = result_x;
-	y = result_y;
-	*/
 }
-
-/*
-void Point::operator++()
-{
-	operator+=(G);
-}
-*/
 
 void Point::double_()
 {
@@ -154,47 +126,4 @@ void Point::compress(unsigned* output)
     output[6] = ((unsigned)x.blocks[1] << 24) + (unsigned)(x.blocks[0] >> 40);
     output[7] = x.blocks[0] >> 8;
     output[8] = (x.blocks[0] << 24) + 0x00800000;
-
-    /*
-	for (int i = 0; i < 4; i++)
-		for (int j = 0; j < 8; j++)
-			output[1 + 8 * i + j] = x.blocks[3 - i] >> 8 * (7 - j);
-     */
 }
-
-/*
-void Point::group(Point* points)
-{
-	Key inverses[Key::GROUP_SIZE / 2 + 1];
-	for (int i = 0; i <= Key::GROUP_SIZE / 2; i++)
-	{
-		inverses[i] = gMultiples[i].x;
-		inverses[i] -= x;
-	}
-	Key::invertGroup(inverses);
-	for (int i = 0; i <= Key::GROUP_SIZE; i++)
-    {
-        points[i] = *this;
-	    if (i < Key::GROUP_SIZE / 2)
-            points[i].subtract(gMultiples[Key::GROUP_SIZE / 2 - 1 - i], inverses[Key::GROUP_SIZE / 2 - 1 - i]);
-	    else if (i == Key::GROUP_SIZE / 2);
-	    else if (i < Key::GROUP_SIZE)
-            points[i].add(gMultiples[i - (Key::GROUP_SIZE / 2 + 1)], inverses[i - (Key::GROUP_SIZE / 2 + 1)]);
-	    else
-            points[Key::GROUP_SIZE].add(gMultiples[Key::GROUP_SIZE / 2], inverses[Key::GROUP_SIZE / 2]);
-    }
-    for (int i = 0; i < Key::GROUP_SIZE / 2; i++)
-    {
-        points[i] = *this;
-        points[i].subtract(gMultiples[Key::GROUP_SIZE / 2 - 1 - i], inverses[Key::GROUP_SIZE / 2 - 1 - i]);
-    }
-    points[Key::GROUP_SIZE / 2] = *this;
-	for (int i = Key::GROUP_SIZE / 2 + 1; i < Key::GROUP_SIZE; i++)
-	{
-		points[i] = *this;
-		points[i].add(gMultiples[i - (Key::GROUP_SIZE / 2 + 1)], inverses[i - (Key::GROUP_SIZE / 2 + 1)]);
-	}
-	points[Key::GROUP_SIZE] = *this;
-	points[Key::GROUP_SIZE].add(gMultiples[Key::GROUP_SIZE / 2], inverses[Key::GROUP_SIZE / 2]);
-}
-*/

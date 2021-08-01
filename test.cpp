@@ -6,15 +6,11 @@
 #include "ripemd160.h"
 #include "test.h"
 
-
-#define TEST(name, result, iterations, call) if (result) { cout << "* Passed test: " << name; Timer timer; if (iterations) { for (int i = 0; i < iterations; i++) call; cout << " [" << timer.stop(iterations) << " ns]"; } cout << endl; } else { cout << "* Failed test: " << name << endl; return -1; }
-
-using namespace std;
-using namespace chrono;
+#define TEST(name, result, iterations, call) if (result) { std::cout << "* Passed test: " << name; Timer timer; if (iterations) { for (int i = 0; i < iterations; i++) call; std::cout << " [" << timer.stop(iterations) << " ns]"; } std::cout << std::endl; } else { std::cout << "* Failed test: " << name << std::endl; return -1; }
 
 unsigned long long Timer::time()
 {
-	return duration_cast<milliseconds>(system_clock::now().time_since_epoch()).count();
+	return std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
 }
 
 Timer::Timer()
@@ -56,15 +52,7 @@ bool check(unsigned* array1, unsigned* array2, int length)
 
 int test()
 {
-    /*
-    cout << "TESTING:" << endl;
-    {
-        unsigned inputs[4][64];
-        unsigned input[64];
-        TEST("INPUT", true, 10000000, INPUT(input, 28))
-        TEST("INPUT_SIMD", true, 10000000, INPUT_SIMD(28))
-    }
-     */
+    std::cout << "TESTING:" << std::endl;
     {
         unsigned inputs[4][64] =
         {
@@ -171,15 +159,6 @@ int test()
             key1.subtract(key2);
         TEST("Key::subtract", key1 == key3, iterations, key1.subtract(key2))
     }
-	/*
-	{
-		Key key1(0xFFFFFF00, 0x59F2815B, 0x2DCE28D9, 0x029BFCDB, 0xCE870B07, 0x55A06295, 0xF9DCBBAC, 0x79BE667E);
-		Key key2(0x00000101, 0x59F2815C, 0x2DCE28D9, 0x029BFCDB, 0xCE870B07, 0x55A06295, 0xF9DCBBAC, 0x79BE667E);
-		for (int i = 0; i < 513; i++)
-			++key1;
-		TEST("Key::operator++", key1 == key2, 1000000, ++key1, 0)
-	}
-	*/
 	{
 		Key key1(0x59F2815B16F81798, 0x029BFCDB2DCE28D9, 0x55A06295CE870B07, 0x79BE667EF9DCBBAC);
 		Key key2(0x9C47D08FFB10D4B8, 0xFD17B448A6855419, 0x5DA4FBFC0E1108A8, 0x483ADA7726A3C465);
@@ -236,20 +215,6 @@ int test()
             key2.multiplyByR2(key2);
         TEST("Key::multiplyByR2()", key1.compareExtended(key2) == 0, iterations, key2.multiplyByR2(key2))
     }
-    /*
-    {
-        Key key1(0x59F2815B16F81798, 0x029BFCDB2DCE28D9, 0x55A06295CE870B07, 0x79BE667EF9DCBBAC);
-        unsigned long long block = 0x00000000FB10D4B9;
-        Key key2(block, 0x0000000000000000, 0x0000000000000000, 0x0000000000000000);
-        Key answer = key1;
-        for (int i = 0; i < 1000; i++)
-        {
-           key1.multiply(block);
-           answer.multiply(key2);
-        }
-        TEST("Key::multiply(unsigned)", key1.compareExtended(answer) == 0, 1000000, key1.multiply(block))
-    }
-     */
     {
         Key key1(0x9C47D08FFB10D4B8, 0xFD17B448A6855419, 0x5DA4FBFC0E1108A8, 0x483ADA7726A3C465, 0x59F2815B16F81798, 0x029BFCDB2DCE28D9, 0x55A06295CE870B07, 0x79BE667EF9DCBBAC);
         Key key2(0xC526CE3E29B569A1, 0xF55B7994186165D1, 0xD227C08AA6818A39, 0x03F4520816A42A72);
@@ -272,92 +237,6 @@ int test()
         for (int i = 0; i < iterations; i++)
             key1 *= key2;
         TEST("Key::operator*=", key1 == key3, iterations, key1 *= key2)
-    }
-    {
-        Key key1(0x59F2815B16F81798, 0x029BFCDB2DCE28D9, 0x55A06295CE870B07, 0x79BE667EF9DCBBAC);
-        char bits[257] = "0001100111101000000111110110100011011010100000010100111110011010100110110001010001110011101101001101101100111111110110010100000011100000110100001110000101110011101010010100011000000101101010100011010111011101001110111001111101111110011001100111110110011110";
-        bool result = true;
-        for (int p = 0; p < 256; p++)
-            if (key1.getBit(p) != bits[p] - '0')
-                result = false;
-        TEST("Key::getBit", result, 1000000, key1.getBit(126))
-    }
-    {
-        Key key1 = Key::ZERO;
-        Key key2(0x59F2815B16F81798, 0x029BFCDB2DCE28D9, 0x55A06295CE870B07, 0x79BE667EF9DCBBAC);
-        char bits[257] = "0001100111101000000111110110100011011010100000010100111110011010100110110001010001110011101101001101101100111111110110010100000011100000110100001110000101110011101010010100011000000101101010100011010111011101001110111001111101111110011001100111110110011110";
-        for (int p = 0; p < 256; p++)
-            if (bits[p] - '0')
-            key1.setBit(p);
-        bool result = key1 == key2;
-        TEST("Key::setBit", result, 1000000, key1.setBit(126))
-    }
-	/*
-	{
-		Key key1(0x9C47D08FFB10D4B9, 0xFD17B448A6855419, 0x5DA4FBFC0E1108A8, 0x483ADA7726A3C465);
-		Key key2(0x9C47D08FFB10D4B9, 0xFD17B448A6855419, 0x5DA4FBFC0E1108A8, 0x483ADA7726A3C465);
-		Key two(0x0000000000000002, 0x0000000000000000, 0x0000000000000000, 0x0000000000000000);
-		bool result = true;
-		for (int i = 0; i < 256; i++)
-		{
-			key1.multiply(two);
-			key2.shiftLeft();
-			if (!(key1 == key2))
-				result = false;
-		}
-		int iterations = 1000000;
-		for (int i = 0; i < iterations; i++)
-			key1.shiftLeft();
-		TEST("Key::shiftLeft", result, iterations, key1.shiftLeft())
-	}
-	*/
-	/*
-	{
-		Key key1(0x9C47D08FFB10D4B9, 0xFD17B448A6855419, 0x5DA4FBFC0E1108A8, 0x483ADA7726A3C465);
-		Key key2(0x9C47D08FFB10D4B9, 0xFD17B448A6855419, 0x5DA4FBFC0E1108A8, 0x483ADA7726A3C465);
-		Key power(0x0000000100000000, 0x0000000000000000, 0x0000000000000000, 0x0000000000000000);
-		bool result = true;
-		for (int i = 0; i < 8; i++)
-		{
-			key1.multiply(power);
-			key2.shiftLeft32();
-			if (!(key1 == key2))
-				result = false;
-		}
-		int iterations = 1000000;
-		for (int i = 0; i < iterations; i++)
-			key1.shiftLeft32();
-		TEST("Key::shiftLeft32", result, iterations, key1.shiftLeft32())
-	}
-	*/
-    {
-        Key key1(0x59F2815B16F81798, 0x029BFCDB2DCE28D9, 0x55A06295CE870B07, 0x79BE667EF9DCBBAC);
-        char bits[257] = "0001100111101000000111110110100011011010100000010100111110011010100110110001010001110011101101001101101100111111110110010100000011100000110100001110000101110011101010010100011000000101101010100011010111011101001110111001111101111110011001100111110110011110";
-        bool result = true;
-        for (int s = 0; s < 256; s++)
-        {
-            for (int p = 0; p < 256; p++)
-                if (key1.getBit(p) != (p + s < 256 ? bits[p + s] : '0') - '0')
-                    result = false;
-            key1.rightShift();
-        }
-        TEST("Key::rightShift", result, 1000000, key1.rightShift())
-    }
-    {
-        char bits[257] = "0001100111101000000111110110100011011010100000010100111110011010100110110001010001110011101101001101101100111111110110010100000011100000110100001110000101110011101010010100011000000101101010100011010111011101001110111001111101111110011001100111110110011110";
-        bool result = true;
-        for (int s = 0; s < 256; s++)
-        {
-            Key key1(0x59F2815B16F81798, 0x029BFCDB2DCE28D9, 0x55A06295CE870B07, 0x79BE667EF9DCBBAC);
-            key1 <<= s;
-            for (int p = 0; p < 256; p++)
-                if (key1.getBit(p) != (p - s >= 0 ? bits[p - s] : '0') - '0')
-                    result = false;
-            if (result == false)
-                break;
-        }
-        Key key1(0x59F2815B16F81798, 0x029BFCDB2DCE28D9, 0x55A06295CE870B07, 0x79BE667EF9DCBBAC);
-        TEST("Key::operator<<=", result, 1000000, key1 <<= 3)
     }
     {
         Key dividend1(0x59F2815B16F81798, 0x029BFCDB2DCE28D9, 0x55A06295CE870B07, 0x79BE667EF9DCBBAC);
@@ -500,31 +379,5 @@ int test()
         point2.y = Key(0x3DB3590975F08733, 0x54299F35E9C79C77, 0x2107FFF206C80EF1, 0x6A952BA15E247C7C);
         TEST("Point(Key)", point1 == point2, 0, point1 = Point(key))
     }
-    /*
-    {
-        Point point = Point::G;
-        for (int i = 0; i < 20; i++)
-            point.double_();
-        Point center = point;
-        Point points[Key::GROUP_SIZE + 1];
-        center += Point::gMultiples[Key::GROUP_SIZE / 2 - 1];
-        center.group(points);
-        Point answers[Key::GROUP_SIZE + 1];
-        answers[0] = point;
-        for (int i = 1; i < Key::GROUP_SIZE; i++)
-        {
-            answers[i] = answers[i - 1];
-            answers[i] += Point::G;
-        }
-        answers[Key::GROUP_SIZE] = center;
-        answers[Key::GROUP_SIZE] += Point::gMultiples[Key::GROUP_SIZE / 2];
-        bool result = true;
-        for (int i = 0; i <= Key::GROUP_SIZE; i++)
-            if (!(points[i] == answers[i]))
-                result = false;
-        TEST("Point::group", result, 1, center.group(points), groupTime);
-        groupTime /= Key::GROUP_SIZE;
-    }
-     */
     return 0;
 }
