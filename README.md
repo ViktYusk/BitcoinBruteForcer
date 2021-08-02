@@ -23,10 +23,15 @@ The next principal methods for keys are implemented:
 
 ### Point
 
-`Point` represents a Bitcoin public point which is a point on [SECP256K1 Curve](https://en.bitcoin.it/wiki/Secp256k1) which is a. k. a. *Bitcoin Curve*. It consists of two 256-bit keys `x` and `y`. `Point::G` is the generator point.
+`Point` represents a Bitcoin public point which is a point on [SECP256K1 Curve](https://en.bitcoin.it/wiki/Secp256k1) which is a. k. a. *Bitcoin Curve*. It consists of two 256-bit keys `x` and `y`. `Point::G` is the generator point. `Point::ADDRESS0` is the first 4 bytes of the puzzle address.
+
+A point can be contructed either from two keys, or from `unsigned long long` private key as the corresponding public point (the last operation is quite slow).
 
 The next principal methods for points are implemented:
-> TODO...
+* `initialize` is a static method to initialize `gPowers` and `gMultiples` which are some useful pre-computed points
+* `operator+=`, `add`, `subtract` for [elliptic curve addition and subtraction](https://en.wikipedia.org/wiki/Elliptic_curve#The_group_law) (two last methods use the pre-computed inverse of the abscissas difference)
+* `double_` for elliptic curve doubling i. e. adding with itself
+* `compress` method compresses the point to pass the result to `sha256` (it is not usual compression of a public point but an optimized one)
 
 ### sha256 and ripemd160
 
