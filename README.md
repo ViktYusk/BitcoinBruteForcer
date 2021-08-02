@@ -10,7 +10,7 @@ A brief introduction to Bitcoin Puzzle, also known as BTC32, all necessary refer
 
 ### Key
 
-`Key` represents a [Bitcoin](https://bitcoin.org/) private key which is a 256-bit number. In some cases, it also may represent just 256-bit numbers which are not valid Bitcoin pirvate keys or even 512-bit numbers. In the project, it is stored as an array of four or eight `unsigned long long` i. e. 64-bit digits. To work with such data, multiprecision arithmetic is implemented.
+`Key` represents a [Bitcoin](https://bitcoin.org/) private key which is a 256-bit number. In some cases, it also may represent just 256-bit numbers which are not valid Bitcoin private keys or even 512-bit numbers. In the project, it is stored as an array of four or eight `unsigned long long` i. e. 64-bit digits. To work with such data, multiprecision arithmetic is implemented.
 
 A key can be contructed either from four 64-bit digits, or eight 64-bit digits (for some futher algorithms it is sometimes necessary to consider 512-bit keys).
 
