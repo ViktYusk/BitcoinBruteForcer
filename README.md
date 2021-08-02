@@ -1,4 +1,4 @@
-The target device of this project is [Raspberry Pi](https://www.raspberrypi.org/) (specifically, I use Raspberry Pi 3B+, but I think it is no problem to run the program on any of models). The important thing that you need to use 64-bit operating system which is not common but it can be found as a beta-version [here](https://downloads.raspberrypi.org/raspios_lite_arm64/images/).
+The target device of this project is [Raspberry Pi](https://www.raspberrypi.org/) (specifically, I use Raspberry Pi 3B+, but I think it is no problem to run the program on any of models). The important thing is that you need to use 64-bit operating system which is not common but it can be found as a beta-version [here](https://downloads.raspberrypi.org/raspios_lite_arm64/images/).
 
 The project is written in C++. In order to optimize speed, for some operations [GCC Inline Assembly](https://gcc.gnu.org/onlinedocs/gcc/Extended-Asm.html) with some specific intructions of ARM64 processors is used. To cross-compile this code from my laptop to Raspberry Pi, I use [CLion](https://www.jetbrains.com/clion/).
 
@@ -41,7 +41,7 @@ Operation | Time for 1 operation | Usages for 1 key | Time for 1 key | % of tota
 `Point::add` | 2100 ns | 0.5000 | 1050 ns | 22 %
 `Key::invertGroup` | 4 100 000 ns | 0.0002 | 1001 ns | 21 %
 `Point::subtract` | 2000 ns | 0.5000 | 1000 ns | 21 %
-`ripemd160` | 549 ns | 1.0000 | 15 ns | 11 %
+`ripemd160` | 549 ns | 1.0000 | 549 ns | 11 %
 `Point::compress` | 15 ns | 1.0000 | 15 ns | 0 %
 `Key::operator-=` | 25 ns | 0.5002 | 13 ns | 0 %
 
