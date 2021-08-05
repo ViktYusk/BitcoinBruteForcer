@@ -123,6 +123,34 @@ int Key::compareExtended(const Key& key)
 	return 0;
 }
 
+bool Key::isNotZero()
+{
+    return blocks[0] | blocks[1] | blocks[2] | blocks[3];
+}
+
+bool Key::increment()
+{
+    if (++blocks[0])
+        return false;
+    if (++blocks[1])
+        return false;
+    if (++blocks[2])
+        return false;
+    if (++blocks[3])
+        return false;
+    return true;
+}
+
+/*
+void Key::rightShift256()
+{
+    blocks[0] = blocks[4];
+    blocks[1] = blocks[5];
+    blocks[2] = blocks[6];
+    blocks[3] = blocks[7];
+}
+ */
+
 bool Key::add(const Key& key)
 {
     unsigned long long carry;
@@ -156,6 +184,23 @@ bool Key::addExtended(const Key& key)
     );
 	return carry;
 }
+
+/*
+bool Key::addHigh(const Key& key)
+{
+    unsigned long long carry;
+    __asm(
+            "ADDS %[a4], %[a4], %[b4]\n\t"
+            "ADCS %[a5], %[a5], %[b5]\n\t"
+            "ADCS %[a6], %[a6], %[b6]\n\t"
+            "ADCS %[a7], %[a7], %[b7]\n\t"
+            "ADC %[c], xzr, xzr"
+            : [a4] "+r" (blocks[4]), [a5] "+r" (blocks[5]), [a6] "+r" (blocks[6]), [a7] "+r" (blocks[7]), [c] "=r" (carry)
+            : [b4] "r" (key.blocks[4]), [b5] "r" (key.blocks[5]), [b6] "r" (key.blocks[6]), [b7] "r" (key.blocks[7])
+            );
+    return carry;
+}
+*/
 
 bool Key::subtract(const Key& key)
 {
@@ -193,7 +238,7 @@ void Key::multiply(const Key& key, Key& result)
     );
 }
 
-void Key::multiplyReduced(const Key& key, Key& result)
+void Key::multiplyLow(const Key& key, Key& result)
 {
     __asm(
     "MUL %[r0], %[a0], %[b0]\n\t UMULH %[r1], %[a0], %[b0]\n\t MUL x11, %[a1], %[b0]\n\t UMULH %[r2], %[a1], %[b0]\n\t MUL x12, %[a2], %[b0]\n\t UMULH %[r3], %[a2], %[b0]\n\t MUL x13, %[a3], %[b0]\n\t"
@@ -212,6 +257,26 @@ void Key::multiplyReduced(const Key& key, Key& result)
     );
 }
 
+void Key::multiplyHigh(const Key& key, Key& result)
+{
+    __asm(
+            "UMULH x21, %[a0], %[b0]\n\t MUL x11, %[a1], %[b0]\n\t UMULH x22, %[a1], %[b0]\n\t MUL x12, %[a2], %[b0]\n\t UMULH x23, %[a2], %[b0]\n\t MUL x13, %[a3], %[b0]\n\t UMULH %[r0], %[a3], %[b0]\n\t"
+            "ADDS x21, x21, x11\n\t ADCS x22, x22, x12\n\t ADCS x23, x23, x13\n\t ADC %[r0], %[r0], xzr\n\t"
+            "MUL x0, %[a0], %[b1]\n\t UMULH x1, %[a0], %[b1]\n\t MUL x11, %[a1], %[b1]\n\t UMULH x2, %[a1], %[b1]\n\t MUL x12, %[a2], %[b1]\n\t UMULH x3, %[a2], %[b1]\n\t MUL x13, %[a3], %[b1]\n\t UMULH x4, %[a3], %[b1]\n\t"
+            "ADDS x1, x1, x11\n\t ADCS x2, x2, x12\n\t ADCS x3, x3, x13\n\t ADC x4, x4, xzr\n\t"
+            "ADDS x21, x21, x0\n\t ADCS x22, x22, x1\n\t ADCS x23, x23, x2\n\t ADCS %[r0], %[r0], x3\n\t ADC %[r1], x4, xzr\n\t"
+            "MUL x0, %[a0], %[b2]\n\t UMULH x1, %[a0], %[b2]\n\t MUL x11, %[a1], %[b2]\n\t UMULH x2, %[a1], %[b2]\n\t MUL x12, %[a2], %[b2]\n\t UMULH x3, %[a2], %[b2]\n\t MUL x13, %[a3], %[b2]\n\t UMULH x4, %[a3], %[b2]\n\t"
+            "ADDS x1, x1, x11\n\t ADCS x2, x2, x12\n\t ADCS x3, x3, x13\n\t ADC x4, x4, xzr\n\t"
+            "ADDS x22, x22, x0\n\t ADCS x23, x23, x1\n\t ADCS %[r0], %[r0], x2\n\t ADCS %[r1], %[r1], x3\n\t ADC %[r2], x4, xzr\n\t"
+            "MUL x0, %[a0], %[b3]\n\t UMULH x1, %[a0], %[b3]\n\t MUL x11, %[a1], %[b3]\n\t UMULH x2, %[a1], %[b3]\n\t MUL x12, %[a2], %[b3]\n\t UMULH x3, %[a2], %[b3]\n\t MUL x13, %[a3], %[b3]\n\t UMULH x4, %[a3], %[b3]\n\t"
+            "ADDS x1, x1, x11\n\t ADCS x2, x2, x12\n\t ADCS x3, x3, x13\n\t ADC x4, x4, xzr\n\t"
+            "ADDS x23, x23, x0\n\t ADCS %[r0], %[r0], x1\n\t ADCS %[r1], %[r1], x2\n\t ADCS %[r2], %[r2], x3\n\t ADC %[r3], x4, xzr"
+            : [r0] "+&r" (result.blocks[0]), [r1] "+&r" (result.blocks[1]), [r2] "+&r" (result.blocks[2]), [r3] "=r" (result.blocks[3])
+            : [a0] "r" (blocks[0]), [a1] "r" (blocks[1]), [a2] "r" (blocks[2]), [a3] "r" (blocks[3]), [b0] "r" (key.blocks[0]), [b1] "r" (key.blocks[1]), [b2] "r" (key.blocks[2]), [b3] "r" (key.blocks[3])
+            : "x0", "x1", "x2", "x3", "x4", "x11", "x12", "x13", "x21", "x22", "x23"
+            );
+}
+
 void Key::multiplyByR2(Key& result)
 {
     __asm(
@@ -228,14 +293,14 @@ void Key::multiplyByR2(Key& result)
 void Key::reduce()
 {
     Key temp;
-    multiplyReduced(P_PRIME, temp);
-	temp.multiply(P, temp);
-	bool carry = addExtended(temp);
+    multiplyLow(P_PRIME, temp);
+	temp.multiplyHigh(P, temp); // TODO: оптимизировать за счёт 0xFFFFFFFFFFFFFFFF?
+	bool notZero = isNotZero();
 	blocks[0] = blocks[4];
-    blocks[1] = blocks[5];
-    blocks[2] = blocks[6];
-    blocks[3] = blocks[7];
-	if (carry)
+	blocks[1] = blocks[5];
+	blocks[2] = blocks[6];
+	blocks[3] = blocks[7];
+	if (notZero && increment() || add(temp))
 		add(R);
 	else if (compare(P) >= 0)
 		subtract(P);

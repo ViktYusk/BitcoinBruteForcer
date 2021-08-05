@@ -48,6 +48,7 @@ Point::Point(Key x, Key y)
 	this->y = y;
 }
 
+// TODO: считать только y % 2, а не весь y
 void Point::add(const Point& point, Key& inverse, Point& result) const
 {
     Key slope = point.y;

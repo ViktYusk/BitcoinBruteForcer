@@ -10,7 +10,7 @@
 
 const int BLOCK_BITS    = 26;
 const int THREAD_BITS   = 2;
-const int PROGRESS_BITS = 12;
+const int PROGRESS_BITS = 11;
 const int SUBBLOCK_BITS = 63 - BLOCK_BITS - THREAD_BITS - PROGRESS_BITS - Key::GROUP_BITS;
 const int THREADS_NUMBER    = 1 << THREAD_BITS;
 const int PROGRESSES_NUMBER = 1 << PROGRESS_BITS;

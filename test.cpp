@@ -50,6 +50,8 @@ bool check(unsigned* array1, unsigned* array2, int length)
     return true;
 }
 
+#pragma GCC push_options
+#pragma GCC optimize ("O0")
 int test()
 {
     std::cout << "TESTING:" << std::endl;
@@ -133,6 +135,19 @@ int test()
         TEST("Key::operator==", !(key1 == key2) && !(key2 == key1) && key2 == key3, 1000000, key2 == key3)
     }
     {
+        Key key1(0x9C47D08FFB10D4B8, 0xFD17B448A6855419, 0x5DA4FBFC0E1108A8, 0x483ADA7726A3C465);
+        Key key2(0x0000000000000000, 0x0000000000000000, 0x0000000000000000, 0x0000000000000000);
+        TEST("Key::isNotZero", key1.isNotZero() && !key2.isNotZero(), 100000000, key2.isNotZero())
+    }
+    /*
+    {
+        Key key1(0x9C47D08FFB10D4B8, 0xFD17B448A6855419, 0x5DA4FBFC0E1108A8, 0x483ADA7726A3C465, 0x59F2815B16F81798, 0x029BFCDB2DCE28D9, 0x55A06295CE870B07, 0x79BE667EF9DCBBAC);
+        Key key2(0x59F2815B16F81798, 0x029BFCDB2DCE28D9, 0x55A06295CE870B07, 0x79BE667EF9DCBBAC);
+        key1.rightShift256();
+        TEST("Key::rightShift256", key1 == key2, 100000000, key1.rightShift256())
+    }
+     */
+    {
         Key key1(0x59F2815B16F81798, 0x029BFCDB2DCE28D9, 0x55A06295CE870B07, 0x79BE667EF9DCBBAC);
         Key key2(0x9C47D08FFB10D4B8, 0xFD17B448A6855419, 0x5DA4FBFC0E1108A8, 0x483ADA7726A3C465);
         Key key3(0x678C3872C9464398, 0x7D3B91EA7EF401DD, 0x716C6AF7F674A9E4, 0xC9EC63F2DD01ED2F);
@@ -140,6 +155,16 @@ int test()
         for (int i = 0; i < iterations; i++)
             key1.add(key2);
         TEST("Key::add", key1 == key3, iterations, key1.add(key2))
+    }
+    {
+        Key key1(0xFFFFFFFFFFF81798, 0x029BFCDB2DCE28D9, 0x55A06295CE870B07, 0x79BE667EF9DCBBAC);
+        Key key2(0xFFFFFFFFFFF81798, 0x029BFCDB2DCE28D9, 0x55A06295CE870B07, 0x79BE667EF9DCBBAC);
+        Key key3(0x0000000005F5E100, 0x0000000000000000, 0x0000000000000000, 0x0000000000000000);
+        int iterations = 100000000;
+        for (int i = 0; i < iterations; i++)
+            key1.increment();
+        key2.add(key3);
+        TEST("Key::increment", key1 == key2, iterations, key1.increment())
     }
     {
         Key key1(0x9C47D08FFB10D4B8, 0xFD17B448A6855419, 0x5DA4FBFC0E1108A8, 0x483ADA7726A3C465, 0x59F2815B16F81798, 0x029BFCDB2DCE28D9, 0x55A06295CE870B07, 0x79BE667EF9DCBBAC);
@@ -150,6 +175,19 @@ int test()
             key1.addExtended(key2);
         TEST("Key::addExtended", key1.compareExtended(key3) == 0, iterations, key1.addExtended(key2))
     }
+    /*
+    {
+        Key key1(0x0000000000000000, 0x0000000000000000, 0x0000000000000000, 0x0000000000000000, 0x59F2815B16F81798, 0x029BFCDB2DCE28D9, 0x55A06295CE870B07, 0x79BE667EF9DCBBAC);
+        Key key2(0x9C47D08FFB10D4B8, 0xFD17B448A6855419, 0x5DA4FBFC0E1108A8, 0x483ADA7726A3C465, 0x59F2815B16F81798, 0x029BFCDB2DCE28D9, 0x55A06295CE870B07, 0x79BE667EF9DCBBAC);
+        Key key3(0x7B6980DED72FB0B8, 0xD361C11E9A968377, 0xB08CAE14FE36344F, 0x92E0DB6AD94B6BF6, 0x678C3872C98ED437, 0x7D3B91EA7EF401DD, 0x716C6AF7F674A9E4, 0xC9EC63F2DD01ED2F);
+        bool carry1 = key1.addExtended(key3);
+        bool carry2 = key2.addHigh(key3);
+        bool result = carry1 == carry2;
+        for (int b = 4; b < 8; b++)
+            result &= key1.blocks[b] == key2.blocks[b];
+        TEST("Key::addHigh", result, 10000000, key2.addHigh(key3))
+    }
+     */
     {
         Key key1(0x59F2815B16F81798, 0x029BFCDB2DCE28D9, 0x55A06295CE870B07, 0x79BE667EF9DCBBAC);
         Key key2(0x9C47D08FFB10D4B8, 0xFD17B448A6855419, 0x5DA4FBFC0E1108A8, 0x483ADA7726A3C465);
@@ -202,8 +240,19 @@ int test()
         for (int i = 0; i < iterations; i++)
             key1.multiply(key3, key1);
         for (int i = 0; i < iterations; i++)
-            key2.multiplyReduced(key3, key2);
-        TEST("Key::multiplyReduced()", key1.compare(key2) == 0, iterations, key2.multiplyReduced(key3, key2))
+            key2.multiplyLow(key3, key2);
+        TEST("Key::multiplyLow", key1.compare(key2) == 0, iterations, key2.multiplyLow(key3, key2))
+    }
+    {
+        Key key1(0x59F2815B16F81798, 0x029BFCDB2DCE28D9, 0x55A06295CE870B07, 0x79BE667EF9DCBBAC);
+        Key key2(0x59F2815B16F81798, 0x029BFCDB2DCE28D9, 0x55A06295CE870B07, 0x79BE667EF9DCBBAC);
+        Key key3(0x9C47D08FFB10D4B8, 0xFD17B448A6855419, 0x5DA4FBFC0E1108A8, 0x483ADA7726A3C465);
+        key1.multiply(key3, key1);
+        key2.multiplyHigh(key3, key2);
+        bool result = true;
+        for (int b = 0; b < 4; b++)
+            result &= key1.blocks[4 + b] == key2.blocks[b];
+        TEST("Key::multiplyHigh", result, 1000000, key2.multiplyHigh(key3, key2))
     }
     {
         Key key1(0x59F2815B16F81798, 0x029BFCDB2DCE28D9, 0x55A06295CE870B07, 0x79BE667EF9DCBBAC);
@@ -217,17 +266,22 @@ int test()
     }
     {
         Key key1(0x9C47D08FFB10D4B8, 0xFD17B448A6855419, 0x5DA4FBFC0E1108A8, 0x483ADA7726A3C465, 0x59F2815B16F81798, 0x029BFCDB2DCE28D9, 0x55A06295CE870B07, 0x79BE667EF9DCBBAC);
-        Key key2(0xC526CE3E29B569A1, 0xF55B7994186165D1, 0xD227C08AA6818A39, 0x03F4520816A42A72);
+        Key key2(0x3344E4AA359C06D0, 0x4923A947FF1CD1D7, 0x687E3D102B7D3A06, 0x93F5461B36AC32DF);
+        key1.reduce();
+        bool result1 = key1 == key2;
+        Key key3(0x9C47D08FFB10D4B8, 0xFD17B448A6855419, 0x5DA4FBFC0E1108A8, 0x483ADA7726A3C465, 0x59F2815B16F81798, 0x029BFCDB2DCE28D9, 0x55A06295CE870B07, 0x79BE667EF9DCBBAC);
+        Key key4(0xC526CE3E29B569A1, 0xF55B7994186165D1, 0xD227C08AA6818A39, 0x03F4520816A42A72);
         int iterations = 1000000;
         for (int i = 0; i < iterations; i++)
         {
-            key1.reduce();
-            key1.blocks[4] = key1.blocks[0];
-            key1.blocks[5] = key1.blocks[1];
-            key1.blocks[6] = key1.blocks[2];
-            key1.blocks[7] = key1.blocks[3];
+            key3.reduce();
+            key3.blocks[4] = key3.blocks[0];
+            key3.blocks[5] = key3.blocks[1];
+            key3.blocks[6] = key3.blocks[2];
+            key3.blocks[7] = key3.blocks[3];
         }
-        TEST("Key::reduce", key1 == key2, iterations, key1.reduce())
+        bool result2 = key3 == key4;
+        TEST("Key::reduce", result1 && result2, iterations, key3.reduce())
     }
     {
         Key key1(0x59F2815B16F81798, 0x029BFCDB2DCE28D9, 0x55A06295CE870B07, 0x79BE667EF9DCBBAC);
@@ -255,7 +309,7 @@ int test()
         Key remainder2(0x4C1AFD48D20FCCFF, 0xFAC80649A463AE4D, 0x54BF3AD462F1E9F1, 0x0C8333020C4688A7);
         dividend2.divide(divisor2, quotient_2);
         bool result2 = divisor2 == divisorCopy2 && dividend2 == remainder2 && quotient_2 == quotient2;
-        TEST("Key::divide", result1 && result2, 10000, dividend1.divide(divisor1, quotient_1))
+        TEST("Key::divide", result1 && result2, 1000000, dividend1.divide(divisor1, quotient_1))
     }
     {
         Key a1(0x0000000000000003, 0x0000000000000000, 0x0000000000000000, 0x0000000000000000);
@@ -381,3 +435,4 @@ int test()
     }
     return 0;
 }
+#pragma GCC pop_options

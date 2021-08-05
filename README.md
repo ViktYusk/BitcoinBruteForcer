@@ -17,8 +17,9 @@ A key can be contructed either from four 64-bit digits, or eight 64-bit digits (
 There are some static constant fields such as `Key::ZERO`, `Key::ONE`, etc. for some important key constants.
 
 The next principal methods for keys are implemented:
-* `add`, `subtract`, `multiply`, `divide` for common arithmetic operations with 256-bit keys (for division, [Knuth's D-Algorithm](https://skanthak.homepage.t-online.de/division.html) is used); `addExtended` adds 512-bit keys; `multiplyReduced` and `multiplyByR2` are optimized multiplication methods, the first of them calculates only lower 256-bit product, the second of them multiplies a key by `Key::R2` which is a rather small key
-* `reduce` does [Montgomery reduction](https://en.wikipedia.org/wiki/Montgomery_modular_multiplication#The_REDC_algorithm)
+* `add`, `subtract` for arithmetical 256-bit addition and subtraction with a carry/borrow flag; `addExtended` adds 512-bit keys
+* `multiply` for arithmetical multiplication; `multiplyByR2` for optimized multiplication by `Key::R2`; `multiplyLow` and `multiplyHigh` for calculating only low/high part of the result; `reduce` does [Montgomery reduction](https://en.wikipedia.org/wiki/Montgomery_modular_multiplication#The_REDC_algorithm)
+* `divide` for division ([Knuth's D-Algorithm](https://skanthak.homepage.t-online.de/division.html) is used)
 * `operator+=`, `operator-=`, `operator*=`, `invert` for modular addition, subtraction, multiplication, and inversion modulo `Key::P`, respectively; `invertGroup` effectively inverts a group of keys as described [here](https://en.wikipedia.org/wiki/Modular_multiplicative_inverse#Multiple_inverses).
 
 ### Point
@@ -42,15 +43,15 @@ The next principal methods for points are implemented:
 All the methods from `Key`, `Point`, and functions from `sha256`, and `ripemd160` are tested in `test`. Some of them, which are directly used in brute-forcing keys, are speed-tested. There are time consumptions for the principal operations using 1 thread:
 Operation | Time for 1 operation | Usages for 1 key | Time for 1 key | % of total time
 --------- | -------------------- | ---------------- | -------------- | ---------------
-`sha256` | 1174 ns | 1.0000 | 1174 ns | 24 %
-`Point::add` | 2100 ns | 0.5000 | 1050 ns | 22 %
-`Key::invertGroup` | 4 100 000 ns | 0.0002 | 1001 ns | 21 %
+`sha256` | 1183 ns | 1.0000 | 1183 ns | 25 %
+`Point::add` | 2000 ns | 0.5000 | 1000 ns | 21 %
 `Point::subtract` | 2000 ns | 0.5000 | 1000 ns | 21 %
-`ripemd160` | 549 ns | 1.0000 | 549 ns | 11 %
-`Point::compress` | 15 ns | 1.0000 | 15 ns | 0 %
-`Key::operator-=` | 25 ns | 0.5002 | 13 ns | 0 %
+`Key::invertGroup` | 3 900 000 ns | 0.0002 | 952 ns | 20 %
+`ripemd160` | 520 ns | 1.0000 | 520 ns | 11 %
+`Point::compress` | 22 ns | 1.0000 | 22 ns | 0 %
+`Key::operator-=` | 32 ns | 0.5002 | 16 ns | 0 %
 
-For now, it is about 4800 ns needed to check 1 private key using 1 thread. Therefore the total speed is about 800 000 keys per second.
+For now, it is about 4700 ns needed to check 1 private key using 1 thread. Therefore, the total speed is about 810K keys/second.
 
 ### main
 
