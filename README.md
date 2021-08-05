@@ -30,7 +30,7 @@ A point can be contructed either from two keys, or from `unsigned long long` pri
 The next principal methods for points are implemented:
 * `initialize` is a static method to initialize `gPowers` and `gMultiples` which are some useful pre-computed points
 * `operator+=`, `add`, `subtract` for [elliptic curve addition and subtraction](https://en.wikipedia.org/wiki/Elliptic_curve#The_group_law) (two last methods use the pre-computed inverse of the abscissas difference)
-* `double_` for elliptic curve doubling i. e. adding with itself
+* `double_` for elliptic curve point doubling i. e. adding a point with itself
 * `compress` method compresses the point to pass the result to `sha256` (it is not usual compression of a public point but an optimized one)
 
 ### sha256 and ripemd160
