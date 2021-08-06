@@ -56,7 +56,7 @@ For now, it is about 4700 ns needed to check 1 private key using 1 thread. There
 ### main
 
 The sought private key consists of 64 bits. In the project, the bits are divided into groups, where Bit # 1 is a higher one:
-Bit # 1 | Bits # 2—27 | Bits # 28—29 | Bits # 30—41 | Bits # 42—52 | Bits # 53—64
+Bit # 1 | Bits # 2—27 | Bits # 28—29 | Bits # 30—40 | Bits # 41—52 | Bits # 53—64
 ------- | ----------- | ------------ | ------------ | ------------ | ------------
 `1` | block bits | thread bits | progress bits | subblock bits | group bits
 
