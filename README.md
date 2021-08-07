@@ -20,7 +20,7 @@ The next principal methods for keys are implemented:
 * `add`, `subtract` for arithmetical 256-bit addition and subtraction with a carry/borrow flag; `addExtended` adds 512-bit keys
 * `multiply` for arithmetical multiplication; `multiplyByR2` for optimized multiplication by `R2`; `multiplyLow` and `multiplyHigh` for calculating only low/high part of the result; `reduce` does [Montgomery reduction](https://en.wikipedia.org/wiki/Montgomery_modular_multiplication#The_REDC_algorithm)
 * `divide` for division ([Knuth's D-Algorithm](https://skanthak.homepage.t-online.de/division.html) is used)
-* `operator+=`, `operator-=`, `operator*=`, `invert` for modular addition, subtraction, multiplication, and inversion modulo `P`, respectively; `invertGroup` effectively inverts a group of keys as described [here](https://en.wikipedia.org/wiki/Modular_multiplicative_inverse#Multiple_inverses).
+* `operator+=`, `operator-=`, `operator*=`, `invert` for modular addition, subtraction, multiplication, and inversion modulo `P`, respectively; `invertGroup` effectively inverts a group of keys as described [here](https://en.wikipedia.org/wiki/Modular_multiplicative_inverse#Multiple_inverses)
 
 ### Point
 
