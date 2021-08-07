@@ -50,7 +50,7 @@ Operation | Time for 1 operation | Usages for 1 key | Time for 1 key | % of tota
 `ripemd160` | 520 ns | 1.0000 | 520 ns | 11 %
 `Point::compress` | 22 ns | 1.0000 | 22 ns | 0 %
 `Key::operator-=` | 32 ns | 0.5002 | 16 ns | 0 %
-`Key::add` | 2000 ns | 0.0002 | 0 ns | 0 %
+`Point::add` | 2000 ns | 0.0002 | 0 ns | 0 %
 
 For now, it is about 4700 ns needed to check 1 private key using 1 thread. Therefore, the total speed is about 820K keys/second.
 
