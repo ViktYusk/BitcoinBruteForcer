@@ -25,7 +25,9 @@ struct Point
 	void operator+=(const Point& point);
 
     void add(const Point& point, Key& inverse, Point& result) const;
+    void addReduced(const Point& point, Key& inverse, Point& result) const;
     void subtract(const Point& point, Key& inverse, Point& result) const;
+    void subtractReduced(const Point& point, Key& inverse, Point& result) const;
 	void double_();
 	void compress(unsigned* output);
 };

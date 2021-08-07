@@ -217,6 +217,12 @@ bool Key::subtract(const Key& key)
 	return carry;
 }
 
+unsigned long long Key::differenceParity(const Key& subtrahend)
+{
+    unsigned long long parity = blocks[0] % 2 ^ subtrahend.blocks[0] % 2;
+    return compare(subtrahend) == 1 ? parity : 1 - parity;
+}
+
 // TODO: метод Карацубы
 void Key::multiply(const Key& key, Key& result)
 {

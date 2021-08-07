@@ -4,7 +4,7 @@
 
 struct Key
 {
-	static const int GROUP_BITS = 12; // TODO: оптимизировать
+	static const int GROUP_BITS = 12;
 	static const int GROUP_SIZE = 1 << GROUP_BITS;
 	static const unsigned long long B = 0x0000000100000000;
 	
@@ -39,6 +39,7 @@ struct Key
 	bool addExtended(const Key& key);
 	//bool addHigh(const Key& key);
 	bool subtract(const Key& key);
+	unsigned long long differenceParity(const Key& subtrahend);
     void multiply(const Key& key, Key& result);
     void multiplyLow(const Key& key, Key& result);
     void multiplyHigh(const Key& key, Key& result);

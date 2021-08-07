@@ -65,9 +65,9 @@ void* thread(void* id)
             for (int i = 0; i < Key::GROUP_SIZE; i++)
             {
                 if (i < Key::GROUP_SIZE / 2)
-                    center.subtract(Point::gMultiples[Key::GROUP_SIZE / 2 - 1 - i], inverses[Key::GROUP_SIZE / 2 - 1 - i], point);
+                    center.subtractReduced(Point::gMultiples[Key::GROUP_SIZE / 2 - 1 - i], inverses[Key::GROUP_SIZE / 2 - 1 - i], point);
                 else if (i > Key::GROUP_SIZE / 2)
-                    center.add(Point::gMultiples[i - (Key::GROUP_SIZE / 2 + 1)], inverses[i - (Key::GROUP_SIZE / 2 + 1)], point);
+                    center.addReduced(Point::gMultiples[i - (Key::GROUP_SIZE / 2 + 1)], inverses[i - (Key::GROUP_SIZE / 2 + 1)], point);
                 else
                     point = center;
                 point.compress(compression);

@@ -14,23 +14,23 @@ A brief introduction to Bitcoin Puzzle, also known as BTC32, all necessary refer
 
 A key can be contructed either from four 64-bit digits, or eight 64-bit digits (for some futher algorithms it is sometimes necessary to consider 512-bit keys).
 
-There are some static constant fields such as `Key::ZERO`, `Key::ONE`, etc. for some important key constants.
+There are some static constant fields such as `ZERO`, `ONE`, etc. for some important key constants.
 
 The next principal methods for keys are implemented:
 * `add`, `subtract` for arithmetical 256-bit addition and subtraction with a carry/borrow flag; `addExtended` adds 512-bit keys
-* `multiply` for arithmetical multiplication; `multiplyByR2` for optimized multiplication by `Key::R2`; `multiplyLow` and `multiplyHigh` for calculating only low/high part of the result; `reduce` does [Montgomery reduction](https://en.wikipedia.org/wiki/Montgomery_modular_multiplication#The_REDC_algorithm)
+* `multiply` for arithmetical multiplication; `multiplyByR2` for optimized multiplication by `R2`; `multiplyLow` and `multiplyHigh` for calculating only low/high part of the result; `reduce` does [Montgomery reduction](https://en.wikipedia.org/wiki/Montgomery_modular_multiplication#The_REDC_algorithm)
 * `divide` for division ([Knuth's D-Algorithm](https://skanthak.homepage.t-online.de/division.html) is used)
-* `operator+=`, `operator-=`, `operator*=`, `invert` for modular addition, subtraction, multiplication, and inversion modulo `Key::P`, respectively; `invertGroup` effectively inverts a group of keys as described [here](https://en.wikipedia.org/wiki/Modular_multiplicative_inverse#Multiple_inverses).
+* `operator+=`, `operator-=`, `operator*=`, `invert` for modular addition, subtraction, multiplication, and inversion modulo `P`, respectively; `invertGroup` effectively inverts a group of keys as described [here](https://en.wikipedia.org/wiki/Modular_multiplicative_inverse#Multiple_inverses).
 
 ### Point
 
-`Point` represents a Bitcoin public point which is a point on [SECP256K1 Curve](https://en.bitcoin.it/wiki/Secp256k1) which is a. k. a. *Bitcoin Curve*. It consists of two 256-bit keys `x` and `y`. `Point::G` is the generator point. `Point::ADDRESS0` is the first 4 bytes of the puzzle address.
+`Point` represents a Bitcoin public point which is a point on [SECP256K1 Curve](https://en.bitcoin.it/wiki/Secp256k1) which is a. k. a. *Bitcoin Curve*. It consists of two 256-bit keys `x` and `y`. `G` is the generator point. `ADDRESS0` is the first 4 bytes of the puzzle address.
 
 A point can be contructed either from two keys, or from `unsigned long long` private key as the corresponding public point (the last operation is quite slow).
 
 The next principal methods for points are implemented:
 * `initialize` is a static method to initialize `gPowers` and `gMultiples` which are some useful pre-computed points
-* `operator+=`, `add`, `subtract` for [elliptic curve addition and subtraction](https://en.wikipedia.org/wiki/Elliptic_curve#The_group_law) (two last methods use the pre-computed inverse of the abscissas difference)
+* `operator+=`, `add`, `subtract` for [elliptic curve addition and subtraction](https://en.wikipedia.org/wiki/Elliptic_curve#The_group_law) (two last methods use the pre-computed inverse of the abscissas difference); `addReduced` and `subtractReduced` calculate `y % 2` instead `y` for the result point
 * `double_` for elliptic curve point doubling i. e. adding a point with itself
 * `compress` method compresses the point to pass the result to `sha256` (it is not usual compression of a public point but an optimized one)
 
@@ -43,15 +43,16 @@ The next principal methods for points are implemented:
 All the methods from `Key`, `Point`, and functions from `sha256`, and `ripemd160` are tested in `test`. Some of them, which are directly used in brute-forcing keys, are speed-tested. There are time consumptions for the principal operations using 1 thread:
 Operation | Time for 1 operation | Usages for 1 key | Time for 1 key | % of total time
 --------- | -------------------- | ---------------- | -------------- | ---------------
-`sha256` | 1183 ns | 1.0000 | 1183 ns | 25 %
-`Point::add` | 2000 ns | 0.5000 | 1000 ns | 21 %
-`Point::subtract` | 2000 ns | 0.5000 | 1000 ns | 21 %
-`Key::invertGroup` | 3 900 000 ns | 0.0002 | 952 ns | 20 %
+`sha256` | 1200 ns | 1.0000 | 1200 ns | 25 %
+`Point::addReduced` | 2000 ns | 0.4998 | 1000 ns | 21 %
+`Point::subtractReduced` | 2000 ns | 0.5000 | 1000 ns | 21 %
+`Key::invertGroup` | 4 000 000 ns | 0.0002 | 977 ns | 21 %
 `ripemd160` | 520 ns | 1.0000 | 520 ns | 11 %
 `Point::compress` | 22 ns | 1.0000 | 22 ns | 0 %
 `Key::operator-=` | 32 ns | 0.5002 | 16 ns | 0 %
+`Key::add` | 2000 ns | 0.0002 | 0 ns | 0 %
 
-For now, it is about 4700 ns needed to check 1 private key using 1 thread. Therefore, the total speed is about 810K keys/second.
+For now, it is about 4700 ns needed to check 1 private key using 1 thread. Therefore, the total speed is about 820K keys/second.
 
 ### main
 

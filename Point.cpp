@@ -48,7 +48,6 @@ Point::Point(Key x, Key y)
 	this->y = y;
 }
 
-// TODO: считать только y % 2, а не весь y
 void Point::add(const Point& point, Key& inverse, Point& result) const
 {
     Key slope = point.y;
@@ -62,6 +61,21 @@ void Point::add(const Point& point, Key& inverse, Point& result) const
     result.y -= result.x;
     result.y *= slope;
     result.y -= y;
+}
+
+void Point::addReduced(const Point& point, Key& inverse, Point& result) const
+{
+    Key slope = point.y;
+    slope -= y;
+    slope *= inverse;
+    result.x = slope;
+    result.x *= slope;
+    result.x -= x;
+    result.x -= point.x;
+    result.y = x;
+    result.y -= result.x;
+    result.y *= slope;
+    result.y.blocks[0] = result.y.differenceParity(y);
 }
 
 void Point::subtract(const Point& point, Key& inverse, Point& result) const
@@ -78,6 +92,22 @@ void Point::subtract(const Point& point, Key& inverse, Point& result) const
     result.y -= result.x;
     result.y *= slope;
     result.y -= y;
+}
+
+void Point::subtractReduced(const Point& point, Key& inverse, Point& result) const
+{
+    Key slope = Key::P;
+    slope.subtract(point.y);
+    slope -= y;
+    slope *= inverse;
+    result.x = slope;
+    result.x *= slope;
+    result.x -= x;
+    result.x -= point.x;
+    result.y = x;
+    result.y -= result.x;
+    result.y *= slope;
+    result.y.blocks[0] = result.y.differenceParity(y);
 }
 
 bool Point::operator==(const Point& point)

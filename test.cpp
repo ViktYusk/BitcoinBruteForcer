@@ -197,6 +197,18 @@ int test()
             key1.subtract(key2);
         TEST("Key::subtract", key1 == key3, iterations, key1.subtract(key2))
     }
+    {
+        Key key1(0x59F2815B16F81798, 0x029BFCDB2DCE28D9, 0x55A06295CE870B07, 0x79BE667EF9DCBBAC);
+        Key key2(0x9C47D08FFB10D4B8, 0xFD17B448A6855419, 0x5DA4FBFC0E1108A8, 0x483ADA7726A3C465);
+        bool result = true;
+        for (int i = 0; i < 1000; i++)
+        {
+            unsigned long long parity = key1.differenceParity(key2);
+            key1 -= key2;
+            result &= key1.blocks[0] % 2 == parity;
+        }
+        TEST("Key::differenceParity", result, 100000000, key1.differenceParity(key2))
+    }
 	{
 		Key key1(0x59F2815B16F81798, 0x029BFCDB2DCE28D9, 0x55A06295CE870B07, 0x79BE667EF9DCBBAC);
 		Key key2(0x9C47D08FFB10D4B8, 0xFD17B448A6855419, 0x5DA4FBFC0E1108A8, 0x483ADA7726A3C465);
@@ -396,6 +408,18 @@ int test()
         TEST("Point::add", temp == point2, 10000, point1.add(Point::G, inverse, temp))
     }
     {
+        Point point1 = Point(/*1024, */Key(0xD5B901B2E285131F, 0xAAEC6ECDC813B088, 0xD664A18F66AD6240, 0x241FEBB8E23CBD77), Key(0xABB3E66F2750026D, 0xCD50FD0FBD0CB5AF, 0xD6C420BD13981DF8, 0x513378D9FF94F8D3));
+        Point point2 = Point(/*1025, */Key(0x8304214FE4985A86, 0x640D2464C7FE0AC4, 0x066535A04DBF563A, 0x635CD7A05064D3BC), Key(0xE0453E27E9E3AE1F, 0xE8D5F047F3281A4C, 0x46735CFCAF9E2F30, 0x00E40265913E77F6));
+        Key inverse = Point::G.x;
+        inverse -= point1.x;
+        inverse.invert();
+        Point temp1;
+        Point temp2;
+        point1.add(Point::G, inverse, temp1);
+        point1.addReduced(Point::G, inverse, temp2);
+        TEST("Point::addReduced", temp1.x == temp2.x && temp1.y.blocks[0] % 2 == temp2.y.blocks[0] % 2, 10000, point1.addReduced(Point::G, inverse, temp2))
+    }
+    {
         Point point1 = Point(/*1025, */Key(0x8304214FE4985A86, 0x640D2464C7FE0AC4, 0x066535A04DBF563A, 0x635CD7A05064D3BC), Key(0xE0453E27E9E3AE1F, 0xE8D5F047F3281A4C, 0x46735CFCAF9E2F30, 0x00E40265913E77F6));
         Point point2 = Point(/*1024, */Key(0xD5B901B2E285131F, 0xAAEC6ECDC813B088, 0xD664A18F66AD6240, 0x241FEBB8E23CBD77), Key(0xABB3E66F2750026D, 0xCD50FD0FBD0CB5AF, 0xD6C420BD13981DF8, 0x513378D9FF94F8D3));
         Key inverse = Point::G.x;
@@ -404,6 +428,18 @@ int test()
         Point temp;
         point1.subtract(Point::G, inverse, temp);
         TEST("Point::subtract", temp == point2, 10000, point1.subtract(Point::G, inverse, temp))
+    }
+    {
+        Point point1 = Point(/*1025, */Key(0x8304214FE4985A86, 0x640D2464C7FE0AC4, 0x066535A04DBF563A, 0x635CD7A05064D3BC), Key(0xE0453E27E9E3AE1F, 0xE8D5F047F3281A4C, 0x46735CFCAF9E2F30, 0x00E40265913E77F6));
+        Point point2 = Point(/*1024, */Key(0xD5B901B2E285131F, 0xAAEC6ECDC813B088, 0xD664A18F66AD6240, 0x241FEBB8E23CBD77), Key(0xABB3E66F2750026D, 0xCD50FD0FBD0CB5AF, 0xD6C420BD13981DF8, 0x513378D9FF94F8D3));
+        Key inverse = Point::G.x;
+        inverse -= point1.x;
+        inverse.invert();
+        Point temp1;
+        Point temp2;
+        point1.subtract(Point::G, inverse, temp1);
+        point1.subtractReduced(Point::G, inverse, temp2);
+        TEST("Point::subtractReduced", temp1.x == temp2.x && temp1.y.blocks[0] % 2 == temp2.y.blocks[0] % 2, 10000, point1.subtractReduced(Point::G, inverse, temp2))
     }
     {
         Point point1 = Point(/*1024, */Key(0xD5B901B2E285131F, 0xAAEC6ECDC813B088, 0xD664A18F66AD6240, 0x241FEBB8E23CBD77), Key(0xABB3E66F2750026D, 0xCD50FD0FBD0CB5AF, 0xD6C420BD13981DF8, 0x513378D9FF94F8D3));
