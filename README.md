@@ -30,7 +30,7 @@ A point can be contructed either from two keys, or from `unsigned long long` pri
 
 The next principal methods for points are implemented:
 * `initialize` is a static method to initialize `gPowers` and `gMultiples` which are some useful pre-computed points
-* `operator+=`, `add`, `subtract` for [elliptic curve addition and subtraction](https://en.wikipedia.org/wiki/Elliptic_curve#The_group_law) (two last methods use the pre-computed inverse of the abscissas difference); `addReduced` and `subtractReduced` calculate `y % 2` instead `y` for the result point
+* `operator+=`, `add`, `subtract` for [elliptic curve addition and subtraction](https://en.wikipedia.org/wiki/Elliptic_curve#The_group_law) (two last methods use the pre-computed inverse of the abscissas difference); `addReduced` and `subtractReduced` calculate `y % 2` instead of `y` for the result point
 * `double_` for elliptic curve point doubling i. e. adding a point with itself
 * `compress` method compresses the point to pass the result to `sha256` (it is not usual compression of a public point but an optimized one)
 
@@ -50,7 +50,7 @@ Operation | Time for 1 operation | Usages for 1 key | Time for 1 key | % of tota
 `ripemd160` | 520 ns | 1.0000 | 520 ns | 11 %
 `Point::compress` | 22 ns | 1.0000 | 22 ns | 0 %
 `Key::operator-=` | 32 ns | 0.5002 | 16 ns | 0 %
-`Key::add` | 2000 ns | 0.0002 | 0 ns | 0 %
+`Point::add` | 2000 ns | 0.0002 | 0 ns | 0 %
 
 For now, it is about 4700 ns needed to check 1 private key using 1 thread. Therefore, the total speed is about 820K keys/second.
 
