@@ -6,7 +6,7 @@ const Key Key::THREE   = Key(0x0000000000000003, 0x0000000000000000, 0x000000000
 const Key Key::R       = Key(0x00000001000003D1, 0x0000000000000000, 0x0000000000000000, 0x0000000000000000); // 4294968273 NOLINT(cert-err58-cpp)
 const Key Key::R2      = Key(0x000007A2000E90A1, 0x0000000000000001, 0x0000000000000000, 0x0000000000000000); // 18446752466076602529 NOLINT(cert-err58-cpp)
 const Key Key::P_PRIME = Key(0xD838091DD2253531, 0xBCB223FEDC24A059, 0x9C46C2C295F2B761, 0xC9BD190515538399); // 91248989341183975618893650062416139444822672217621753343178995607987479196977 NOLINT(cert-err58-cpp)
-const Key Key::P         = Key(0xFFFFFFFEFFFFFC2F, 0xFFFFFFFFFFFFFFFF, 0xFFFFFFFFFFFFFFFF, 0xFFFFFFFFFFFFFFFF); // 115792089237316195423570985008687907853269984665640564039457584007908834671663 NOLINT(cert-err58-cpp)
+const Key Key::P       = Key(0xFFFFFFFEFFFFFC2F, 0xFFFFFFFFFFFFFFFF, 0xFFFFFFFFFFFFFFFF, 0xFFFFFFFFFFFFFFFF); // 115792089237316195423570985008687907853269984665640564039457584007908834671663 NOLINT(cert-err58-cpp)
 
 void Key::gcd(Key a, Key b, Key& x, Key&y)
 {
@@ -211,8 +211,8 @@ bool Key::subtract(const Key& key)
         "SBCS %[a2], %[a2], %[b2]\n\t"
         "SBCS %[a3], %[a3], %[b3]\n\t"
         "SBC %[c], xzr, xzr"
-        : [a0] "+r" (blocks[0]), [a1] "+r" (blocks[1]), [a2] "+r" (blocks[2]), [a3] "+r" (blocks[3]), [a4] "+r" (blocks[4]), [a5] "+r" (blocks[5]), [a6] "+r" (blocks[6]), [a7] "+r" (blocks[7]), [c] "=r" (carry)
-        : [b0] "r" (key.blocks[0]), [b1] "r" (key.blocks[1]), [b2] "r" (key.blocks[2]), [b3] "r" (key.blocks[3]), [b4] "r" (key.blocks[4]), [b5] "r" (key.blocks[5]), [b6] "r" (key.blocks[6]), [b7] "r" (key.blocks[7])
+        : [a0] "+r" (blocks[0]), [a1] "+r" (blocks[1]), [a2] "+r" (blocks[2]), [a3] "+r" (blocks[3]), [c] "=r" (carry)
+        : [b0] "r" (key.blocks[0]), [b1] "r" (key.blocks[1]), [b2] "r" (key.blocks[2]), [b3] "r" (key.blocks[3])
     );
 	return carry;
 }
@@ -223,7 +223,6 @@ unsigned long long Key::differenceParity(const Key& subtrahend)
     return compare(subtrahend) == 1 ? parity : 1 - parity;
 }
 
-// TODO: метод Карацубы
 void Key::multiply(const Key& key, Key& result)
 {
     __asm(
@@ -238,7 +237,7 @@ void Key::multiply(const Key& key, Key& result)
     "MUL x0, %[a0], %[b3]\n\t UMULH x1, %[a0], %[b3]\n\t MUL x11, %[a1], %[b3]\n\t UMULH x2, %[a1], %[b3]\n\t MUL x12, %[a2], %[b3]\n\t UMULH x3, %[a2], %[b3]\n\t MUL x13, %[a3], %[b3]\n\t UMULH x4, %[a3], %[b3]\n\t"
     "ADDS x1, x1, x11\n\t ADCS x2, x2, x12\n\t ADCS x3, x3, x13\n\t ADC x4, x4, xzr\n\t"
     "ADDS %[r3], %[r3], x0\n\t ADCS %[r4], %[r4], x1\n\t ADCS %[r5], %[r5], x2\n\t ADCS %[r6], %[r6], x3\n\t ADC %[r7], x4, xzr"
-    : [r0] "=&r" (result.blocks[0]), [r1] "+&r" (result.blocks[1]), [r2] "+&r" (result.blocks[2]), [r3] "+&r" (result.blocks[3]), [r4] "+&r" (result.blocks[4]), [r5] "+&r" (result.blocks[5]), [r6] "+&r" (result.blocks[6]), [r7] "=r" (result.blocks[7])
+    : [r0] "=&r" (result.blocks[0]), [r1] "+r" (result.blocks[1]), [r2] "+r" (result.blocks[2]), [r3] "+r" (result.blocks[3]), [r4] "+r" (result.blocks[4]), [r5] "+r" (result.blocks[5]), [r6] "+r" (result.blocks[6]), [r7] "=r" (result.blocks[7])
     : [a0] "r" (blocks[0]), [a1] "r" (blocks[1]), [a2] "r" (blocks[2]), [a3] "r" (blocks[3]), [b0] "r" (key.blocks[0]), [b1] "r" (key.blocks[1]), [b2] "r" (key.blocks[2]), [b3] "r" (key.blocks[3])
     : "x0", "x1", "x2", "x3", "x4", "x11", "x12", "x13"
     );
@@ -296,17 +295,33 @@ void Key::multiplyByR2(Key& result)
     );
 }
 
+void Key::multiplyByRHigh(Key& result)
+{
+    __asm(
+            "UMULH x1, %[a0], %[b0]\n\t MUL x11, %[a1], %[b0]\n\t UMULH x2, %[a1], %[b0]\n\t MUL x12, %[a2], %[b0]\n\t UMULH x3, %[a2], %[b0]\n\t MUL x13, %[a3], %[b0]\n\t UMULH %[r0], %[a3], %[b0]\n\t"
+            "ADDS x1, x1, x11\n\t ADCS x2, x2, x12\n\t ADCS x3, x3, x13\n\t ADC %[r0], %[r0], xzr\n\t"
+            "MOV %[r1], #0\n\t MOV %[r2], #0\n\t MOV %[r3], #0"
+            : [r0] "+r" (result.blocks[0]), [r1] "=r" (result.blocks[1]), [r2] "=r" (result.blocks[2]), [r3] "=r" (result.blocks[3])
+            : [a0] "r" (blocks[0]), [a1] "r" (blocks[1]), [a2] "r" (blocks[2]), [a3] "r" (blocks[3]), [b0] "r" (R.blocks[0])
+            : "x1", "x2", "x3", "x11", "x12", "x13"
+    );
+}
+
+
 void Key::reduce()
 {
-    Key temp;
-    multiplyLow(P_PRIME, temp);
-	temp.multiplyHigh(P, temp); // TODO: оптимизировать за счёт 0xFFFFFFFFFFFFFFFF?
+    Key temp1, temp2;
+    multiplyLow(P_PRIME, temp1);
+    temp1.multiplyByRHigh(temp2);
+    if (temp1.isNotZero())
+        temp2.increment();
+    temp1.subtract(temp2);
 	bool notZero = isNotZero();
 	blocks[0] = blocks[4];
 	blocks[1] = blocks[5];
 	blocks[2] = blocks[6];
 	blocks[3] = blocks[7];
-	if (notZero && increment() || add(temp))
+	if (notZero && increment() || add(temp1))
 		add(R);
 	else if (compare(P) >= 0)
 		subtract(P);

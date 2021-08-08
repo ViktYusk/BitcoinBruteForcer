@@ -69,7 +69,10 @@ void* thread(void* id)
                 else if (i > Key::GROUP_SIZE / 2)
                     center.addReduced(Point::gMultiples[i - (Key::GROUP_SIZE / 2 + 1)], inverses[i - (Key::GROUP_SIZE / 2 + 1)], point);
                 else
+                {
                     point = center;
+                    point.y.blocks[0] &= 1;
+                }
                 point.compress(compression);
                 unsigned output[8];
                 sha256(compression, output);

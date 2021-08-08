@@ -33,6 +33,7 @@ struct Key
 	int compare(const Key& key);
 	int compareExtended(const Key& key);
 	bool isNotZero();
+
 	bool increment();
 	//void rightShift256();
 	bool add(const Key& key);
@@ -44,6 +45,7 @@ struct Key
     void multiplyLow(const Key& key, Key& result);
     void multiplyHigh(const Key& key, Key& result);
 	void multiplyByR2(Key& result);
+	void multiplyByRHigh(Key& result);
 	void reduce();
 	void divide(Key& divisor, Key& quotient);
 	void invert();

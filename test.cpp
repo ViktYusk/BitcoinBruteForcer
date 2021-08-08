@@ -274,7 +274,14 @@ int test()
             key1.multiply(Key::R2, key1);
         for (int i = 0; i < iterations; i++)
             key2.multiplyByR2(key2);
-        TEST("Key::multiplyByR2()", key1.compareExtended(key2) == 0, iterations, key2.multiplyByR2(key2))
+        TEST("Key::multiplyByR2", key1.compareExtended(key2) == 0, iterations, key2.multiplyByR2(key2))
+    }
+    {
+        Key key1(0x59F2815B16F81798, 0x029BFCDB2DCE28D9, 0x55A06295CE870B07, 0x79BE667EF9DCBBAC);
+        Key key2(0x59F2815B16F81798, 0x029BFCDB2DCE28D9, 0x55A06295CE870B07, 0x79BE667EF9DCBBAC);
+        key1.multiplyHigh(Key::R, key1);
+        key2.multiplyByRHigh(key2);
+        TEST("Key::multiplyByRHigh", key1 == key2, 10000000, key2.multiplyByRHigh(key2))
     }
     {
         Key key1(0x9C47D08FFB10D4B8, 0xFD17B448A6855419, 0x5DA4FBFC0E1108A8, 0x483ADA7726A3C465, 0x59F2815B16F81798, 0x029BFCDB2DCE28D9, 0x55A06295CE870B07, 0x79BE667EF9DCBBAC);
@@ -389,6 +396,8 @@ int test()
     {
         Point point1 = Point(/*1, */Key(0x59F2815B16F81798, 0x029BFCDB2DCE28D9, 0x55A06295CE870B07, 0x79BE667EF9DCBBAC), Key(0x9C47D08FFB10D4B8, 0xFD17B448A6855419, 0x5DA4FBFC0E1108A8, 0x483ADA7726A3C465));
         Point point2 = Point(/*0, */Key(0x9C47D08FFB10D4B8, 0xFD17B448A6855419, 0x5DA4FBFC0E1108A8, 0x483ADA7726A3C465), Key(0x59F2815B16F81799, 0x029BFCDB2DCE28D9, 0x55A06295CE870B07, 0x79BE667EF9DCBBAC));
+        point1.y.blocks[0] &= 1;
+        point2.y.blocks[0] &= 1;
         unsigned compression1[9] = { 0x0279BE66, 0x7EF9DCBB, 0xAC55A062, 0x95CE870B, 0x07029BFC, 0xDB2DCE28, 0xD959F281, 0x5B16F817, 0x98800000 };
         unsigned compression2[9] = { 0x03483ADA, 0x7726A3C4, 0x655DA4FB, 0xFC0E1108, 0xA8FD17B4, 0x48A68554, 0x199C47D0, 0x8FFB10D4, 0xB8800000 };
         unsigned testCompression1[9];

@@ -12,6 +12,7 @@ const unsigned K[64] =
     0x748F82EE, 0x78A5636F, 0x84C87814, 0x8CC70208, 0x90BEFFFA, 0xA4506CEB, 0xBEF9A3F7, 0xC67178F2
 };
 
+// TODO: попробовать работать с 64-битными словами
 void sha256(unsigned input[], unsigned output[])
 {
     INPUT_16(input); INPUT_17(input); INPUT_18_21(input, 18); INPUT_18_21(input, 19);

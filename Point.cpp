@@ -148,7 +148,7 @@ void Point::double_()
 
 void Point::compress(unsigned* output)
 {
-	output[0] = ((0x02 + (unsigned)y.blocks[0] % 2) << 24) + (unsigned)(x.blocks[3] >> 40);
+	output[0] = ((0x02 + (unsigned)y.blocks[0]) << 24) + (unsigned)(x.blocks[3] >> 40);
 	output[1] = x.blocks[3] >> 8;
     output[2] = ((unsigned)x.blocks[3] << 24) + (unsigned)(x.blocks[2] >> 40);
     output[3] = x.blocks[2] >> 8;
