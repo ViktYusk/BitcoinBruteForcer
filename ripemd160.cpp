@@ -1,6 +1,6 @@
 #include "ripemd160.h"
 
-// TODO: оптимизировать (+ возвращать только output[0])
+// TODO: optimize (+ maybe, calculate only output[0])
 void ripemd160(unsigned* input, unsigned* output)
 {
     output[0] = 0x67452301;
@@ -8,28 +8,16 @@ void ripemd160(unsigned* input, unsigned* output)
     output[2] = 0x98BADCFE;
     output[3] = 0x10325476;
     output[4] = 0xC3D2E1F0;
-
     unsigned chunk[16];
-    REVERSE(input[0], &chunk[0])
-    REVERSE(input[1], &chunk[1])
-    REVERSE(input[2], &chunk[2])
-    REVERSE(input[3], &chunk[3])
-    REVERSE(input[4], &chunk[4])
-    REVERSE(input[5], &chunk[5])
-    REVERSE(input[6], &chunk[6])
-    REVERSE(input[7], &chunk[7])
-    chunk[8] = 128;
-    chunk[9] = 0;
-    chunk[10] = 0;
-    chunk[11] = 0;
-    chunk[12] = 0;
-    chunk[13] = 0;
-    chunk[14] = 256;
-    chunk[15] = 0;
+    REVERSE(input[0], &chunk[0]) REVERSE(input[1], &chunk[1]) REVERSE(input[2], &chunk[2]) REVERSE(input[3], &chunk[3])
+    REVERSE(input[4], &chunk[4]) REVERSE(input[5], &chunk[5]) REVERSE(input[6], &chunk[6]) REVERSE(input[7], &chunk[7])
+    chunk[8] = 128; chunk[9] = 0; chunk[10] = 0; chunk[11] = 0;
+    chunk[12] = 0; chunk[13] = 0; chunk[14] = 256; chunk[15] = 0;
     uint32_t aa = output[0], bb = output[1], cc = output[2], dd = output[3], ee = output[4];
     uint32_t aaa = output[0], bbb = output[1], ccc = output[2], ddd = output[3], eee = output[4];
 
     /* round 1 */
+    ///*
     FF(aa, bb, cc, dd, ee, chunk[0], 11);
     FF(ee, aa, bb, cc, dd, chunk[1], 14);
     FF(dd, ee, aa, bb, cc, chunk[2], 15);
@@ -46,6 +34,25 @@ void ripemd160(unsigned* input, unsigned* output)
     FF(cc, dd, ee, aa, bb, chunk[13], 7);
     FF(bb, cc, dd, ee, aa, chunk[14], 9);
     FF(aa, bb, cc, dd, ee, chunk[15], 8);
+    //*/
+    /*
+    FF(aa, bb, cc, dd, ee, chunk[0], "21");
+    FF(ee, aa, bb, cc, dd, chunk[1], "18");
+    FF(dd, ee, aa, bb, cc, chunk[2], "17");
+    FF(cc, dd, ee, aa, bb, chunk[3], "20");
+    FF(bb, cc, dd, ee, aa, chunk[4], "27");
+    FF(aa, bb, cc, dd, ee, chunk[5], "24");
+    FF(ee, aa, bb, cc, dd, chunk[6], "25");
+    FF(dd, ee, aa, bb, cc, chunk[7], "23");
+    FF(cc, dd, ee, aa, bb, chunk[8], "21");
+    FF(bb, cc, dd, ee, aa, chunk[9], "19");
+    FF(aa, bb, cc, dd, ee, chunk[10], "18");
+    FF(ee, aa, bb, cc, dd, chunk[11], "17");
+    FF(dd, ee, aa, bb, cc, chunk[12], "26");
+    FF(cc, dd, ee, aa, bb, chunk[13], "25");
+    FF(bb, cc, dd, ee, aa, chunk[14], "23");
+    FF(aa, bb, cc, dd, ee, chunk[15], "24");
+    */
 
     /* round 2 */
     GG(ee, aa, bb, cc, dd, chunk[7], 7);
@@ -216,14 +223,4 @@ void ripemd160(unsigned* input, unsigned* output)
     output[3] = output[4] + aa + bbb;
     output[4] = output[0] + bb + ccc;
     output[0] = ddd;
-
-	//memcpy(hash, digest, 20);
-	/*
-    for (i = 0; i < 5; ++i) {
-		*(hash++) = digest[i];
-		*(hash++) = digest[i] >> 8;
-		*(hash++) = digest[i] >> 16;
-		*(hash++) = digest[i] >> 24;
-	}
-	 */
 }

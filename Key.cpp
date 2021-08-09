@@ -185,23 +185,6 @@ bool Key::addExtended(const Key& key)
 	return carry;
 }
 
-/*
-bool Key::addHigh(const Key& key)
-{
-    unsigned long long carry;
-    __asm(
-            "ADDS %[a4], %[a4], %[b4]\n\t"
-            "ADCS %[a5], %[a5], %[b5]\n\t"
-            "ADCS %[a6], %[a6], %[b6]\n\t"
-            "ADCS %[a7], %[a7], %[b7]\n\t"
-            "ADC %[c], xzr, xzr"
-            : [a4] "+r" (blocks[4]), [a5] "+r" (blocks[5]), [a6] "+r" (blocks[6]), [a7] "+r" (blocks[7]), [c] "=r" (carry)
-            : [b4] "r" (key.blocks[4]), [b5] "r" (key.blocks[5]), [b6] "r" (key.blocks[6]), [b7] "r" (key.blocks[7])
-            );
-    return carry;
-}
-*/
-
 bool Key::subtract(const Key& key)
 {
     unsigned long long carry;
@@ -223,6 +206,7 @@ unsigned long long Key::differenceParity(const Key& subtrahend)
     return compare(subtrahend) == 1 ? parity : 1 - parity;
 }
 
+// TODO: try without __asm, but with unsigned blocks
 void Key::multiply(const Key& key, Key& result)
 {
     __asm(

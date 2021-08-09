@@ -36,23 +36,23 @@ The next principal methods for points are implemented:
 
 ### sha256 and ripemd160
 
-`sha256` and `ripemd160` are hashes which are used for converting a public point into a Bitcoin address. Addresses in this projects are not common addresses of Bitcoin like `16jY7qLJnxb7CHZyqBP8qca9d51gAjyXQN` but Base58Check-decoded ones like `3EE4133D991F52FDF6A25C9834E0745AC74248A4` (by the way, the address in previous examples is the address of the puzzle). In the project, these hash-functions are highly optimized such that they break its specification rules; for example, SHA256 does not do packing and unpacking to optimize speed.
+`sha256` and `ripemd160` are hashes which are used for converting a public point into a Bitcoin address. Addresses in this project are not common addresses of Bitcoin like `16jY7qLJnxb7CHZyqBP8qca9d51gAjyXQN` but Base58Check-decoded ones like `3EE4133D991F52FDF6A25C9834E0745AC74248A4` (by the way, the address in previous examples is the address of the puzzle). In the project, these hash-functions are highly optimized such that they break its specification rules; for example, SHA256 does not do packing and unpacking to optimize speed.
 
 ### test
 
 All the methods from `Key`, `Point`, and functions from `sha256`, and `ripemd160` are tested in `test`. Some of them, which are directly used in brute-forcing keys, are speed-tested. There are time consumptions for the principal operations using 1 thread:
 Operation | Time for 1 operation | Usages for 1 key | Time for 1 key | % of total time
 --------- | -------------------- | ---------------- | -------------- | ---------------
-`sha256` | 1200 ns | 1.0000 | 1200 ns | 25 %
-`Point::addReduced` | 2000 ns | 0.4998 | 1000 ns | 21 %
-`Point::subtractReduced` | 2000 ns | 0.5000 | 1000 ns | 21 %
-`Key::invertGroup` | 4 000 000 ns | 0.0002 | 977 ns | 21 %
-`ripemd160` | 520 ns | 1.0000 | 520 ns | 11 %
-`Point::compress` | 22 ns | 1.0000 | 22 ns | 0 %
-`Key::operator-=` | 32 ns | 0.5002 | 16 ns | 0 %
-`Point::add` | 2000 ns | 0.0002 | 0 ns | 0 %
+`sha256` | 763 ns | 1.0000 | 763 ns | 22 %
+`Key::invertGroup` | 2 900 000 ns | 0.0002 | 708 ns | 21 %
+`Point::subtractReduced` | 1400 ns | 0.5000 | 700 ns | 20 %
+`Point::addReduced` | 1400 ns | 0.4998 | 700 ns | 20 %
+`ripemd160` | 521 ns | 1.0000 | 521 ns | 15 %
+`Point::compress` | 22 ns | 1.0000 | 22 ns | 1 %
+`Key::operator-=` | 25 ns | 0.5002 | 13 ns | 0 %
+`Point::add` | 1500 ns | 0.0002 | 0 ns | 0 %
 
-For now, it is about 4700 ns needed to check 1 private key using 1 thread. Therefore, the total speed is about 820K keys/second.
+For now, it is about 3400 ns needed to check 1 private key using 1 thread. Therefore, the total speed is about 1.1M keys/second.
 
 ### main
 

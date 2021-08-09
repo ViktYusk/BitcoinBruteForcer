@@ -119,6 +119,7 @@ LIBBTC_END_DECL
         (a) = ROL((a), (s)) + (e);     \
         (c) = ROL((c), 10);            \
     }
+
 #define GG(a, b, c, d, e, x, s)                       \
     {                                                 \
         (a) += G((b), (c), (d)) + (x) + 0x5a827999UL; \
