@@ -40,10 +40,6 @@ struct Key
 
 	static void gcd(Key a, Key b, Key& x, Key& y);
 	static void invertGroup(Key* keys);
-#ifdef DEBUG
-	static void print(unsigned char digit);
-	static void print(unsigned long long block);
-#endif
 
 	unsigned long long blocks[8];
 	
@@ -51,9 +47,6 @@ struct Key
 	Key(unsigned long long block0, unsigned long long block1, unsigned long long block2, unsigned long long block3);
 	Key(unsigned long long block0, unsigned long long block1, unsigned long long block2, unsigned long long block3, unsigned long long block4, unsigned long long block5, unsigned long long block6, unsigned long long block7);
 
-#ifdef DEBUG
-	void print(bool extended=false);
-#endif
 	bool operator==(const Key& key) const;
 	void operator+=(const Key& key);
 	void operator-=(const Key& key);

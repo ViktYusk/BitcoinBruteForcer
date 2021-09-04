@@ -23,6 +23,17 @@ std::mutex mutex_;
 Point threadsPoints[THREADS_NUMBER + 1];
 Timer timer;
 
+void print(unsigned char digit)
+{
+    std::cout << (char)(digit < 10 ? '0' + digit : 'A' + digit - 10);
+}
+
+void print(unsigned long long block)
+{
+    for (int i = 0; i < 16; i++)
+        print((unsigned char)(block >> 4 * (15 - i) & 0xF));
+}
+
 void* thread_function(void* id)
 {
     Point point;
@@ -59,7 +70,7 @@ void* thread_function(void* id)
                 if (address[0] == Point::ADDRESS0)
                 {
                     mutex_.lock();
-                    Key::print((((((((((1ULL << BLOCK_BITS) + block) << THREAD_BITS) + *(int*)id) << PROGRESS_BITS) + p) << SUBBLOCK_BITS) + s) << Key::GROUP_BITS) + i);
+                    print((((((((((1ULL << BLOCK_BITS) + block) << THREAD_BITS) + *(int*)id) << PROGRESS_BITS) + p) << SUBBLOCK_BITS) + s) << Key::GROUP_BITS) + i);
                     std::cout << std::endl;
                     mutex_.unlock();
                 }

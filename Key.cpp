@@ -1,7 +1,4 @@
 #include "Key.h"
-#ifdef DEBUG
-#include <iostream>
-#endif
 
 const Key Key::ZERO    = Key(0x0000000000000000, 0x0000000000000000, 0x0000000000000000, 0x0000000000000000); // 0 NOLINT(cert-err58-cpp)
 const Key Key::ONE     = Key(0x0000000000000001, 0x0000000000000000, 0x0000000000000000, 0x0000000000000000); // 1 NOLINT(cert-err58-cpp)
@@ -11,26 +8,12 @@ const Key Key::R2      = Key(0x000007A2000E90A1, 0x0000000000000001, 0x000000000
 const Key Key::P_PRIME = Key(0xD838091DD2253531, 0xBCB223FEDC24A059, 0x9C46C2C295F2B761, 0xC9BD190515538399); // 91248989341183975618893650062416139444822672217621753343178995607987479196977 NOLINT(cert-err58-cpp)
 const Key Key::P       = Key(0xFFFFFFFEFFFFFC2F, 0xFFFFFFFFFFFFFFFF, 0xFFFFFFFFFFFFFFFF, 0xFFFFFFFFFFFFFFFF); // 115792089237316195423570985008687907853269984665640564039457584007908834671663 NOLINT(cert-err58-cpp)
 
-#ifdef DEBUG
-void Key::print(unsigned char digit)
-{
-    std::cout << (char)(digit < 10 ? '0' + digit : 'A' + digit - 10);
-}
-
-void Key::print(unsigned long long block)
-{
-    for (int i = 0; i < 16; i++)
-        print((unsigned char)(block >> 4 * (15 - i) & 0xF));
-}
-#endif
 
 #pragma GCC push_options
 //#pragma GCC optimize("O0")
 void Key::gcd(Key a, Key b, Key& x, Key&y)
 {
-    //std::cout << "a = "; a.print(); std::cout << ", b = "; b.print(); std::cout << std::endl;
     if (a.isNotZero())
-    //if (!(a == ZERO))
     {
         Key x_;
         Key y_;
@@ -47,7 +30,6 @@ void Key::gcd(Key a, Key b, Key& x, Key&y)
         x = ZERO;
         y = ONE;
     }
-    //std::cout << "x = "; x.print(); std::cout << ", y = "; y.print(); std::cout << std::endl;
 }
 #pragma GCC pop_options
 
@@ -124,14 +106,6 @@ void Key::operator*=(const Key& key)
 	reduce();
 }
 #pragma GCC pop_options
-
-#ifdef DEBUG
-void Key::print(bool extended)
-{
-    for (int b = extended ? 7 : 3; b >= 0; b--)
-        print(blocks[b]);
-}
-#endif
 
 int Key::compare(const Key& key)
 {
