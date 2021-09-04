@@ -1,6 +1,6 @@
 #include "ripemd160.h"
 
-// TODO: optimize (+ maybe, calculate only output[0])
+// TODO: calculate only output[0]
 void ripemd160(unsigned* input, unsigned* output)
 {
     output[0] = 0x67452301;

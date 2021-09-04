@@ -1,6 +1,28 @@
 #pragma once
 
 #define COMPARE_BLOCKS(block1, block2) if (block1 > block2) return 1; if (block1 < block2) return -1;
+#ifndef __aarch64__
+#define MULTIPLY(start, finish) \
+auto* unsignedBlocks = (unsigned*)blocks; \
+auto* keyUnsignedBlocks = (unsigned*)key.blocks; \
+auto* resultUnsignedBlocks = (unsigned*)result.blocks; \
+unsigned long long table[8][8]; \
+for (int i = 0; i < 8; i++) \
+    for (int j = 0; j < 8; j++) \
+        if (i + j >= start && i + j < finish) \
+            table[i][j] = (unsigned long long)unsignedBlocks[i] * keyUnsignedBlocks[j]; \
+unsigned long long temp = 0; \
+for (int i = start; i < finish; i++) { \
+    for (int j = 0; j <= i; j++) \
+        if (j < 8 && i - j < 8) \
+            temp += (unsigned)table[j][i - j]; \
+    for (int j = 0; j <= i - 1; j++) \
+        if (j < 8 && i - 1 - j < 8) \
+            temp += table[j][i - 1 - j] >> 32; \
+    resultUnsignedBlocks[i] = temp; \
+    temp >>= 32; \
+}
+#endif
 
 struct Key
 {
@@ -18,14 +40,21 @@ struct Key
 
 	static void gcd(Key a, Key b, Key& x, Key& y);
 	static void invertGroup(Key* keys);
+#ifdef DEBUG
+	static void print(unsigned char digit);
+	static void print(unsigned long long block);
+#endif
 
-	unsigned long long blocks[8]{};
+	unsigned long long blocks[8];
 	
 	Key();
 	Key(unsigned long long block0, unsigned long long block1, unsigned long long block2, unsigned long long block3);
 	Key(unsigned long long block0, unsigned long long block1, unsigned long long block2, unsigned long long block3, unsigned long long block4, unsigned long long block5, unsigned long long block6, unsigned long long block7);
-	
-	bool operator==(const Key& key);
+
+#ifdef DEBUG
+	void print(bool extended=false);
+#endif
+	bool operator==(const Key& key) const;
 	void operator+=(const Key& key);
 	void operator-=(const Key& key);
 	void operator*=(const Key& key);
@@ -45,7 +74,7 @@ struct Key
     void multiplyLow(const Key& key, Key& result);
     void multiplyHigh(const Key& key, Key& result);
 	void multiplyByR2(Key& result);
-	void multiplyByRHigh(Key& result);
+//	void multiplyByRHigh(Key& result);
 	void reduce();
 	void divide(Key& divisor, Key& quotient);
 	void invert();

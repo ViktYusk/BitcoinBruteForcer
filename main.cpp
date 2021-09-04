@@ -23,29 +23,7 @@ std::mutex mutex_;
 Point threadsPoints[THREADS_NUMBER + 1];
 Timer timer;
 
-void print(unsigned char digit)
-{
-    std::cout << (char)(digit < 10 ? '0' + digit : 'A' + digit - 10);
-}
-
-void print(unsigned long long key)
-{
-    for (int i = 0; i < 16; i++)
-        print((unsigned char)(key >> 4 * (15 - i) & 0xF));
-}
-
-void print(unsigned* address)
-{
-    for (int i = 0; i < 5; i++)
-        for (int j = 0; j < 4; j++)
-        {
-            unsigned char byte = *((unsigned char*)(address + i) + j);
-            print((unsigned char)((byte & 0xF0) >> 4));
-            print((unsigned char)(byte & 0x0F));
-        }
-}
-
-void* thread(void* id) 
+void* thread_function(void* id)
 {
     Point point;
     Point center(threadsPoints[*(int*)id]);
@@ -81,9 +59,7 @@ void* thread(void* id)
                 if (address[0] == Point::ADDRESS0)
                 {
                     mutex_.lock();
-                    print((((((((((1ULL << BLOCK_BITS) + block) << THREAD_BITS) + *(int*)id) << PROGRESS_BITS) + p) << SUBBLOCK_BITS) + s) << Key::GROUP_BITS) + i);
-                    std::cout << " ";
-                    print(address);
+                    Key::print((((((((((1ULL << BLOCK_BITS) + block) << THREAD_BITS) + *(int*)id) << PROGRESS_BITS) + p) << SUBBLOCK_BITS) + s) << Key::GROUP_BITS) + i);
                     std::cout << std::endl;
                     mutex_.unlock();
                 }
@@ -93,10 +69,10 @@ void* thread(void* id)
 		}
 #ifdef DEBUG
 		mutex_.lock();
-		threadsProgresses[*(int*)id]++;
+	    threadsProgresses[*(int*)id]++;
 		bool log = true;
 		for (int threadProgress : threadsProgresses)
-			log &= threadProgress >= threadsProgresses[*(int*)id];
+		    log &= threadProgress >= threadsProgresses[*(int*)id];
 		if (log)
             std::cout << "Progress = " << (p + 1) * 100.0 / PROGRESSES_NUMBER << " %   [" << (int)(GROUPS_PER_PROGRESS * Key::GROUP_SIZE / timer.stop() / 1000) << " Kkeys/second]" << std::endl;
 		mutex_.unlock();
@@ -114,23 +90,27 @@ void* thread(void* id)
 int main(int argc, char* argv[])
 {
 #ifdef DEBUG
-    if (test())
+    int code = test();
+    if (code == -1)
         return -1;
 #endif
     if (argc < 2)
         return test();
-	for (int i = 0; argv[1][i] != 0; i++)
-		if (argv[1][i] < '0' || argv[1][i] > '9')
-		{
-			std::cout << "Block number must be non-negative integer" << std::endl;
-			return -1;
-		}
-	block = atoi(argv[1]);
+    for (int i = 0; argv[1][i] != 0; i++)
+        if (argv[1][i] < '0' || argv[1][i] > '9')
+        {
+            std::cout << "Block number must be non-negative integer" << std::endl;
+            return -1;
+        }
+    block = atoi(argv[1]);
 	if (block < 0 || block >= 1 << BLOCK_BITS)
 	{
-		std::cout << "Block is not in range" << std::endl;
+		std::cout << "Block is not in range: " << block << std::endl;
 		return -1;
 	}
+#ifdef DEBUG
+	std::cout << "CHECKING BLOCK # " << block << ":" << std::endl;
+#endif
 	unsigned long long startKey = 1;
 	startKey <<= BLOCK_BITS;
 	startKey += block;
@@ -153,10 +133,10 @@ int main(int argc, char* argv[])
 	for (int id = 0; id < THREADS_NUMBER; id++)
 	{
 		thread_ids[id] = id;
-		if (pthread_create(&threads[id], NULL, thread, &thread_ids[id]) != 0)
+		if (pthread_create(&threads[id], NULL, thread_function, &thread_ids[id]) != 0)
 		{
-			std::cout << "Error while creating thread # " << id << std::endl;
-			return -1;
+		    std::cout << "Error while creating thread # " << id << std::endl;
+		    return -1;
 		}
 	}
 	for (int id = 0; id < THREADS_NUMBER; id++)
