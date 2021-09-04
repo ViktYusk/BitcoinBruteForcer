@@ -34,6 +34,17 @@ void print(unsigned long long block)
         print((unsigned char)(block >> 4 * (15 - i) & 0xF));
 }
 
+void print(unsigned* address)
+{
+    for (int i = 0; i < 5; i++)
+        for (int j = 0; j < 4; j++)
+        {
+            unsigned char byte = *((unsigned char*)(address + i) + j);
+            print((unsigned char)((byte & 0xF0) >> 4));
+            print((unsigned char)(byte & 0x0F));
+        }
+}
+
 void* thread_function(void* id)
 {
     Point point;
@@ -71,6 +82,8 @@ void* thread_function(void* id)
                 {
                     mutex_.lock();
                     print((((((((((1ULL << BLOCK_BITS) + block) << THREAD_BITS) + *(int*)id) << PROGRESS_BITS) + p) << SUBBLOCK_BITS) + s) << Key::GROUP_BITS) + i);
+                    std::cout << " ";
+                    print(address);
                     std::cout << std::endl;
                     mutex_.unlock();
                 }
