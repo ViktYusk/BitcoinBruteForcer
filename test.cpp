@@ -85,11 +85,11 @@ int test()
 		unsigned output[5] = { 0x7ED5EEF7, 0x78281CEB, 0x44536309, 0xABDA5680, 0xDF342508 };
 		unsigned testInput[8];
 		unsigned testOutput[5];
-		memcpy(testInput, input, sizeof(testInput));
+		for (int i = 0; i < 8; i++)
+		    testInput[i] = input[i];
 		for (int i = 0; i < 5; i++)
 		{
 			ripemd160(testInput, testOutput);
-			//memcpy(testInput, testOutput, sizeof(testOutput));
 			for (int j = 0; j < 5; j++)
             {
 			    REVERSE(*((unsigned*)testOutput + j), &testInput[j])

@@ -1,28 +1,6 @@
 #pragma once
 
 #define COMPARE_BLOCKS(block1, block2) if (block1 > block2) return 1; if (block1 < block2) return -1;
-#ifndef __aarch64__
-#define MULTIPLY(start, finish) \
-auto* unsignedBlocks = (unsigned*)blocks; \
-auto* keyUnsignedBlocks = (unsigned*)key.blocks; \
-auto* resultUnsignedBlocks = (unsigned*)result.blocks; \
-unsigned long long table[8][8]; \
-for (int i = 0; i < 8; i++) \
-    for (int j = 0; j < 8; j++) \
-        if (i + j >= start && i + j < finish) \
-            table[i][j] = (unsigned long long)unsignedBlocks[i] * keyUnsignedBlocks[j]; \
-unsigned long long temp = 0; \
-for (int i = start; i < finish; i++) { \
-    for (int j = 0; j <= i; j++) \
-        if (j < 8 && i - j < 8) \
-            temp += (unsigned)table[j][i - j]; \
-    for (int j = 0; j <= i - 1; j++) \
-        if (j < 8 && i - 1 - j < 8) \
-            temp += table[j][i - 1 - j] >> 32; \
-    resultUnsignedBlocks[i] = temp; \
-    temp >>= 32; \
-}
-#endif
 
 struct Key
 {

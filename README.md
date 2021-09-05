@@ -1,4 +1,4 @@
-The target device of this project is [Raspberry Pi](https://www.raspberrypi.org/) (specifically, I use Raspberry Pi 3B+, but I think it is no problem to run the program on any of models). The important thing is that you need to use 64-bit operating system which is not common but it can be found as a beta-version [here](https://downloads.raspberrypi.org/raspios_lite_arm64/images/). Nevertheless, you can try to compile the code for another target.
+The target device of this project is [Raspberry Pi](https://www.raspberrypi.org/) (specifically, I use Raspberry Pi 3B+, but I think it is no problem to run the program on any of models). The important thing is that you need to use 64-bit operating system which is not common but it can be found as a beta-version [here](https://downloads.raspberrypi.org/raspios_lite_arm64/images/).
 
 The project is written in C++. In order to optimize speed, for some operations [GCC Inline Assembly](https://gcc.gnu.org/onlinedocs/gcc/Extended-Asm.html) with some specific intructions of ARM64 processors is used. To cross-compile this code from my laptop to Raspberry Pi, I use [CLion](https://www.jetbrains.com/clion/).
 

@@ -1,180 +1,49 @@
-// https://github.com/miguelmota/cpp-ripemd160/blob/master/ripemd160.c
-/**
- * Copyright (c) 2015 Jonas Schnelli
- * Copyright (c) 2013-2014 Tomas Dzetkulic
- * Copyright (c) 2013-2014 Pavol Rusnak
- *
- * Permission is hereby granted, free of charge, to any person obtaining
- * a copy of this software and associated documentation files (the "Software"),
- * to deal in the Software without restriction, including without limitation
- * the rights to use, copy, modify, merge, publish, distribute, sublicense,
- * and/or sell copies of the Software, and to permit persons to whom the
- * Software is furnished to do so, subject to the following conditions:
- *
- * The above copyright notice and this permission notice shall be included
- * in all copies or substantial portions of the Software.
- *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
- * OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
- * THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES
- * OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE,
- * ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
- * OTHER DEALINGS IN THE SOFTWARE.
- */
-#pragma once
-
-#include <string.h>
-
-// ==================================================
-// #include "ripemd160.h"
-
-#ifndef __LIBBTC_RIPEMD160_H__
-#define __LIBBTC_RIPEMD160_H__
-
-// --------------------------------------------------
-// #include "btc.h"
-
-#ifndef __LIBBTC_BTC_H__
-#define __LIBBTC_BTC_H__
-
-#include <limits.h>
-#include <stdint.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-
-typedef uint8_t btc_bool; //!serialize, c/c++ save bool
-
-#ifndef true
-#define true 1
-#endif
-
-#ifndef false
-#define false 0
-#endif
-
-#ifdef __cplusplus
-# define LIBBTC_BEGIN_DECL extern "C" {
-# define LIBBTC_END_DECL	}
-#else
-# define LIBBTC_BEGIN_DECL /* empty */
-# define LIBBTC_END_DECL	/* empty */
-#endif
-
-#ifndef LIBBTC_API
-#if defined(_WIN32)
-#ifdef LIBBTC_BUILD
-#define LIBBTC_API __declspec(dllexport)
-#else
-#define LIBBTC_API
-#endif
-#elif defined(__GNUC__) && defined(LIBBTC_BUILD)
-#define LIBBTC_API __attribute__((visibility("default")))
-#else
-#define LIBBTC_API
-#endif
-#endif
-
-#define BTC_ECKEY_UNCOMPRESSED_LENGTH 65
-#define BTC_ECKEY_COMPRESSED_LENGTH 33
-#define BTC_ECKEY_PKEY_LENGTH 32
-#define BTC_ECKEY_PKEY_LENGTH 32
-#define BTC_HASH_LENGTH 32
-
-#define BTC_MIN(a,b) (((a)<(b))?(a):(b))
-#define BTC_MAX(a,b) (((a)>(b))?(a):(b))
-
-#define MSG_LEN 32 //
-
-LIBBTC_BEGIN_DECL
-
-typedef uint8_t uint256[32];
-typedef uint8_t uint160[20];
-
-LIBBTC_END_DECL
-
-#endif // __LIBBTC_BTC_H__
-// --------------------------------------------------
-
-LIBBTC_BEGIN_DECL
-
-
-LIBBTC_END_DECL
-
-#endif // END __LIBBTC_RIPEMD160_H__
-// ==================================================
-
-#define ROL(x, n) (((x) << (n)) | ((x) >> (32 - (n))))
-
-#define F(x, y, z) ((x) ^ (y) ^ (z))
-#define G(x, y, z) (((x) & (y)) | (~(x) & (z)))
-#define H(x, y, z) (((x) | ~(y)) ^ (z))
-#define IQ(x, y, z) (((x) & (z)) | ((y) & ~(z)))
-#define J(x, y, z) ((x) ^ ((y) | ~(z)))
-
-#define FF(a, b, c, d, e, x, s)        \
-    {                                  \
-        (a) += F((b), (c), (d)) + (x); \
-        (a) = ROL((a), (s)) + (e);     \
-        (c) = ROL((c), 10);            \
-    }
-
-#define GG(a, b, c, d, e, x, s)                       \
-    {                                                 \
-        (a) += G((b), (c), (d)) + (x) + 0x5a827999UL; \
-        (a) = ROL((a), (s)) + (e);                    \
-        (c) = ROL((c), 10);                           \
-    }
-#define HH(a, b, c, d, e, x, s)                       \
-    {                                                 \
-        (a) += H((b), (c), (d)) + (x) + 0x6ed9eba1UL; \
-        (a) = ROL((a), (s)) + (e);                    \
-        (c) = ROL((c), 10);                           \
-    }
-#define II(a, b, c, d, e, x, s)                        \
-    {                                                  \
-        (a) += IQ((b), (c), (d)) + (x) + 0x8f1bbcdcUL; \
-        (a) = ROL((a), (s)) + (e);                     \
-        (c) = ROL((c), 10);                            \
-    }
-#define JJ(a, b, c, d, e, x, s)                       \
-    {                                                 \
-        (a) += J((b), (c), (d)) + (x) + 0xa953fd4eUL; \
-        (a) = ROL((a), (s)) + (e);                    \
-        (c) = ROL((c), 10);                           \
-    }
-#define FFF(a, b, c, d, e, x, s)       \
-    {                                  \
-        (a) += F((b), (c), (d)) + (x); \
-        (a) = ROL((a), (s)) + (e);     \
-        (c) = ROL((c), 10);            \
-    }
-#define GGG(a, b, c, d, e, x, s)                      \
-    {                                                 \
-        (a) += G((b), (c), (d)) + (x) + 0x7a6d76e9UL; \
-        (a) = ROL((a), (s)) + (e);                    \
-        (c) = ROL((c), 10);                           \
-    }
-#define HHH(a, b, c, d, e, x, s)                      \
-    {                                                 \
-        (a) += H((b), (c), (d)) + (x) + 0x6d703ef3UL; \
-        (a) = ROL((a), (s)) + (e);                    \
-        (c) = ROL((c), 10);                           \
-    }
-#define III(a, b, c, d, e, x, s)                       \
-    {                                                  \
-        (a) += IQ((b), (c), (d)) + (x) + 0x5c4dd124UL; \
-        (a) = ROL((a), (s)) + (e);                     \
-        (c) = ROL((c), 10);                            \
-    }
-#define JJJ(a, b, c, d, e, x, s)                      \
-    {                                                 \
-        (a) += J((b), (c), (d)) + (x) + 0x50a28be6UL; \
-        (a) = ROL((a), (s)) + (e);                    \
-        (c) = ROL((c), 10);                           \
-    }
-
+#define ROL(x, n) (x << n | x >> (32 - n))
+#define F(x, y, z) (x ^ y ^ z)
+#define G(x, y, z) (x & y | ~x & z)
+#define H(x, y, z) ((x | ~y) ^ z)
+#define IQ(x, y, z) (x & z | y & ~z)
+#define J(x, y, z) (x ^ (y | ~z))
+#define FF(a, b, c, d, e, x, s) \
+a += F(b, c, d) + x; \
+a = ROL(a, s) + e; \
+c = ROL(c, 10);
+#define GG(a, b, c, d, e, x, s) \
+a += G(b, c, d) + x + 0x5A827999; \
+a = ROL(a, s) + e; \
+c = ROL(c, 10);
+#define HH(a, b, c, d, e, x, s) \
+a += H(b, c, d) + x + 0x6ED9EBA1; \
+a = ROL(a, s) + e; \
+c = ROL(c, 10);
+#define II(a, b, c, d, e, x, s) \
+a += IQ(b, c, d) + x + 0x8F1BBCDC; \
+a = ROL(a, s) + e; \
+c = ROL(c, 10);
+#define JJ(a, b, c, d, e, x, s) \
+a += J(b, c, d) + x + 0xA953FD4E; \
+a = ROL(a, s) + e; \
+c = ROL(c, 10);
+#define FFF(a, b, c, d, e, x, s) \
+a += F(b, c, d) + x; \
+a = ROL(a, s) + e; \
+c = ROL(c, 10);
+#define GGG(a, b, c, d, e, x, s) \
+a += G(b, c, d) + x + 0x7A6D76E9; \
+a = ROL(a, s) + e; \
+c = ROL(c, 10);
+#define HHH(a, b, c, d, e, x, s) \
+a += H(b, c, d) + x + 0x6D703EF3; \
+a = ROL(a, s) + e; \
+c = ROL(c, 10);
+#define III(a, b, c, d, e, x, s) \
+a += IQ(b, c, d) + x + 0x5C4DD124; \
+a = ROL(a, s) + e; \
+c = ROL(c, 10);
+#define JJJ(a, b, c, d, e, x, s) \
+a += J(b, c, d) + x + 0x50A28BE6; \
+a = ROL(a, s) + e; \
+c = ROL(c, 10);
 #define REVERSE(input, output) *((unsigned char*)output + 3) = input; *((unsigned char*)output + 2) = input >> 8; *((unsigned char*)output + 1) = input >> 16; *(unsigned char*)output = input >> 24;
 
 void ripemd160(unsigned* input, unsigned* output);

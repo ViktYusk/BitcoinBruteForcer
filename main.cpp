@@ -4,8 +4,8 @@
 #include <pthread.h>
 
 #include "Point.h"
-#include "sha256.h"
 #include "ripemd160.h"
+#include "sha256.h"
 #include "test.h"
 
 const int BLOCK_BITS    = 26;
@@ -50,7 +50,8 @@ void* thread_function(void* id)
     Point point;
     Point center(threadsPoints[*(int*)id]);
 	unsigned compression[64];
-	memcpy(compression + 9, Point::COMPRESSION_ENDING, sizeof(Point::COMPRESSION_ENDING));
+	for (int i = 0; i < 7; i++)
+	    compression[9 + i] = Point::COMPRESSION_ENDING[i];
 	for (int p = 0; p < PROGRESSES_NUMBER; p++)
 	{
 	    for (int s = 0; s < SUBBLOCKS_NUMBER; s++)
@@ -117,9 +118,10 @@ int main(int argc, char* argv[])
     int code = test();
     if (code == -1)
         return -1;
-#endif
+#else
     if (argc < 2)
         return test();
+#endif
     for (int i = 0; argv[1][i] != 0; i++)
         if (argv[1][i] < '0' || argv[1][i] > '9')
         {

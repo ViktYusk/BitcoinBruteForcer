@@ -96,6 +96,7 @@ void Key::operator-=(const Key& key)
 		add(P);
 }
 
+// TODO: Try division to find product modulo P
 #pragma GCC push_options
 #pragma GCC optimize ("O2")
 void Key::operator*=(const Key& key)
@@ -162,7 +163,6 @@ void Key::rightShift256()
 
 bool Key::add(const Key& key)
 {
-#ifdef __aarch64__
     unsigned long long carry;
     __asm(
         "ADDS %[a0], %[a0], %[b0]\n\t"
@@ -173,23 +173,11 @@ bool Key::add(const Key& key)
         : [a0] "+r" (blocks[0]), [a1] "+r" (blocks[1]), [a2] "+r" (blocks[2]), [a3] "+r" (blocks[3]), [c] "=r" (carry)
         : [b0] "r" (key.blocks[0]), [b1] "r" (key.blocks[1]), [b2] "r" (key.blocks[2]), [b3] "r" (key.blocks[3])
     );
-#else
-    unsigned carry = 0;
-    long long result;
-    auto* unsignedBlocks = (unsigned*)blocks;
-    auto* keyUnsignedBlocks = (unsigned*)key.blocks;
-    for (int i = 0; i < 8; i++) {
-        result = (long long)unsignedBlocks[i] + keyUnsignedBlocks[i] + carry;
-        unsignedBlocks[i] = result;
-        carry = result >> 32;
-    }
-#endif
 	return carry;
 }
 
 bool Key::addExtended(const Key& key)
 {
-#ifdef __aarch64__
     unsigned long long carry;
     __asm(
         "ADDS %[a0], %[a0], %[b0]\n\t"
@@ -204,23 +192,11 @@ bool Key::addExtended(const Key& key)
         : [a0] "+r" (blocks[0]), [a1] "+r" (blocks[1]), [a2] "+r" (blocks[2]), [a3] "+r" (blocks[3]), [a4] "+r" (blocks[4]), [a5] "+r" (blocks[5]), [a6] "+r" (blocks[6]), [a7] "+r" (blocks[7]), [c] "=r" (carry)
         : [b0] "r" (key.blocks[0]), [b1] "r" (key.blocks[1]), [b2] "r" (key.blocks[2]), [b3] "r" (key.blocks[3]), [b4] "r" (key.blocks[4]), [b5] "r" (key.blocks[5]), [b6] "r" (key.blocks[6]), [b7] "r" (key.blocks[7])
     );
-#else
-    unsigned carry = 0;
-    long long result;
-    auto* unsignedBlocks = (unsigned*)blocks;
-    auto* keyUnsignedBlocks = (unsigned*)key.blocks;
-    for (int i = 0; i < 16; i++) {
-        result = (long long)unsignedBlocks[i] + keyUnsignedBlocks[i] + carry;
-        unsignedBlocks[i] = result;
-        carry = result >> 32;
-    }
-#endif
 	return carry;
 }
 
 bool Key::subtract(const Key& key)
 {
-#ifdef __aarch64__
     unsigned long long carry;
     __asm(
         "SUBS %[a0], %[a0], %[b0]\n\t"
@@ -231,17 +207,6 @@ bool Key::subtract(const Key& key)
         : [a0] "+r" (blocks[0]), [a1] "+r" (blocks[1]), [a2] "+r" (blocks[2]), [a3] "+r" (blocks[3]), [c] "=r" (carry)
         : [b0] "r" (key.blocks[0]), [b1] "r" (key.blocks[1]), [b2] "r" (key.blocks[2]), [b3] "r" (key.blocks[3])
     );
-#else
-    unsigned carry = 0;
-    long long result;
-    auto* unsignedBlocks = (unsigned*)blocks;
-    auto* keyUnsignedBlocks = (unsigned*)key.blocks;
-    for (int i = 0; i < 8; i++) {
-        result = (long long)unsignedBlocks[i] - keyUnsignedBlocks[i] - carry;
-        unsignedBlocks[i] = result;
-        carry = result < 0;
-    }
-#endif
 	return carry;
 }
 
@@ -251,9 +216,9 @@ unsigned long long Key::differenceParity(const Key& subtrahend)
     return compare(subtrahend) == 1 ? parity : 1 - parity;
 }
 
+// TODO: Try Karatsuba method
 void Key::multiply(const Key& key, Key& result)
 {
-#ifdef __aarch64__
     __asm(
         "MUL %[r0], %[a0], %[b0]\n\t UMULH %[r1], %[a0], %[b0]\n\t MUL x11, %[a1], %[b0]\n\t UMULH %[r2], %[a1], %[b0]\n\t MUL x12, %[a2], %[b0]\n\t UMULH %[r3], %[a2], %[b0]\n\t MUL x13, %[a3], %[b0]\n\t UMULH %[r4], %[a3], %[b0]\n\t"
         "ADDS %[r1], %[r1], x11\n\t ADCS %[r2], %[r2], x12\n\t ADCS %[r3], %[r3], x13\n\t ADC %[r4], %[r4], xzr\n\t"
@@ -270,14 +235,10 @@ void Key::multiply(const Key& key, Key& result)
         : [a0] "r" (blocks[0]), [a1] "r" (blocks[1]), [a2] "r" (blocks[2]), [a3] "r" (blocks[3]), [b0] "r" (key.blocks[0]), [b1] "r" (key.blocks[1]), [b2] "r" (key.blocks[2]), [b3] "r" (key.blocks[3])
         : "x0", "x1", "x2", "x3", "x4", "x11", "x12", "x13"
     );
-#else
-    MULTIPLY(0, 16)
-#endif
 }
 
 void Key::multiplyLow(const Key& key, Key& result)
 {
-#ifdef __aarch64__
     __asm(
         "MUL %[r0], %[a0], %[b0]\n\t UMULH %[r1], %[a0], %[b0]\n\t MUL x11, %[a1], %[b0]\n\t UMULH %[r2], %[a1], %[b0]\n\t MUL x12, %[a2], %[b0]\n\t UMULH %[r3], %[a2], %[b0]\n\t MUL x13, %[a3], %[b0]\n\t"
         "ADDS %[r1], %[r1], x11\n\t ADCS %[r2], %[r2], x12\n\t ADC %[r3], %[r3], x13\n\t"
@@ -293,14 +254,10 @@ void Key::multiplyLow(const Key& key, Key& result)
         : [a0] "r" (blocks[0]), [a1] "r" (blocks[1]), [a2] "r" (blocks[2]), [a3] "r" (blocks[3]), [b0] "r" (key.blocks[0]), [b1] "r" (key.blocks[1]), [b2] "r" (key.blocks[2]), [b3] "r" (key.blocks[3])
         : "x0", "x1", "x2", "x3", "x4", "x11", "x12", "x13"
     );
-#else
-    MULTIPLY(0, 8)
-#endif
 }
 
 void Key::multiplyHigh(const Key& key, Key& result)
 {
-#ifdef __aarch64__
     __asm(
         "UMULH x21, %[a0], %[b0]\n\t MUL x11, %[a1], %[b0]\n\t UMULH x22, %[a1], %[b0]\n\t MUL x12, %[a2], %[b0]\n\t UMULH x23, %[a2], %[b0]\n\t MUL x13, %[a3], %[b0]\n\t UMULH %[r0], %[a3], %[b0]\n\t"
         "ADDS x21, x21, x11\n\t ADCS x22, x22, x12\n\t ADCS x23, x23, x13\n\t ADC %[r0], %[r0], xzr\n\t"
@@ -317,19 +274,11 @@ void Key::multiplyHigh(const Key& key, Key& result)
         : [a0] "r" (blocks[0]), [a1] "r" (blocks[1]), [a2] "r" (blocks[2]), [a3] "r" (blocks[3]), [b0] "r" (key.blocks[0]), [b1] "r" (key.blocks[1]), [b2] "r" (key.blocks[2]), [b3] "r" (key.blocks[3])
         : "x0", "x1", "x2", "x3", "x4", "x11", "x12", "x13", "x21", "x22", "x23"
     );
-#else
-    MULTIPLY(1, 16)
-    result.blocks[0] = result.blocks[4];
-    result.blocks[1] = result.blocks[5];
-    result.blocks[2] = result.blocks[6];
-    result.blocks[3] = result.blocks[7];
-#endif
 }
 
 
 void Key::multiplyByR2(Key& result)
 {
-#ifdef __aarch64__
     __asm(
         "MUL %[r0], %[a0], %[b0]\n\t UMULH %[r1], %[a0], %[b0]\n\t MUL x11, %[a1], %[b0]\n\t UMULH %[r2], %[a1], %[b0]\n\t MUL x12, %[a2], %[b0]\n\t UMULH %[r3], %[a2], %[b0]\n\t MUL x13, %[a3], %[b0]\n\t UMULH %[r4], %[a3], %[b0]\n\t"
         "ADDS %[r1], %[r1], x11\n\t ADCS %[r2], %[r2], x12\n\t ADCS %[r3], %[r3], x13\n\t ADC %[r4], %[r4], xzr\n\t"
@@ -339,34 +288,10 @@ void Key::multiplyByR2(Key& result)
         : [a0] "r" (blocks[0]), [a1] "r" (blocks[1]), [a2] "r" (blocks[2]), [a3] "r" (blocks[3]), [b0] "r" (R2.blocks[0])
         : "x11", "x12", "x13"
     );
-#else
-    auto* unsignedBlocks = (unsigned*)blocks;
-    auto* r2UnsignedBlocks = (unsigned*)R2.blocks;
-    auto* resultUnsignedBlocks = (unsigned*)result.blocks;
-    unsigned long long table[8][3];
-    for (int i = 0; i < 8; i++) {
-        for (int j = 0; j < 2; j++)
-            table[i][j] = (unsigned long long)unsignedBlocks[i] * r2UnsignedBlocks[j];
-        table[i][2] = unsignedBlocks[i];
-    }
-    unsigned long long temp = 0;
-    for (int i = 0; i < 11; i++) {
-        for (int j = 0; j <= i; j++)
-            if (j < 8 && i - j < 3)
-                temp += (unsigned)table[j][i - j];
-        for (int j = 0; j <= i - 1; j++)
-            if (j < 8 && i - 1 - j < 3)
-                temp += table[j][i - 1 - j] >> 32;
-        resultUnsignedBlocks[i] = temp;
-        temp >>= 32;
-    }
-    resultUnsignedBlocks[11] = result.blocks[6] = result.blocks[7] = 0;
-#endif
 }
 
 //void Key::multiplyByRHigh(Key& result)
 //{
-//#ifdef __aarch64__
 //    __asm(
 //        "UMULH x1, %[a0], %[b0]\n\t MUL x11, %[a1], %[b0]\n\t UMULH x2, %[a1], %[b0]\n\t MUL x12, %[a2], %[b0]\n\t UMULH x3, %[a2], %[b0]\n\t MUL x13, %[a3], %[b0]\n\t UMULH x0, %[a3], %[b0]\n\t"
 //        "ADDS x1, x1, x11\n\t ADCS x2, x2, x12\n\t ADCS x3, x3, x13\n\t ADC %[r0], x0, xzr"
@@ -375,29 +300,6 @@ void Key::multiplyByR2(Key& result)
 //        : "x0", "x1", "x2", "x3", "x11", "x12", "x13"
 //    );
 //    result.blocks[1] = result.blocks[2] = result.blocks[3] = 0;
-//#else
-//    auto* unsignedBlocks = (unsigned*)blocks;
-//    auto* rUnsignedBlocks = (unsigned*)R.blocks;
-//    auto* resultUnsignedBlocks = (unsigned*)result.blocks;
-//    unsigned long long table[8][2];
-//    for (int i = 0; i < 8; i++) {
-//        table[i][0] = (unsigned long long)unsignedBlocks[i] * rUnsignedBlocks[0];
-//        table[i][1] = unsignedBlocks[i];
-//    }
-//    unsigned long long temp = 0;
-//    for (int i = 0; i < 10; i++) {
-//        for (int j = 0; j <= i; j++)
-//            if (j < 8 && i - j < 2)
-//                temp += (unsigned)table[j][i - j];
-//        for (int j = 0; j <= i - 1; j++)
-//            if (j < 8 && i - 1 - j < 2)
-//                temp += table[j][i - 1 - j] >> 32;
-//        resultUnsignedBlocks[i] = temp;
-//        temp >>= 32;
-//    }
-//    result.blocks[0] = result.blocks[4];
-//    result.blocks[1] = result.blocks[2] = result.blocks[3] = 0;
-//#endif
 //}
 
 #pragma GCC push_options
@@ -409,7 +311,6 @@ void Key::reduce()
         //std::cout << blocks[0] << " => ";
     Key temp1, temp2;
     multiplyLow(P_PRIME, temp1);
-#ifdef __aarch64__
     __asm(
         "UMULH x1, %[a0], %[b0]\n\t MUL x11, %[a1], %[b0]\n\t UMULH x2, %[a1], %[b0]\n\t MUL x12, %[a2], %[b0]\n\t UMULH x3, %[a2], %[b0]\n\t MUL x13, %[a3], %[b0]\n\t UMULH x0, %[a3], %[b0]\n\t"
         "ADDS x1, x1, x11\n\t ADCS x2, x2, x12\n\t ADCS x3, x3, x13\n\t ADC %[r0], x0, xzr"
@@ -418,29 +319,6 @@ void Key::reduce()
         : "x0", "x1", "x2", "x3", "x11", "x12", "x13"
     );
     temp2.blocks[1] = temp2.blocks[2] = temp2.blocks[3] = 0;
-#else
-    auto* unsignedBlocks = (unsigned*)temp1.blocks;
-    auto* rUnsignedBlocks = (unsigned*)R.blocks;
-    auto* resultUnsignedBlocks = (unsigned*)temp2.blocks;
-    unsigned long long table[8][2];
-    for (int i = 0; i < 8; i++) {
-        table[i][0] = (unsigned long long)unsignedBlocks[i] * rUnsignedBlocks[0];
-        table[i][1] = unsignedBlocks[i];
-    }
-    unsigned long long temp = 0;
-    for (int i = 0; i < 10; i++) {
-        for (int j = 0; j <= i; j++)
-            if (j < 8 && i - j < 2)
-                temp += (unsigned)table[j][i - j];
-            for (int j = 0; j <= i - 1; j++)
-                if (j < 8 && i - 1 - j < 2)
-                    temp += table[j][i - 1 - j] >> 32;
-                resultUnsignedBlocks[i] = temp;
-                temp >>= 32;
-    }
-    temp2.blocks[0] = temp2.blocks[4];
-    temp2.blocks[1] = temp2.blocks[2] = temp2.blocks[3] = 0;
-#endif
     if (temp1.isNotZero())
         temp2.increment();
     temp1.subtract(temp2);
@@ -462,6 +340,7 @@ void Key::reduce()
 }
 #pragma GCC pop_options
 
+// TODO: Review
 void Key::divide(Key& divisor, Key& quotient)
 {
     auto* u = (unsigned*)blocks;
