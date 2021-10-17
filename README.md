@@ -1,4 +1,4 @@
-The target device of this project is [Raspberry Pi](https://www.raspberrypi.org/) (specifically, I use Raspberry Pi 3B+, but I think it is no problem to run the program on any of models). The important thing is that you need to use 64-bit operating system which is not common but it can be found as a beta-version [here](https://downloads.raspberrypi.org/raspios_lite_arm64/images/).
+The target device of this project is [Raspberry Pi](https://www.raspberrypi.org/) (specifically, I use Raspberry Pi 3B+, but I think it is no problem to run the program on any of models). The important thing is that you need to use a 64-bit operating system which is not common but it can be found as a beta-version [here](https://downloads.raspberrypi.org/raspios_lite_arm64/images/).
 
 The project is written in C++. In order to optimize speed, for some operations [GCC Inline Assembly](https://gcc.gnu.org/onlinedocs/gcc/Extended-Asm.html) with some specific intructions of ARM64 processors is used. To cross-compile this code from my laptop to Raspberry Pi, I use [CLion](https://www.jetbrains.com/clion/).
 
@@ -18,7 +18,7 @@ There are some static constant fields such as `ZERO`, `ONE`, etc. for some impor
 
 The next principal methods for keys are implemented:
 * `add`, `subtract` for arithmetical 256-bit addition and subtraction with a carry/borrow flag; `addExtended` adds 512-bit keys
-* `multiply` for arithmetical multiplication; `multiplyByR2` for optimized multiplication by `R2`; `multiplyLow` and `multiplyHigh` for calculating only low/high part of the result; `reduce` does [Montgomery reduction](https://en.wikipedia.org/wiki/Montgomery_modular_multiplication#The_REDC_algorithm)
+* `multiply` for arithmetical multiplication; `multiplyByR2` for optimized multiplication by `R2`; `multiplyLow` for calculating only low part of the result; `reduce` does [Montgomery reduction](https://en.wikipedia.org/wiki/Montgomery_modular_multiplication#The_REDC_algorithm)
 * `divide` for division ([Knuth's D-Algorithm](https://skanthak.homepage.t-online.de/division.html) is used)
 * `operator+=`, `operator-=`, `operator*=`, `invert` for modular addition, subtraction, multiplication, and inversion modulo `P`, respectively; `invertGroup` effectively inverts a group of keys as described [here](https://en.wikipedia.org/wiki/Modular_multiplicative_inverse#Multiple_inverses)
 
@@ -44,16 +44,16 @@ All the methods from `Key`, `Point`, and functions from `sha256`, and `ripemd160
 
 Operation | Time for 1 operation | Usages for 1 key | Time for 1 key | % of total time
 --------- | -------------------- | ---------------- | -------------- | ---------------
-`sha256` | 763 ns | 1.0000 | 763 ns | 22 %
-`Key::invertGroup` | 2 900 000 ns | 0.0002 | 708 ns | 21 %
-`Point::subtractReduced` | 1400 ns | 0.5000 | 700 ns | 20 %
-`Point::addReduced` | 1400 ns | 0.4998 | 700 ns | 20 %
-`ripemd160` | 521 ns | 1.0000 | 521 ns | 15 %
-`Point::compress` | 22 ns | 1.0000 | 22 ns | 1 %
-`Key::operator-=` | 25 ns | 0.5002 | 13 ns | 0 %
-`Point::add` | 1500 ns | 0.0002 | 0 ns | 0 %
+`sha256` | 750 ns | 1.0000 | 750 ns | 25 %
+`Point::subtractReduced` | 1200 ns | 0.5000 | 600 ns | 20 %
+`Point::addReduced` | 1200 ns | 0.4998 | 600 ns | 20 %
+`ripemd160` | 510 ns | 1.0000 | 510 ns | 17 %
+`Key::invertGroup` | 2 400 000 ns | 0.0002 | 480 ns | 16 %
+`Point::compress` | 15 ns | 1.0000 | 15 ns | 1 %
+`Key::operator-=` | 17 ns | 0.5002 | 9 ns | 0 %
+`Point::add` | 1200 ns | 0.0002 | 0 ns | 0 %
 
-For now, it is about 3400 ns needed to check 1 private key using 1 thread. Therefore, the total speed is about 1.1M keys/second.
+For now, it is about 3 μs needed to check 1 private key using 1 thread. Therefore, the total speed is more than 1.2M keys/second (on Raspberry Pi 3B+ with a 64-bit operating system).
 
 ### main
 

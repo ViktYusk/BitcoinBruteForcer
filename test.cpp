@@ -50,8 +50,6 @@ bool check(unsigned* array1, unsigned* array2, int length)
     return true;
 }
 
-//#pragma GCC push_options
-//#pragma GCC optimize ("O0")
 int test()
 {
     std::cout << "TESTING:" << std::endl;
@@ -83,13 +81,16 @@ int test()
 	{
         unsigned input[8] = { 0x68656C6C, 0x6F2C206D, 0x79206E61, 0x6D652069, 0x73205669, 0x6B746F72, 0x20597573, 0x6B6F7679 };
 		unsigned output[5] = { 0x7ED5EEF7, 0x78281CEB, 0x44536309, 0xABDA5680, 0xDF342508 };
+        unsigned output0s[5] = { 0x1A7C3C88, 0x2DD2EF7E, 0x0BF2B39D, 0xFAD74302, 0x7ED5EEF7 };
 		unsigned testInput[8];
 		unsigned testOutput[5];
 		for (int i = 0; i < 8; i++)
 		    testInput[i] = input[i];
+        bool result = true;
 		for (int i = 0; i < 5; i++)
 		{
 			ripemd160(testInput, testOutput);
+            result &= ripemd160(testInput) == output0s[i];
 			for (int j = 0; j < 5; j++)
             {
 			    REVERSE(*((unsigned*)testOutput + j), &testInput[j])
@@ -98,7 +99,8 @@ int test()
 			testInput[6] = 0x04050607;
 			testInput[7] = 0x08090A0B;
 		}
-		TEST("ripemd160", check(testOutput, output, 5), 1000000, ripemd160(testInput, testOutput))
+        TEST("ripemd160(unsigned*)", check(testOutput, output, 5), 1000000, ripemd160(testInput, testOutput))
+		TEST("ripemd160(unsigned*, unsigned*)", result, 0, ripemd160(testInput, testOutput))
 	}
 	{
 		unsigned long long blocks[4] = {0x59F2815B16F81798, 0x029BFCDB2DCE28D9, 0x55A06295CE870B07, 0x79BE667EF9DCBBAC};
@@ -262,35 +264,17 @@ int test()
     {
         Key key1(0x59F2815B16F81798, 0x029BFCDB2DCE28D9, 0x55A06295CE870B07, 0x79BE667EF9DCBBAC);
         Key key2(0x59F2815B16F81798, 0x029BFCDB2DCE28D9, 0x55A06295CE870B07, 0x79BE667EF9DCBBAC);
-        Key key3(0x9C47D08FFB10D4B8, 0xFD17B448A6855419, 0x5DA4FBFC0E1108A8, 0x483ADA7726A3C465);
-        key1.multiply(key3, key1);
-        key2.multiplyHigh(key3, key2);
-        bool result = true;
-        for (int b = 0; b < 4; b++)
-            result &= key1.blocks[4 + b] == key2.blocks[b];
-        TEST("Key::multiplyHigh", result, 1000000, key2.multiplyHigh(key3, key2))
-    }
-    {
-        Key key1(0x59F2815B16F81798, 0x029BFCDB2DCE28D9, 0x55A06295CE870B07, 0x79BE667EF9DCBBAC);
-        Key key2(0x59F2815B16F81798, 0x029BFCDB2DCE28D9, 0x55A06295CE870B07, 0x79BE667EF9DCBBAC);
         key1.multiply(Key::R2, key1);
-        key2.multiplyByR2(key2);
+        key2.multiplyByR2();
         bool result1 = key1.compareExtended(key2) == 0;
         int iterations = 999999;
         for (int i = 0; i < iterations; i++)
             key1.multiply(Key::R2, key1);
         for (int i = 0; i < iterations; i++)
-            key2.multiplyByR2(key2);
+            key2.multiplyByR2();
         bool result2 = key1.compareExtended(key2) == 0;
-        TEST("Key::multiplyByR2", result1 && result2, iterations, key2.multiplyByR2(key2))
+        TEST("Key::multiplyByR2", result1 && result2, iterations, key2.multiplyByR2())
     }
-//    {
-//        Key key1(0x59F2815B16F81798, 0x029BFCDB2DCE28D9, 0x55A06295CE870B07, 0x79BE667EF9DCBBAC);
-//        Key key2(0x59F2815B16F81798, 0x029BFCDB2DCE28D9, 0x55A06295CE870B07, 0x79BE667EF9DCBBAC);
-//        key1.multiplyHigh(Key::R, key1);
-//        key2.multiplyByRHigh(key2);
-//        TEST("Key::multiplyByRHigh", key1 == key2, 10000000, key2.multiplyByRHigh(key2))
-//    }
     {
         Key key1(0x9C47D08FFB10D4B8, 0xFD17B448A6855419, 0x5DA4FBFC0E1108A8, 0x483ADA7726A3C465, 0x59F2815B16F81798, 0x029BFCDB2DCE28D9, 0x55A06295CE870B07, 0x79BE667EF9DCBBAC);
         Key key2(0x3344E4AA359C06D0, 0x4923A947FF1CD1D7, 0x687E3D102B7D3A06, 0x93F5461B36AC32DF);
@@ -356,7 +340,7 @@ int test()
         Key remainder3(0x0000000000000002, 0x0000000000000000, 0x0000000000000000, 0x0000000000000000);
         dividend3.divide(divisor3, quotient_3);
         bool result3 = divisor3 == divisorCopy3 && dividend3 == remainder3 && quotient_3 == quotient3;
-        TEST("Key::divide", result1 && result2 && result3, 1000000, dividend1.divide(divisor1, quotient_1))
+        TEST("Key::divide", result1 && result2 && result3, 1000000, dividend2.divide(divisor2, quotient_2))
     }
     {
         Key x_;
@@ -373,7 +357,7 @@ int test()
         Key y2(0xB946138B35F7D60E, 0x7935C9F605369F4E, 0xC5ADA7DDB91DC968, 0xEF207A7B9FA568F6);
         Key::gcd(a2, b2, x_, y_);
         bool result2 = x_ == x2 && y_ == y2;
-        TEST("Key::gcd", result1 && result2, 100, Key::gcd(a2, b2, x_, y_))
+        TEST("Key::gcd", result1 && result2, 1000, Key::gcd(a2, b2, x_, y_))
     }
     {
         Key key1(0x59F2815B16F81798, 0x029BFCDB2DCE28D9, 0x55A06295CE870B07, 0x79BE667EF9DCBBAC);
@@ -391,7 +375,7 @@ int test()
         result &= key == key4;
         key.invert();
         result &= key == key3;
-        TEST("Key::invert", result, 100, key.invert())
+        TEST("Key::invert", result, 1000, key.invert())
     }
     {
         Key inputs1[Key::GROUP_SIZE / 2 + 1];
@@ -411,7 +395,7 @@ int test()
             inputs1[k].invert();
             result &= inputs1[k] == inputs2[k];
         }
-        TEST("Key::invertGroup", result, 10, Key::invertGroup(inputs2))
+        TEST("Key::invertGroup", result, 100, Key::invertGroup(inputs2))
     }
     {
         //unsigned long long key = 1;
@@ -447,7 +431,7 @@ int test()
         inverse.invert();
         Point temp;
         point1.add(Point::G, inverse, temp);
-        TEST("Point::add", temp == point2, 10000, point1.add(Point::G, inverse, temp))
+        TEST("Point::add", temp == point2, 100000, point1.add(Point::G, inverse, temp))
     }
     {
         Point point1 = Point(/*1024, */Key(0xD5B901B2E285131F, 0xAAEC6ECDC813B088, 0xD664A18F66AD6240, 0x241FEBB8E23CBD77), Key(0xABB3E66F2750026D, 0xCD50FD0FBD0CB5AF, 0xD6C420BD13981DF8, 0x513378D9FF94F8D3));
@@ -459,7 +443,7 @@ int test()
         Point temp2;
         point1.add(Point::G, inverse, temp1);
         point1.addReduced(Point::G, inverse, temp2);
-        TEST("Point::addReduced", temp1.x == temp2.x && temp1.y.blocks[0] % 2 == temp2.y.blocks[0] % 2, 10000, point1.addReduced(Point::G, inverse, temp2))
+        TEST("Point::addReduced", temp1.x == temp2.x && temp1.y.blocks[0] % 2 == temp2.y.blocks[0] % 2, 100000, point1.addReduced(Point::G, inverse, temp2))
     }
     {
         Point point1 = Point(/*1025, */Key(0x8304214FE4985A86, 0x640D2464C7FE0AC4, 0x066535A04DBF563A, 0x635CD7A05064D3BC), Key(0xE0453E27E9E3AE1F, 0xE8D5F047F3281A4C, 0x46735CFCAF9E2F30, 0x00E40265913E77F6));
@@ -469,7 +453,7 @@ int test()
         inverse.invert();
         Point temp;
         point1.subtract(Point::G, inverse, temp);
-        TEST("Point::subtract", temp == point2, 10000, point1.subtract(Point::G, inverse, temp))
+        TEST("Point::subtract", temp == point2, 100000, point1.subtract(Point::G, inverse, temp))
     }
     {
         Point point1 = Point(/*1025, */Key(0x8304214FE4985A86, 0x640D2464C7FE0AC4, 0x066535A04DBF563A, 0x635CD7A05064D3BC), Key(0xE0453E27E9E3AE1F, 0xE8D5F047F3281A4C, 0x46735CFCAF9E2F30, 0x00E40265913E77F6));
@@ -481,7 +465,7 @@ int test()
         Point temp2;
         point1.subtract(Point::G, inverse, temp1);
         point1.subtractReduced(Point::G, inverse, temp2);
-        TEST("Point::subtractReduced", temp1.x == temp2.x && temp1.y.blocks[0] % 2 == temp2.y.blocks[0] % 2, 10000, point1.subtractReduced(Point::G, inverse, temp2))
+        TEST("Point::subtractReduced", temp1.x == temp2.x && temp1.y.blocks[0] % 2 == temp2.y.blocks[0] % 2, 100000, point1.subtractReduced(Point::G, inverse, temp2))
     }
     {
         Point point1 = Point(/*1024, */Key(0xD5B901B2E285131F, 0xAAEC6ECDC813B088, 0xD664A18F66AD6240, 0x241FEBB8E23CBD77), Key(0xABB3E66F2750026D, 0xCD50FD0FBD0CB5AF, 0xD6C420BD13981DF8, 0x513378D9FF94F8D3));
@@ -519,4 +503,3 @@ int test()
     std::cout << std::endl;
     return 0;
 }
-//#pragma GCC pop_options

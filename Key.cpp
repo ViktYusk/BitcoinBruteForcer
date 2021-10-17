@@ -8,9 +8,6 @@ const Key Key::R2      = Key(0x000007A2000E90A1, 0x0000000000000001, 0x000000000
 const Key Key::P_PRIME = Key(0xD838091DD2253531, 0xBCB223FEDC24A059, 0x9C46C2C295F2B761, 0xC9BD190515538399); // 91248989341183975618893650062416139444822672217621753343178995607987479196977 NOLINT(cert-err58-cpp)
 const Key Key::P       = Key(0xFFFFFFFEFFFFFC2F, 0xFFFFFFFFFFFFFFFF, 0xFFFFFFFFFFFFFFFF, 0xFFFFFFFFFFFFFFFF); // 115792089237316195423570985008687907853269984665640564039457584007908834671663 NOLINT(cert-err58-cpp)
 
-
-#pragma GCC push_options
-//#pragma GCC optimize("O0")
 void Key::gcd(Key a, Key b, Key& x, Key&y)
 {
     if (a.isNotZero())
@@ -31,7 +28,6 @@ void Key::gcd(Key a, Key b, Key& x, Key&y)
         y = ONE;
     }
 }
-#pragma GCC pop_options
 
 void Key::invertGroup(Key* keys)
 {
@@ -96,17 +92,13 @@ void Key::operator-=(const Key& key)
 		add(P);
 }
 
-// TODO: Try division to find product modulo P
-#pragma GCC push_options
-#pragma GCC optimize ("O2")
 void Key::operator*=(const Key& key)
 {
-    multiplyByR2(*this);
+    multiplyByR2();
 	reduce();
 	multiply(key, *this);
 	reduce();
 }
-#pragma GCC pop_options
 
 int Key::compare(const Key& key)
 {
@@ -130,13 +122,10 @@ int Key::compareExtended(const Key& key)
 	return 0;
 }
 
-#pragma GCC push_options
-//#pragma GCC optimize ("O0")
 bool Key::isNotZero()
 {
     return blocks[0] | blocks[1] | blocks[2] | blocks[3];
 }
-#pragma GCC pop_options
 
 bool Key::increment()
 {
@@ -150,16 +139,6 @@ bool Key::increment()
         return false;
     return true;
 }
-
-/*
-void Key::rightShift256()
-{
-    blocks[0] = blocks[4];
-    blocks[1] = blocks[5];
-    blocks[2] = blocks[6];
-    blocks[3] = blocks[7];
-}
- */
 
 bool Key::add(const Key& key)
 {
@@ -216,108 +195,70 @@ unsigned long long Key::differenceParity(const Key& subtrahend)
     return compare(subtrahend) == 1 ? parity : 1 - parity;
 }
 
-// TODO: Try Karatsuba method
-void Key::multiply(const Key& key, Key& result)
+void Key::multiply(const Key& key, Key& product)
 {
-    __asm(
-        "MUL %[r0], %[a0], %[b0]\n\t UMULH %[r1], %[a0], %[b0]\n\t MUL x11, %[a1], %[b0]\n\t UMULH %[r2], %[a1], %[b0]\n\t MUL x12, %[a2], %[b0]\n\t UMULH %[r3], %[a2], %[b0]\n\t MUL x13, %[a3], %[b0]\n\t UMULH %[r4], %[a3], %[b0]\n\t"
-        "ADDS %[r1], %[r1], x11\n\t ADCS %[r2], %[r2], x12\n\t ADCS %[r3], %[r3], x13\n\t ADC %[r4], %[r4], xzr\n\t"
-        "MUL x0, %[a0], %[b1]\n\t UMULH x1, %[a0], %[b1]\n\t MUL x11, %[a1], %[b1]\n\t UMULH x2, %[a1], %[b1]\n\t MUL x12, %[a2], %[b1]\n\t UMULH x3, %[a2], %[b1]\n\t MUL x13, %[a3], %[b1]\n\t UMULH x4, %[a3], %[b1]\n\t"
-        "ADDS x1, x1, x11\n\t ADCS x2, x2, x12\n\t ADCS x3, x3, x13\n\t ADC x4, x4, xzr\n\t"
-        "ADDS %[r1], %[r1], x0\n\t ADCS %[r2], %[r2], x1\n\t ADCS %[r3], %[r3], x2\n\t ADCS %[r4], %[r4], x3\n\t ADC %[r5], x4, xzr\n\t"
-        "MUL x0, %[a0], %[b2]\n\t UMULH x1, %[a0], %[b2]\n\t MUL x11, %[a1], %[b2]\n\t UMULH x2, %[a1], %[b2]\n\t MUL x12, %[a2], %[b2]\n\t UMULH x3, %[a2], %[b2]\n\t MUL x13, %[a3], %[b2]\n\t UMULH x4, %[a3], %[b2]\n\t"
-        "ADDS x1, x1, x11\n\t ADCS x2, x2, x12\n\t ADCS x3, x3, x13\n\t ADC x4, x4, xzr\n\t"
-        "ADDS %[r2], %[r2], x0\n\t ADCS %[r3], %[r3], x1\n\t ADCS %[r4], %[r4], x2\n\t ADCS %[r5], %[r5], x3\n\t ADC %[r6], x4, xzr\n\t"
-        "MUL x0, %[a0], %[b3]\n\t UMULH x1, %[a0], %[b3]\n\t MUL x11, %[a1], %[b3]\n\t UMULH x2, %[a1], %[b3]\n\t MUL x12, %[a2], %[b3]\n\t UMULH x3, %[a2], %[b3]\n\t MUL x13, %[a3], %[b3]\n\t UMULH x4, %[a3], %[b3]\n\t"
-        "ADDS x1, x1, x11\n\t ADCS x2, x2, x12\n\t ADCS x3, x3, x13\n\t ADC x4, x4, xzr\n\t"
-        "ADDS %[r3], %[r3], x0\n\t ADCS %[r4], %[r4], x1\n\t ADCS %[r5], %[r5], x2\n\t ADCS %[r6], %[r6], x3\n\t ADC %[r7], x4, xzr"
-        : [r0] "=&r" (result.blocks[0]), [r1] "+r" (result.blocks[1]), [r2] "+r" (result.blocks[2]), [r3] "+r" (result.blocks[3]), [r4] "+r" (result.blocks[4]), [r5] "+r" (result.blocks[5]), [r6] "+r" (result.blocks[6]), [r7] "=r" (result.blocks[7])
-        : [a0] "r" (blocks[0]), [a1] "r" (blocks[1]), [a2] "r" (blocks[2]), [a3] "r" (blocks[3]), [b0] "r" (key.blocks[0]), [b1] "r" (key.blocks[1]), [b2] "r" (key.blocks[2]), [b3] "r" (key.blocks[3])
-        : "x0", "x1", "x2", "x3", "x4", "x11", "x12", "x13"
-    );
+    unsigned long long table[4][5];
+    __uint128_t result;
+    MULTIPLY_BLOCKS_BY_BLOCK(0)
+    MULTIPLY_BLOCKS_BY_BLOCK(1)
+    MULTIPLY_BLOCKS_BY_BLOCK(2)
+    MULTIPLY_BLOCKS_BY_BLOCK(3)
+    product.blocks[0] = table[0][0];
+    result = (__uint128_t)table[0][1] + table[1][0];
+    product.blocks[1] = result;
+    ADD_MULTIPLIED_BLOCKS(2, table[0][2] + table[1][1] + table[2][0])
+    ADD_MULTIPLIED_BLOCKS(3, table[0][3] + table[1][2] + table[2][1] + table[3][0])
+    ADD_MULTIPLIED_BLOCKS(4, table[0][4] + table[1][3] + table[2][2] + table[3][1])
+    ADD_MULTIPLIED_BLOCKS(5, table[1][4] + table[2][3] + table[3][2])
+    ADD_MULTIPLIED_BLOCKS(6, table[2][4] + table[3][3])
+    ADD_MULTIPLIED_BLOCKS_REDUCED(7, table[3][4])
 }
 
-void Key::multiplyLow(const Key& key, Key& result)
+void Key::multiplyLow(const Key& key, Key& product)
 {
-    __asm(
-        "MUL %[r0], %[a0], %[b0]\n\t UMULH %[r1], %[a0], %[b0]\n\t MUL x11, %[a1], %[b0]\n\t UMULH %[r2], %[a1], %[b0]\n\t MUL x12, %[a2], %[b0]\n\t UMULH %[r3], %[a2], %[b0]\n\t MUL x13, %[a3], %[b0]\n\t"
-        "ADDS %[r1], %[r1], x11\n\t ADCS %[r2], %[r2], x12\n\t ADC %[r3], %[r3], x13\n\t"
-        "MUL x0, %[a0], %[b1]\n\t UMULH x1, %[a0], %[b1]\n\t MUL x11, %[a1], %[b1]\n\t UMULH x2, %[a1], %[b1]\n\t MUL x12, %[a2], %[b1]\n\t"
-        "ADDS x1, x1, x11\n\t ADC x2, x2, x12\n\t"
-        "ADDS %[r1], %[r1], x0\n\t ADCS %[r2], %[r2], x1\n\t ADC %[r3], %[r3], x2\n\t"
-        "MUL x0, %[a0], %[b2]\n\t UMULH x1, %[a0], %[b2]\n\t MUL x11, %[a1], %[b2]\n\t"
-        "ADD x1, x1, x11\n\t"
-        "ADDS %[r2], %[r2], x0\n\t ADCS %[r3], %[r3], x1\n\t"
-        "MUL x0, %[a0], %[b3]\n\t"
-        "ADD %[r3], %[r3], x0"
-        : [r0] "+&r" (result.blocks[0]), [r1] "+&r" (result.blocks[1]), [r2] "+&r" (result.blocks[2]), [r3] "+&r" (result.blocks[3])
-        : [a0] "r" (blocks[0]), [a1] "r" (blocks[1]), [a2] "r" (blocks[2]), [a3] "r" (blocks[3]), [b0] "r" (key.blocks[0]), [b1] "r" (key.blocks[1]), [b2] "r" (key.blocks[2]), [b3] "r" (key.blocks[3])
-        : "x0", "x1", "x2", "x3", "x4", "x11", "x12", "x13"
-    );
+    unsigned long long table[4][4];
+    __uint128_t result;
+    result = 0; MULTIPLY_BLOCK_BY_BLOCK(0, 0) MULTIPLY_BLOCK_BY_BLOCK(0, 1) MULTIPLY_BLOCK_BY_BLOCK(0, 2) MULTIPLY_BLOCK_BY_BLOCK_REDUCED(0, 3)
+    result = 0; MULTIPLY_BLOCK_BY_BLOCK(1, 0) MULTIPLY_BLOCK_BY_BLOCK(1, 1) MULTIPLY_BLOCK_BY_BLOCK_REDUCED(1, 2)
+    result = 0; MULTIPLY_BLOCK_BY_BLOCK(2, 0) MULTIPLY_BLOCK_BY_BLOCK_REDUCED(2, 1)
+    result = 0; MULTIPLY_BLOCK_BY_BLOCK_REDUCED(3, 0)
+    product.blocks[0] = table[0][0];
+    result = (__uint128_t)table[0][1] + table[1][0];
+    product.blocks[1] = result;
+    ADD_MULTIPLIED_BLOCKS(2, table[0][2] + table[1][1] + table[2][0])
+    ADD_MULTIPLIED_BLOCKS_REDUCED(3, table[0][3] + table[1][2] + table[2][1] + table[3][0])
 }
 
-void Key::multiplyHigh(const Key& key, Key& result)
+void Key::multiplyByR2()
 {
-    __asm(
-        "UMULH x21, %[a0], %[b0]\n\t MUL x11, %[a1], %[b0]\n\t UMULH x22, %[a1], %[b0]\n\t MUL x12, %[a2], %[b0]\n\t UMULH x23, %[a2], %[b0]\n\t MUL x13, %[a3], %[b0]\n\t UMULH %[r0], %[a3], %[b0]\n\t"
-        "ADDS x21, x21, x11\n\t ADCS x22, x22, x12\n\t ADCS x23, x23, x13\n\t ADC %[r0], %[r0], xzr\n\t"
-        "MUL x0, %[a0], %[b1]\n\t UMULH x1, %[a0], %[b1]\n\t MUL x11, %[a1], %[b1]\n\t UMULH x2, %[a1], %[b1]\n\t MUL x12, %[a2], %[b1]\n\t UMULH x3, %[a2], %[b1]\n\t MUL x13, %[a3], %[b1]\n\t UMULH x4, %[a3], %[b1]\n\t"
-        "ADDS x1, x1, x11\n\t ADCS x2, x2, x12\n\t ADCS x3, x3, x13\n\t ADC x4, x4, xzr\n\t"
-        "ADDS x21, x21, x0\n\t ADCS x22, x22, x1\n\t ADCS x23, x23, x2\n\t ADCS %[r0], %[r0], x3\n\t ADC %[r1], x4, xzr\n\t"
-        "MUL x0, %[a0], %[b2]\n\t UMULH x1, %[a0], %[b2]\n\t MUL x11, %[a1], %[b2]\n\t UMULH x2, %[a1], %[b2]\n\t MUL x12, %[a2], %[b2]\n\t UMULH x3, %[a2], %[b2]\n\t MUL x13, %[a3], %[b2]\n\t UMULH x4, %[a3], %[b2]\n\t"
-        "ADDS x1, x1, x11\n\t ADCS x2, x2, x12\n\t ADCS x3, x3, x13\n\t ADC x4, x4, xzr\n\t"
-        "ADDS x22, x22, x0\n\t ADCS x23, x23, x1\n\t ADCS %[r0], %[r0], x2\n\t ADCS %[r1], %[r1], x3\n\t ADC %[r2], x4, xzr\n\t"
-        "MUL x0, %[a0], %[b3]\n\t UMULH x1, %[a0], %[b3]\n\t MUL x11, %[a1], %[b3]\n\t UMULH x2, %[a1], %[b3]\n\t MUL x12, %[a2], %[b3]\n\t UMULH x3, %[a2], %[b3]\n\t MUL x13, %[a3], %[b3]\n\t UMULH x4, %[a3], %[b3]\n\t"
-        "ADDS x1, x1, x11\n\t ADCS x2, x2, x12\n\t ADCS x3, x3, x13\n\t ADC x4, x4, xzr\n\t"
-        "ADDS x23, x23, x0\n\t ADCS %[r0], %[r0], x1\n\t ADCS %[r1], %[r1], x2\n\t ADCS %[r2], %[r2], x3\n\t ADC %[r3], x4, xzr"
-        : [r0] "+&r" (result.blocks[0]), [r1] "+&r" (result.blocks[1]), [r2] "+&r" (result.blocks[2]), [r3] "=r" (result.blocks[3])
-        : [a0] "r" (blocks[0]), [a1] "r" (blocks[1]), [a2] "r" (blocks[2]), [a3] "r" (blocks[3]), [b0] "r" (key.blocks[0]), [b1] "r" (key.blocks[1]), [b2] "r" (key.blocks[2]), [b3] "r" (key.blocks[3])
-        : "x0", "x1", "x2", "x3", "x4", "x11", "x12", "x13", "x21", "x22", "x23"
-    );
+    unsigned long long table[5];
+    __uint128_t result = 0;
+    MULTIPLY_BLOCK_BY_R2(0)
+    MULTIPLY_BLOCK_BY_R2(1)
+    MULTIPLY_BLOCK_BY_R2(2)
+    result += (__uint128_t)R2.blocks[0] * blocks[3]; table[3] = result; table[4] = result >> 64;
+    blocks[4] = blocks[0];
+    blocks[5] = blocks[1];
+    blocks[6] = blocks[2];
+    blocks[7] = blocks[3];
+    blocks[0] = table[0];
+    result = (__uint128_t)table[1] + blocks[4];
+    blocks[1] = result;
+    ADD_MULTIPLIED_BLOCKS_SELF(2, table[2] + blocks[5])
+    ADD_MULTIPLIED_BLOCKS_SELF(3, table[3] + blocks[6])
+    ADD_MULTIPLIED_BLOCKS_SELF(4, table[4] + blocks[7])
+    blocks[5] = result >> 64;
+    blocks[6] = blocks[7] = 0;
 }
 
-
-void Key::multiplyByR2(Key& result)
-{
-    __asm(
-        "MUL %[r0], %[a0], %[b0]\n\t UMULH %[r1], %[a0], %[b0]\n\t MUL x11, %[a1], %[b0]\n\t UMULH %[r2], %[a1], %[b0]\n\t MUL x12, %[a2], %[b0]\n\t UMULH %[r3], %[a2], %[b0]\n\t MUL x13, %[a3], %[b0]\n\t UMULH %[r4], %[a3], %[b0]\n\t"
-        "ADDS %[r1], %[r1], x11\n\t ADCS %[r2], %[r2], x12\n\t ADCS %[r3], %[r3], x13\n\t ADC %[r4], %[r4], xzr\n\t"
-        "ADDS %[r1], %[r1], %[a0]\n\t ADCS %[r2], %[r2], %[a1]\n\t ADCS %[r3], %[r3], %[a2]\n\t ADCS %[r4], %[r4], %[a3]\n\t ADC %[r5], xzr, xzr\n\t"
-        "MOV %[r6], #0\n\t MOV %[r7], #0"
-        : [r0] "+&r" (result.blocks[0]), [r1] "+&r" (result.blocks[1]), [r2] "+r" (result.blocks[2]), [r3] "+&r" (result.blocks[3]), [r4] "+&r" (result.blocks[4]), [r5] "+&r" (result.blocks[5]), [r6] "=&r" (result.blocks[6]), [r7] "=&r" (result.blocks[7])
-        : [a0] "r" (blocks[0]), [a1] "r" (blocks[1]), [a2] "r" (blocks[2]), [a3] "r" (blocks[3]), [b0] "r" (R2.blocks[0])
-        : "x11", "x12", "x13"
-    );
-}
-
-//void Key::multiplyByRHigh(Key& result)
-//{
-//    __asm(
-//        "UMULH x1, %[a0], %[b0]\n\t MUL x11, %[a1], %[b0]\n\t UMULH x2, %[a1], %[b0]\n\t MUL x12, %[a2], %[b0]\n\t UMULH x3, %[a2], %[b0]\n\t MUL x13, %[a3], %[b0]\n\t UMULH x0, %[a3], %[b0]\n\t"
-//        "ADDS x1, x1, x11\n\t ADCS x2, x2, x12\n\t ADCS x3, x3, x13\n\t ADC %[r0], x0, xzr"
-//        : [r0] "=r" (result.blocks[0])
-//        : [a0] "r" (blocks[0]), [a1] "r" (blocks[1]), [a2] "r" (blocks[2]), [a3] "r" (blocks[3]), [b0] "r" (R.blocks[0])
-//        : "x0", "x1", "x2", "x3", "x11", "x12", "x13"
-//    );
-//    result.blocks[1] = result.blocks[2] = result.blocks[3] = 0;
-//}
-
-#pragma GCC push_options
-#pragma GCC optimize ("O2")
 void Key::reduce()
 {
-    //if (test)
-        //std::cout << "reduce(" << blocks[0] << " " << blocks[1] << " " << blocks[2] << " " << blocks[3] << " " << blocks[4] << " " << blocks[5] << " " << blocks[6] << " " << blocks[7] << ") = ";
-        //std::cout << blocks[0] << " => ";
     Key temp1, temp2;
     multiplyLow(P_PRIME, temp1);
-    __asm(
-        "UMULH x1, %[a0], %[b0]\n\t MUL x11, %[a1], %[b0]\n\t UMULH x2, %[a1], %[b0]\n\t MUL x12, %[a2], %[b0]\n\t UMULH x3, %[a2], %[b0]\n\t MUL x13, %[a3], %[b0]\n\t UMULH x0, %[a3], %[b0]\n\t"
-        "ADDS x1, x1, x11\n\t ADCS x2, x2, x12\n\t ADCS x3, x3, x13\n\t ADC %[r0], x0, xzr"
-        : [r0] "=r" (temp2.blocks[0])
-        : [a0] "r" (temp1.blocks[0]), [a1] "r" (temp1.blocks[1]), [a2] "r" (temp1.blocks[2]), [a3] "r" (temp1.blocks[3]), [b0] "r" (R.blocks[0])
-        : "x0", "x1", "x2", "x3", "x11", "x12", "x13"
-    );
+    __uint128_t result = (__uint128_t)R.blocks[0] * temp1.blocks[0]; result >>= 64;
+    result += (__uint128_t)R.blocks[0] * temp1.blocks[1]; result >>= 64;
+    result += (__uint128_t)R.blocks[0] * temp1.blocks[2]; result >>= 64;
+    result += (__uint128_t)R.blocks[0] * temp1.blocks[3]; temp2.blocks[0] = result >> 64;
     temp2.blocks[1] = temp2.blocks[2] = temp2.blocks[3] = 0;
     if (temp1.isNotZero())
         temp2.increment();
@@ -334,14 +275,9 @@ void Key::reduce()
 		add(R);
 	else if (compare(P) >= 0)
 		subtract(P);
-	//if (test)
-	    //std::cout << blocks[0] << " " << blocks[1] << " " << blocks[2] << " " << blocks[3] << std::endl;
-	    //std::cout << blocks[0] << std::endl;
 }
-#pragma GCC pop_options
 
-// TODO: Review
-void Key::divide(Key& divisor, Key& quotient)
+void Key::divide(const Key& divisor, Key& quotient)
 {
     auto* u = (unsigned*)blocks;
     auto* v = (unsigned*)divisor.blocks;
@@ -373,7 +309,8 @@ void Key::divide(Key& divisor, Key& quotient)
     for (int i = n - 1; i > 0; i--)
         vn[i] = v[i] << s | (unsigned long long)v[i - 1] >> (32 - s);
     vn[0] = v[0] << s;
-    unsigned q[8] = { 0 };
+    quotient = ZERO;
+    auto* q = (unsigned*)quotient.blocks;
     for (int j = m - n; j >= 0; j--)
     {
         unsigned long long _ = un[n + j] * B + un[n + j - 1];
@@ -411,10 +348,6 @@ void Key::divide(Key& divisor, Key& quotient)
             un[n + j] += k;
         }
     }
-    quotient.blocks[0] = q[0] + ((unsigned long long)q[1] << 32);
-    quotient.blocks[1] = q[2] + ((unsigned long long)q[3] << 32);
-    quotient.blocks[2] = q[4] + ((unsigned long long)q[5] << 32);
-    quotient.blocks[3] = q[6] + ((unsigned long long)q[7] << 32);
     unsigned r[8] = { 0 };
     for (int i = 0; i < n - 1; i++)
         r[i] = un[i] >> s | (unsigned long long)un[i + 1] << (32 - s);
