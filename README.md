@@ -24,7 +24,7 @@ The next principal methods for keys are implemented:
 
 ### Point
 
-`Point` represents a Bitcoin public point which is a point on [SECP256K1 Curve](https://en.bitcoin.it/wiki/Secp256k1) which is a. k. a. *Bitcoin Curve*. It consists of two 256-bit keys `x` and `y`. `G` is the generator point. `ADDRESS0` is the first 4 bytes of the puzzle address.
+`Point` represents a Bitcoin public point which is a point on [`secp256k1` Curve](https://en.bitcoin.it/wiki/Secp256k1) which is a. k. a. *Bitcoin Curve*. It consists of two 256-bit keys `x` and `y`. `G` is the generator point. `ADDRESS0` is the first 4 bytes of the puzzle address.
 
 A point can be contructed either from two keys, or from `unsigned long long` private key as the corresponding public point (the last operation is quite slow).
 
@@ -111,7 +111,7 @@ There is also finish point check. If the finish point for some thread is wrong (
 
 ## Contributions and Donations
 
-I really want to optimize speed as much as possible up to several millions keys in a second. I would appreciate any advice or help. You can use my email to contact me:
+I really want to optimize speed as much as possible up to several million keys in a second. I would appreciate any advice or help. You can use my email to contact me:
 ```
 viktyusk@gmail.com
 ```
