@@ -21,10 +21,11 @@ struct Key
 	static const Key THREE;
 	static const Key R;
 	static const Key R2;
+    static const Key P2;
 	static const Key P_PRIME;
 	static const Key P;
 
-	static void gcd(Key a, Key b, Key& x, Key& y);
+	//static void gcd(Key a, Key b, Key& x, Key& y);
 	static void invertGroup(Key* keys);
 
 	unsigned long long blocks[8];
@@ -40,17 +41,18 @@ struct Key
 
 	int compare(const Key& key);
 	int compareExtended(const Key& key);
-	bool isNotZero();
 
+    bool isNotZero();
 	bool increment();
 	bool add(const Key& key);
 	bool addExtended(const Key& key);
 	bool subtract(const Key& key);
 	unsigned long long differenceParity(const Key& subtrahend);
+    void rightShift();
     void multiply(const Key& key, Key& product);
     void multiplyLow(const Key& key, Key& product);
 	void multiplyByR2();
 	void reduce();
-	void divide(const Key& divisor, Key& quotient);
+	//void divide(const Key& divisor, Key& quotient);
 	void invert();
 };

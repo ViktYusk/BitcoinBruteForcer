@@ -48,7 +48,7 @@ Operation | Time for 1 operation | Usages for 1 key | Time for 1 key | % of tota
 `Point::subtractReduced` | 1200 ns | 0.5000 | 600 ns | 20 %
 `Point::addReduced` | 1200 ns | 0.4998 | 600 ns | 20 %
 `ripemd160` | 510 ns | 1.0000 | 510 ns | 17 %
-`Key::invertGroup` | 2 400 000 ns | 0.0002 | 480 ns | 16 %
+`Key::invertGroup` | 2 300 000 ns | 0.0002 | 460 ns | 16 %
 `Point::compress` | 15 ns | 1.0000 | 15 ns | 1 %
 `Key::operator-=` | 17 ns | 0.5002 | 9 ns | 0 %
 `Point::add` | 1200 ns | 0.0002 | 0 ns | 0 %
@@ -70,7 +70,7 @@ The compiled program `bitcoin_puzzle` for Linux needs an argument with block num
 bitcoin_puzzle 14920854
 ```
 
-in order to process block # 14920854. With current speed of calculations, it takes about 2 days to process a block, and after this you will see the next output:
+in order to process block # 14920854. With current speed of calculations, it takes about 30 hours to process a block, and after this you will see the next output:
 
 ```
 9C7592C05DC70C7D 3EE4133DC0048754A7B8EB3A085032FADD54E184

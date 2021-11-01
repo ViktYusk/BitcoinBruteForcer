@@ -203,18 +203,6 @@ int test()
             key1.subtract(key2);
         TEST("Key::subtract", key1 == key3, iterations, key1.subtract(key2))
     }
-    {
-        Key key1(0x59F2815B16F81798, 0x029BFCDB2DCE28D9, 0x55A06295CE870B07, 0x79BE667EF9DCBBAC);
-        Key key2(0x9C47D08FFB10D4B8, 0xFD17B448A6855419, 0x5DA4FBFC0E1108A8, 0x483ADA7726A3C465);
-        bool result = true;
-        for (int i = 0; i < 1000; i++)
-        {
-            unsigned long long parity = key1.differenceParity(key2);
-            key1 -= key2;
-            result &= key1.blocks[0] % 2 == parity;
-        }
-        TEST("Key::differenceParity", result, 100000000, key1.differenceParity(key2))
-    }
 	{
 		Key key1(0x59F2815B16F81798, 0x029BFCDB2DCE28D9, 0x55A06295CE870B07, 0x79BE667EF9DCBBAC);
 		Key key2(0x9C47D08FFB10D4B8, 0xFD17B448A6855419, 0x5DA4FBFC0E1108A8, 0x483ADA7726A3C465);
@@ -237,6 +225,24 @@ int test()
 			key1 -= key2;
 		TEST("Key::operator-=", key1 == key3, iterations, key1 -= key2)
 	}
+    {
+        Key key1(0x59F2815B16F81798, 0x029BFCDB2DCE28D9, 0x55A06295CE870B07, 0x79BE667EF9DCBBAC);
+        Key key2(0x9C47D08FFB10D4B8, 0xFD17B448A6855419, 0x5DA4FBFC0E1108A8, 0x483ADA7726A3C465);
+        bool result = true;
+        for (int i = 0; i < 1000; i++)
+        {
+            unsigned long long parity = key1.differenceParity(key2);
+            key1 -= key2;
+            result &= key1.blocks[0] % 2 == parity;
+        }
+        TEST("Key::differenceParity", result, 100000000, key1.differenceParity(key2))
+    }
+    {
+        Key key1(0x59F2815B16F81798, 0x029BFCDB2DCE28D9, 0x55A06295CE870B07, 0x79BE667EF9DCBBAC);
+        Key key2(0xACF940AD8B7C0BCC, 0x814DFE6D96E7146C, 0x2AD0314AE7438583, 0x3CDF333F7CEE5DD6);
+        key1.rightShift();
+        TEST("Key::rightShift", key1 == key2, 0, key1.rightShift())
+    }
 	{
 		Key key1(0x59F2815B16F81798, 0x029BFCDB2DCE28D9, 0x55A06295CE870B07, 0x79BE667EF9DCBBAC);
 		Key key2(0x9C47D08FFB10D4B9, 0xFD17B448A6855419, 0x5DA4FBFC0E1108A8, 0x483ADA7726A3C465);
@@ -315,6 +321,7 @@ int test()
             key1 *= key2;
         TEST("Key::operator*=", key1 == key3, iterations, key1 *= key2)
     }
+    /*
     {
         Key dividend1(0x59F2815B16F81798, 0x029BFCDB2DCE28D9, 0x55A06295CE870B07, 0x79BE667EF9DCBBAC);
         Key divisor1(0x000007A2000E90A1, 0x0000000000000001, 0x0000000000000000, 0x0000000000000000);
@@ -342,6 +349,8 @@ int test()
         bool result3 = divisor3 == divisorCopy3 && dividend3 == remainder3 && quotient_3 == quotient3;
         TEST("Key::divide", result1 && result2 && result3, 1000000, dividend2.divide(divisor2, quotient_2))
     }
+    */
+    /*
     {
         Key x_;
         Key y_;
@@ -359,6 +368,7 @@ int test()
         bool result2 = x_ == x2 && y_ == y2;
         TEST("Key::gcd", result1 && result2, 1000, Key::gcd(a2, b2, x_, y_))
     }
+    */
     {
         Key key1(0x59F2815B16F81798, 0x029BFCDB2DCE28D9, 0x55A06295CE870B07, 0x79BE667EF9DCBBAC);
         Key key2(0xE61D003687CA9EF6, 0x67B8E794ABFB076B, 0x870AAEB8AD77626A, 0x237AFDF1D2938D86);
