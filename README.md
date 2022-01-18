@@ -118,5 +118,5 @@ viktyusk@gmail.com
 
 If you want to donate me, please, use the next Bitcoin address:
 ```
-bc1q383qqx90z3kcarpdct5fnz2flzwm3652czhp5v
+bc1qdf30mdgp4ajltv2xktmcajja08lusjysqar9mz
 ```
