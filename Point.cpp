@@ -110,7 +110,7 @@ void Point::subtractReduced(const Point& point, Key& inverse, Point& result) con
     result.y.blocks[0] = result.y.differenceParity(y);
 }
 
-bool Point::operator==(const Point& point)
+bool Point::operator==(const Point& point) const
 {
 	return x == point.x && y == point.y;
 }

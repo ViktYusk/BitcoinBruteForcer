@@ -21,7 +21,7 @@ struct Point
 	explicit Point(unsigned long long key);
 	Point(Key x, Key y);
 
-	bool operator==(const Point& point);
+	bool operator==(const Point& point) const;
 	void operator+=(const Point& point);
 
     void add(const Point& point, Key& inverse, Point& result) const;
