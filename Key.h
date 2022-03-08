@@ -9,6 +9,10 @@
 #define ADD_MULTIPLIED_BLOCKS(i, sum) result >>= 64; result += (__uint128_t)sum; product.blocks[i] = result;
 #define ADD_MULTIPLIED_BLOCKS_SELF(i, sum) result >>= 64; result += (__uint128_t)sum; blocks[i] = result;
 #define ADD_MULTIPLIED_BLOCKS_REDUCED(i, sum) product.blocks[i] = (unsigned long long)(result >> 64) + sum;
+#ifndef __aarch64__
+#define ADD_BLOCKS(i) result += (__uint128_t)blocks[i] + key.blocks[i]; blocks[i] = result; result >>= 64;
+#define SUBTRACT_BLOCKS(i) result = (__uint128_t)blocks[i] - key.blocks[i] - (bool)result; blocks[i] = result; result >>= 64;
+#endif
 
 struct Key
 {

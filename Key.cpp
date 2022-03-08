@@ -142,6 +142,7 @@ bool Key::increment()
 
 bool Key::add(const Key& key)
 {
+#ifdef __aarch64__
     unsigned long long carry;
     __asm(
         "ADDS %[a0], %[a0], %[b0]\n\t"
@@ -153,10 +154,19 @@ bool Key::add(const Key& key)
         : [b0] "r" (key.blocks[0]), [b1] "r" (key.blocks[1]), [b2] "r" (key.blocks[2]), [b3] "r" (key.blocks[3])
     );
 	return carry;
+#else
+    __uint128_t result = 0;
+    ADD_BLOCKS(0);
+    ADD_BLOCKS(1);
+    ADD_BLOCKS(2);
+    ADD_BLOCKS(3);
+    return result;
+#endif
 }
 
 bool Key::addExtended(const Key& key)
 {
+#ifdef __aarch64__
     unsigned long long carry;
     __asm(
         "ADDS %[a0], %[a0], %[b0]\n\t"
@@ -171,11 +181,24 @@ bool Key::addExtended(const Key& key)
         : [a0] "+r" (blocks[0]), [a1] "+r" (blocks[1]), [a2] "+r" (blocks[2]), [a3] "+r" (blocks[3]), [a4] "+r" (blocks[4]), [a5] "+r" (blocks[5]), [a6] "+r" (blocks[6]), [a7] "+r" (blocks[7]), [c] "=r" (carry)
         : [b0] "r" (key.blocks[0]), [b1] "r" (key.blocks[1]), [b2] "r" (key.blocks[2]), [b3] "r" (key.blocks[3]), [b4] "r" (key.blocks[4]), [b5] "r" (key.blocks[5]), [b6] "r" (key.blocks[6]), [b7] "r" (key.blocks[7])
     );
-	return carry;
+    return carry;
+#else
+    __uint128_t result = 0;
+    ADD_BLOCKS(0);
+    ADD_BLOCKS(1);
+    ADD_BLOCKS(2);
+    ADD_BLOCKS(3);
+    ADD_BLOCKS(4);
+    ADD_BLOCKS(5);
+    ADD_BLOCKS(6);
+    ADD_BLOCKS(7);
+    return result;
+#endif
 }
 
 bool Key::subtract(const Key& key)
 {
+#ifdef __aarch64__
     unsigned long long carry;
     __asm(
         "SUBS %[a0], %[a0], %[b0]\n\t"
@@ -187,6 +210,14 @@ bool Key::subtract(const Key& key)
         : [b0] "r" (key.blocks[0]), [b1] "r" (key.blocks[1]), [b2] "r" (key.blocks[2]), [b3] "r" (key.blocks[3])
     );
 	return carry;
+#else
+    __uint128_t result = 0;
+    SUBTRACT_BLOCKS(0);
+    SUBTRACT_BLOCKS(1);
+    SUBTRACT_BLOCKS(2);
+    SUBTRACT_BLOCKS(3);
+    return result;
+#endif
 }
 
 unsigned long long Key::differenceParity(const Key& subtrahend)

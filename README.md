@@ -1,6 +1,8 @@
-The target device of this project is [Raspberry Pi](https://www.raspberrypi.org/) (specifically, I use Raspberry Pi 3B+, but I think it is no problem to run the program on any of models). The important thing is that you need to use a 64-bit operating system which is not common but it can be found as a beta-version [here](https://downloads.raspberrypi.org/raspios_lite_arm64/images/).
+I developed this project with [CLion](https://www.jetbrains.com/clion/) IDE.
 
-The project is written in C++. In order to optimize speed, for some operations [GCC Inline Assembly](https://gcc.gnu.org/onlinedocs/gcc/Extended-Asm.html) with some specific intructions of ARM64 processors is used. To cross-compile this code from my laptop to Raspberry Pi, I use [CLion](https://www.jetbrains.com/clion/).
+The target device of this project is [Raspberry Pi](https://www.raspberrypi.org/) (specifically, I use Raspberry Pi 3B+, but I think it is no problem to run the program on any of models). The important thing is that you need to use a 64-bit operating system which is not common, but it can be found as a beta-version [here](https://downloads.raspberrypi.org/raspios_lite_arm64/images/). In order to optimize speed, for some operations [GCC Inline Assembly](https://gcc.gnu.org/onlinedocs/gcc/Extended-Asm.html) with some specific instructions of AArch64 processors is used, but the code is compatible with other processors.
+
+This project can be compiled for other platforms as well. For example, to compile it for Windows, I use [Cygwin](https://www.cygwin.com/).
 
 ## Bitcoin Puzzle
 
@@ -40,7 +42,7 @@ The next principal methods for points are implemented:
 
 ### test
 
-All the methods from `Key`, `Point`, and functions from `sha256`, and `ripemd160` are tested in `test`. Some of them, which are directly used in brute-forcing keys, are speed-tested. There are time consumptions for the principal operations using 1 thread:
+All the methods from `Key`, `Point`, and functions from `sha256`, and `ripemd160` are tested in `test`. Some of them, which are directly used in brute-forcing keys, are speed-tested. There are time consumptions for the principal operations using 1 thread (on Raspberry Pi 3B+ with a 64-bit operating system):
 
 Operation | Time for 1 operation | Usages for 1 key | Time for 1 key | % of total time
 --------- | -------------------- | ---------------- | -------------- | ---------------
@@ -53,7 +55,7 @@ Operation | Time for 1 operation | Usages for 1 key | Time for 1 key | % of tota
 `Key::operator-=` | 17 ns | 0.5002 | 9 ns | 0 %
 `Point::add` | 1200 ns | 0.0002 | 0 ns | 0 %
 
-For now, it is about 3 μs needed to check 1 private key using 1 thread. Therefore, the total speed is more than 1.2M keys/second (on Raspberry Pi 3B+ with a 64-bit operating system).
+For now, it is about 3 μs needed to check 1 private key using 1 thread. Therefore, the total speed is more than 1.2M keys/second.
 
 ### main
 
