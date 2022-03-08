@@ -8,7 +8,7 @@
 #include "sha256.h"
 #include "test.h"
 
-const int BLOCK_BITS    = 26;
+const int BLOCK_BITS    = 27;
 const int THREAD_BITS   = 2;
 const int PROGRESS_BITS = 11;
 const int SUBBLOCK_BITS = 63 - BLOCK_BITS - THREAD_BITS - PROGRESS_BITS - Key::GROUP_BITS;
