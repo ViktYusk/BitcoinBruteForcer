@@ -38,7 +38,7 @@ The next principal methods for points are implemented:
 
 ### sha256 and ripemd160
 
-`sha256` and `ripemd160` are hashes which are used for converting a public point into a Bitcoin address. Addresses in this project are not common addresses of Bitcoin like `16jY7qLJnxb7CHZyqBP8qca9d51gAjyXQN` but Base58Check-decoded ones like `3EE4133D991F52FDF6A25C9834E0745AC74248A4` (by the way, the address in previous examples is the address of the puzzle). In the project, these hash-functions are highly optimized such that they break its specification rules; for example, SHA256 does not do packing and unpacking to optimize speed.
+`sha256` and `ripemd160` are hashes which are used for converting a public point into a Bitcoin address. Addresses in this project are not common addresses of Bitcoin like `16jY7qLJnxb7CHZyqBP8qca9d51gAjyXQN` but Base58Check-decoded ones like `3EE4133D991F52FDF6A25C9834E0745AC74248A4` (by the way, the address in previous examples is the address of the puzzle). In the project, these hash-functions are highly optimized such that they break their specification rules; for example, SHA256 does not do packing and unpacking to optimize speed.
 
 ### test
 
