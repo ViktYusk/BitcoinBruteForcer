@@ -1,6 +1,6 @@
-I developed this project with [CLion](https://www.jetbrains.com/clion/) IDE.
+This project is written in C++. Use [GCC](https://gcc.gnu.org/) to compile it.
 
-The target device of this project is [Raspberry Pi](https://www.raspberrypi.org/) (specifically, I use Raspberry Pi 3B+, but I think it is no problem to run the program on any of models). The important thing is that you need to use a 64-bit operating system which is not common, but it can be found as a beta-version [here](https://downloads.raspberrypi.org/raspios_lite_arm64/images/). In order to optimize speed, for some operations [GCC Inline Assembly](https://gcc.gnu.org/onlinedocs/gcc/Extended-Asm.html) with some specific instructions of AArch64 processors is used, but the code is compatible with other processors.
+The target device of this project is [Raspberry Pi](https://www.raspberrypi.org/) (specifically, I use Raspberry Pi 3B+, but I think it is no problem to run the program on any of models). The important thing is that you need to use a 64-bit operating system which is not common, but it can be found as a beta-version [here](https://downloads.raspberrypi.org/raspios_lite_arm64/images/). In order to optimize speed, for some operations [GCC Inline Assembly](https://gcc.gnu.org/onlinedocs/gcc/Extended-Asm.html) with some specific instructions of AArch64 processors is used, but the code is compatible with other processors. To cross-compile this project on Raspberry Pi, I use [CLion](https://www.jetbrains.com/clion/) IDE.
 
 This project can be compiled for other platforms as well. For example, to compile it for Windows, I use [Cygwin](https://www.cygwin.com/).
 
