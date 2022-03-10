@@ -6,7 +6,7 @@
 #include "ripemd160.h"
 #include "test.h"
 
-#define TEST(name, result, iterations, call) if (result) { std::cout << "* Passed test: " << name; Timer timer; if (iterations) { for (int i = 0; i < iterations; i++) call; std::cout << " [" << timer.stop(iterations) << " ns]"; } std::cout << std::endl; } else { std::cout << "* Failed test: " << name << std::endl; return -1; }
+#define TEST(name, result, iterations, call) if (result) { std::cout << "[I] Test is passed: " << name; Timer timer; if (iterations) { for (int i = 0; i < iterations; i++) call; std::cout << " [" << timer.stop(iterations) << " ns]"; } std::cout << std::endl; } else { std::cout << "[I] Test is failed: " << name << std::endl; return -1; }
 
 unsigned long long Timer::time()
 {
@@ -52,7 +52,7 @@ bool check(unsigned* array1, unsigned* array2, int length)
 
 int test()
 {
-    std::cout << "TESTING:" << std::endl;
+    std::cout << "[I] TESTING:" << std::endl;
     {
         unsigned inputs[4][64] =
         {
@@ -508,6 +508,6 @@ int test()
         point2.y = Key(0x3DB3590975F08733, 0x54299F35E9C79C77, 0x2107FFF206C80EF1, 0x6A952BA15E247C7C);
         TEST("Point(Key)", point1 == point2, 0, point1 = Point(key))
     }
-    std::cout << std::endl;
+//    std::cout << std::endl;
     return 0;
 }
