@@ -70,7 +70,7 @@ Bit # 1 | Bits # 2—28 | Bits # 29—30 | Bits # 31—40 | Bits # 41—52 | Bit
 ------- | ----------- | ------------ | ------------ | ------------ | ------------
 `1` | block bits | thread bits | progress bits | subblock bits | group bits
 
-The total number of private keys to brute force is 2^63. The whole work is divided into 2^27 = 134 217 728 so called *blocks*, each of them corresponds to *block bits*. Since my laptop and Raspberry Pi 3B+ have 4 cores, I use 2 bits as *thread bits*, i.e. for the first thread, thread bits are `00`, for the second thread, thread bits are `01`, etc. When *progress bits* group changes, there prints a progress message. Other bit groups are just being brute-forced. With current speed of calculations, it takes about 15 hours to process a block on Raspberry Pi 3B+ with a 64-bit operating system.
+The total number of private keys to brute force is 2^63. The whole work is divided into 2^27 = 134 217 728 so called *blocks*, each of them contains 2^36 keys. *Block bits* correspond to a specific block. Since my laptop and Raspberry Pi 3B+ have 4 cores, I use 2 bits as *thread bits*, i.e. for the first thread, thread bits are `00`, for the second thread, thread bits are `01`, etc. When *progress bits* group changes, there prints a progress message. Other bit groups are just being brute-forced. With current speed of calculations, it takes about 15 hours to process a block on Raspberry Pi 3B+ with a 64-bit operating system.
 
 The compiled program needs one argument with block number in decimal to process. If no argument is passed then the program will test itself.
 
