@@ -1,5 +1,7 @@
 #include "sha256.h"
 
+#pragma clang diagnostic push
+#pragma ide diagnostic ignored "OCDFAInspection"
 void sha256(unsigned input[], unsigned output[])
 {
     INPUT_16() INPUT_17() INPUT_18_21(18) INPUT_18_21(19) INPUT_18_21(20) INPUT_18_21(21) INPUT(22) INPUT(23)
@@ -30,3 +32,4 @@ void sha256(unsigned input[], unsigned output[])
     output[0] += words[0]; output[1] += words[1]; output[2] += words[2]; output[3] += words[3];
     output[4] += words[4]; output[5] += words[5]; output[6] += words[6]; output[7] += words[7];
 }
+#pragma clang diagnostic pop

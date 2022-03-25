@@ -5,14 +5,8 @@
       <paths name="Raspberry Pi (9de103da-dc65-41a0-8191-a8e02a8498a8)">
         <serverdata>
           <mappings>
-            <mapping deploy="/tmp/tmp.DzulQt85bp" local="$PROJECT_DIR$" />
+            <mapping local="$PROJECT_DIR$" web="/" />
           </mappings>
-          <excludedPaths>
-            <excludedPath local="true" path="$PROJECT_DIR$/cmake-build-release" />
-            <excludedPath local="true" path="$PROJECT_DIR$/cmake-build-debug" />
-            <excludedPath local="true" path="$PROJECT_DIR$/cmake-build-debug" />
-            <excludedPath local="true" path="$PROJECT_DIR$/cmake-build-release" />
-          </excludedPaths>
         </serverdata>
       </paths>
     </serverData>

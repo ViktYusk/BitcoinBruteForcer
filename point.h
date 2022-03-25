@@ -1,6 +1,6 @@
 #pragma once
 
-#include "Key.h"
+#include "key.h"
 
 struct Point
 {
@@ -10,7 +10,7 @@ struct Point
 	static const Point G;
 
 	static Point gPowers[64];
-	static Point gMultiples[Key::GROUP_SIZE / 2 + 1];
+	static Point gMultiples[GROUP_SIZE / 2 + 1];
 
 	static void initialize();
 	

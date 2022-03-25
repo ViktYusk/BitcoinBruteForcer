@@ -1,14 +1,15 @@
-#include "Key.h"
+#include "key.h"
 
 const Key Key::ZERO    = Key(0x0000000000000000, 0x0000000000000000, 0x0000000000000000, 0x0000000000000000); // 0 NOLINT(cert-err58-cpp)
 const Key Key::ONE     = Key(0x0000000000000001, 0x0000000000000000, 0x0000000000000000, 0x0000000000000000); // 1 NOLINT(cert-err58-cpp)
 const Key Key::THREE   = Key(0x0000000000000003, 0x0000000000000000, 0x0000000000000000, 0x0000000000000000); // 3 NOLINT(cert-err58-cpp)
 const Key Key::R       = Key(0x00000001000003D1, 0x0000000000000000, 0x0000000000000000, 0x0000000000000000); // 4294968273 NOLINT(cert-err58-cpp)
 const Key Key::R2      = Key(0x000007A2000E90A1, 0x0000000000000001, 0x0000000000000000, 0x0000000000000000); // 18446752466076602529 NOLINT(cert-err58-cpp)
-//const Key Key::P2      = Key(0xFFFFFFFF7FFFFE18, 0xFFFFFFFFFFFFFFFF, 0xFFFFFFFFFFFFFFFF, 0x7FFFFFFFFFFFFFFF); // 57896044618658097711785492504343953926634992332820282019728792003954417335832 NOLINT(cert-err58-cpp)
 const Key Key::P_PRIME = Key(0xD838091DD2253531, 0xBCB223FEDC24A059, 0x9C46C2C295F2B761, 0xC9BD190515538399); // 91248989341183975618893650062416139444822672217621753343178995607987479196977 NOLINT(cert-err58-cpp)
 const Key Key::P       = Key(0xFFFFFFFEFFFFFC2F, 0xFFFFFFFFFFFFFFFF, 0xFFFFFFFFFFFFFFFF, 0xFFFFFFFFFFFFFFFF); // 115792089237316195423570985008687907853269984665640564039457584007908834671663 NOLINT(cert-err58-cpp)
 
+#pragma clang diagnostic push
+#pragma ide diagnostic ignored "OCDFAInspection"
 void Key::gcd(Key a, Key b, Key& x, Key& y)
 {
     if (a.isNotZero())
@@ -29,6 +30,7 @@ void Key::gcd(Key a, Key b, Key& x, Key& y)
         y = ONE;
     }
 }
+#pragma clang diagnostic pop
 
 void Key::invertGroup(Key* keys)
 {
@@ -156,10 +158,10 @@ bool Key::add(const Key& key)
 	return carry;
 #else
     __uint128_t result = 0;
-    ADD_BLOCKS(0);
-    ADD_BLOCKS(1);
-    ADD_BLOCKS(2);
-    ADD_BLOCKS(3);
+    ADD_BLOCKS(0)
+    ADD_BLOCKS(1)
+    ADD_BLOCKS(2)
+    ADD_BLOCKS(3)
     return result;
 #endif
 }
@@ -184,14 +186,14 @@ bool Key::addExtended(const Key& key)
     return carry;
 #else
     __uint128_t result = 0;
-    ADD_BLOCKS(0);
-    ADD_BLOCKS(1);
-    ADD_BLOCKS(2);
-    ADD_BLOCKS(3);
-    ADD_BLOCKS(4);
-    ADD_BLOCKS(5);
-    ADD_BLOCKS(6);
-    ADD_BLOCKS(7);
+    ADD_BLOCKS(0)
+    ADD_BLOCKS(1)
+    ADD_BLOCKS(2)
+    ADD_BLOCKS(3)
+    ADD_BLOCKS(4)
+    ADD_BLOCKS(5)
+    ADD_BLOCKS(6)
+    ADD_BLOCKS(7)
     return result;
 #endif
 }
@@ -212,10 +214,10 @@ bool Key::subtract(const Key& key)
 	return carry;
 #else
     __uint128_t result = 0;
-    SUBTRACT_BLOCKS(0);
-    SUBTRACT_BLOCKS(1);
-    SUBTRACT_BLOCKS(2);
-    SUBTRACT_BLOCKS(3);
+    SUBTRACT_BLOCKS(0)
+    SUBTRACT_BLOCKS(1)
+    SUBTRACT_BLOCKS(2)
+    SUBTRACT_BLOCKS(3)
     return result;
 #endif
 }
@@ -225,17 +227,6 @@ unsigned long long Key::differenceParity(const Key& subtrahend)
     unsigned long long parity = blocks[0] % 2 ^ subtrahend.blocks[0] % 2;
     return compare(subtrahend) == 1 ? parity : 1 - parity;
 }
-
-/*
-void Key::rightShift()
-{
-    __asm("MOV %[b0], %[b0], LSR #1\n\t ADD %[b0], %[b0], %[b1], LSL #63\n\t"
-          "MOV %[b1], %[b1], LSR #1\n\t ADD %[b1], %[b1], %[b2], LSL #63\n\t"
-          "MOV %[b2], %[b2], LSR #1\n\t ADD %[b2], %[b2], %[b3], LSL #63\n\t"
-          "MOV %[b3], %[b3], LSR #1"
-    : [b0] "+r" (blocks[0]), [b1] "+r" (blocks[1]), [b2] "+r" (blocks[2]), [b3] "+r" (blocks[3]));
-}
-*/
 
 void Key::multiply(const Key& key, Key& product)
 {
@@ -406,40 +397,4 @@ void Key::invert()
 	Key y;
 	gcd(*this, P, x, y);
 	*this = x;
-
-    /*
-    Key u = P;
-    Key v = *this;
-    *this = ZERO;
-    Key s = ONE;
-    while (v.isNotZero())
-    {
-        if (!(u.blocks[0] % 2))
-        {
-            u.rightShift();
-            bool odd = blocks[0] % 2;
-            rightShift();
-            if (odd)
-                add(P2);
-        }
-        else if (!(v.blocks[0] % 2))
-        {
-            v.rightShift();
-            bool odd = s.blocks[0] % 2;
-            s.rightShift();
-            if (odd)
-                s.add(P2);
-        }
-        else if (u.compare(v) > 0)
-        {
-            u.subtract(v);
-            *this -= s;
-        }
-        else
-        {
-            v.subtract(u);
-            s -= *this;
-        }
-    }
-    */
 }

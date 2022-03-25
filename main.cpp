@@ -1,21 +1,15 @@
-#include <chrono>
-#include <iostream>
 #include <mutex>
 #include <pthread.h>
 
-#include "Point.h"
-#include "ripemd160.h"
-#include "sha256.h"
 #include "test.h"
 
-const int BLOCK_BITS    = 27;
-const int THREAD_BITS   = 2;
-const int PROGRESS_BITS = 10;
-const int SUBBLOCK_BITS = 63 - BLOCK_BITS - THREAD_BITS - PROGRESS_BITS - Key::GROUP_BITS;
-const int THREADS_NUMBER    = 1 << THREAD_BITS;
-const int PROGRESSES_NUMBER = 1 << PROGRESS_BITS;
-const int SUBBLOCKS_NUMBER  = 1 << SUBBLOCK_BITS;
-const int GROUPS_PER_PROGRESS = THREADS_NUMBER * SUBBLOCKS_NUMBER;
+#define BLOCK_BITS 27
+#define THREAD_BITS 2
+#define PROGRESS_BITS 10
+#define SUBBLOCK_BITS (63 - BLOCK_BITS - THREAD_BITS - PROGRESS_BITS - GROUP_BITS)
+#define THREADS_NUMBER (1 << THREAD_BITS)
+#define PROGRESSES_NUMBER (1 << PROGRESS_BITS)
+#define SUBBLOCKS_NUMBER (1 << SUBBLOCK_BITS)
 
 int block;
 int threadsProgresses[THREADS_NUMBER] = { 0 };
@@ -34,7 +28,7 @@ void print(unsigned long long block)
         print((unsigned char)(block >> 4 * (15 - i) & 0xF));
 }
 
-void print(unsigned* address)
+void print(const unsigned* address)
 {
     for (int i = 0; i < 5; i++)
         for (int j = 0; j < 4; j++)
@@ -56,19 +50,19 @@ void* thread_function(void* id)
 	{
 	    for (int s = 0; s < SUBBLOCKS_NUMBER; s++)
 		{
-            Key inverses[Key::GROUP_SIZE / 2 + 1];
-            for (int i = 0; i <= Key::GROUP_SIZE / 2; i++)
+            Key inverses[GROUP_SIZE / 2 + 1];
+            for (int i = 0; i <= GROUP_SIZE / 2; i++)
             {
                 inverses[i] = Point::gMultiples[i].x;
                 inverses[i] -= center.x;
             }
             Key::invertGroup(inverses);
-            for (int i = 0; i < Key::GROUP_SIZE; i++)
+            for (int i = 0; i < GROUP_SIZE; i++)
             {
-                if (i < Key::GROUP_SIZE / 2)
-                    center.subtractReduced(Point::gMultiples[Key::GROUP_SIZE / 2 - 1 - i], inverses[Key::GROUP_SIZE / 2 - 1 - i], point);
-                else if (i > Key::GROUP_SIZE / 2)
-                    center.addReduced(Point::gMultiples[i - (Key::GROUP_SIZE / 2 + 1)], inverses[i - (Key::GROUP_SIZE / 2 + 1)], point);
+                if (i < GROUP_SIZE / 2)
+                    center.subtractReduced(Point::gMultiples[GROUP_SIZE / 2 - 1 - i], inverses[GROUP_SIZE / 2 - 1 - i], point);
+                else if (i > GROUP_SIZE / 2)
+                    center.addReduced(Point::gMultiples[i - (GROUP_SIZE / 2 + 1)], inverses[i - (GROUP_SIZE / 2 + 1)], point);
                 else
                 {
                     point = center;
@@ -83,14 +77,14 @@ void* thread_function(void* id)
                     ripemd160(output, address);
                     mutex_.lock();
                     std::cout << "[W] ";
-                    print((((((((((1ULL << BLOCK_BITS) + block) << THREAD_BITS) + *(int*)id) << PROGRESS_BITS) + p) << SUBBLOCK_BITS) + s) << Key::GROUP_BITS) + i);
+                    print((((((((((1ULL << BLOCK_BITS) + block) << THREAD_BITS) + *(int*)id) << PROGRESS_BITS) + p) << SUBBLOCK_BITS) + s) << GROUP_BITS) + i);
                     std::cout << " ";
                     print(address);
                     std::cout << std::endl;
                     mutex_.unlock();
                 }
             }
-			center.add(Point::gMultiples[Key::GROUP_SIZE / 2], inverses[Key::GROUP_SIZE / 2], point);
+			center.add(Point::gMultiples[GROUP_SIZE / 2], inverses[GROUP_SIZE / 2], point);
             center = point;
 		}
 //#ifdef DEBUG
@@ -100,7 +94,7 @@ void* thread_function(void* id)
 		for (int threadProgress : threadsProgresses)
 		    log &= threadProgress >= threadsProgresses[*(int*)id];
 		if (log)
-            std::cout << "[I] Progress = " << std::fixed << (p + 1) * 100.0 / PROGRESSES_NUMBER << " % [" << std::fixed << (GROUPS_PER_PROGRESS * Key::GROUP_SIZE / timer.stop() / 1000000.0) << " Mkeys/sec]" << std::endl;
+            std::cout << "[I] Progress = " << std::fixed << (p + 1) * 100.0 / PROGRESSES_NUMBER << " % [" << std::fixed << (THREADS_NUMBER * SUBBLOCKS_NUMBER * GROUP_SIZE / timer.stop() / 1000000.0) << " Mkeys/sec]" << std::endl;
 		mutex_.unlock();
 //#endif
 	}
@@ -143,11 +137,11 @@ int main(int argc, char* argv[])
 	startKey <<= BLOCK_BITS;
 	startKey += block;
 	startKey <<= THREAD_BITS;
-	startKey <<= PROGRESS_BITS + SUBBLOCK_BITS + Key::GROUP_BITS;
-	startKey += Key::GROUP_SIZE / 2;
+	startKey <<= PROGRESS_BITS + SUBBLOCK_BITS + GROUP_BITS;
+	startKey += GROUP_SIZE / 2;
 	Point::initialize();
 	threadsPoints[0] = Point(startKey);
-	unsigned long long threadKeys = 1ULL << (PROGRESS_BITS + SUBBLOCK_BITS + Key::GROUP_BITS);
+	unsigned long long threadKeys = 1ULL << (PROGRESS_BITS + SUBBLOCK_BITS + GROUP_BITS);
 	unsigned long long threadKey = threadKeys;
 	for (int i = 1; i <= THREADS_NUMBER; i++)
 	{

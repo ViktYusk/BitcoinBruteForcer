@@ -1,12 +1,4 @@
-#include <chrono>
-#include <iostream>
-#include "Key.h"
-#include "Point.h"
-#include "sha256.h"
-#include "ripemd160.h"
 #include "test.h"
-
-#define TEST(name, result, iterations, call) if (result) { std::cout << "[I] Test is passed: " << name; Timer timer; if (iterations) { for (int i = 0; i < iterations; i++) call; std::cout << " [" << timer.stop(iterations) << " ns]"; } std::cout << std::endl; } else { std::cout << "[I] Test is failed: " << name << std::endl; return -1; }
 
 unsigned long long Timer::time()
 {
@@ -29,20 +21,12 @@ unsigned long long Timer::stop(int iterations)
 double Timer::stop()
 {
     unsigned long long newTime = time();
-    double returnTime = (newTime - timer) / 1000.0;
+    double returnTime = (double)(newTime - timer) / 1000;
     timer = newTime;
     return returnTime;
 }
 
-bool check(unsigned char* array1, unsigned char* array2, int length)
-{
-	for (int c = 0; c < length; c++)
-		if (array1[c] != array2[c])
-			return false;
-	return true;
-}
-
-bool check(unsigned* array1, unsigned* array2, int length)
+bool check(const unsigned* array1, const unsigned* array2, int length)
 {
     for (int c = 0; c < length; c++)
         if (array1[c] != array2[c])
@@ -87,10 +71,10 @@ int test()
 		for (int i = 0; i < 8; i++)
 		    testInput[i] = input[i];
         bool result = true;
-		for (int i = 0; i < 5; i++)
+		for (unsigned int output0 : output0s)
 		{
 			ripemd160(testInput, testOutput);
-            result &= ripemd160(testInput) == output0s[i];
+            result &= ripemd160(testInput) == output0;
 			for (int j = 0; j < 5; j++)
             {
 			    REVERSE(*((unsigned*)testOutput + j), &testInput[j])
@@ -134,7 +118,8 @@ int test()
         Key key1(0x59F2815B16F81798, 0x029BFCDB2DCE28D9, 0x55A06295CE870B07, 0x79BE667EF9DCBBAC, 0x9C47D08FFB10D4B8, 0xFD17B448A6855419, 0x5DA4FBFC0E1108A8, 0x483ADA7726A3C465);
         Key key2(0x9C47D08FFB10D4B8, 0xFD17B448A6855419, 0x5DA4FBFC0E1108A8, 0x483ADA7726A3C465, 0x59F2815B16F81798, 0x029BFCDB2DCE28D9, 0x55A06295CE870B07, 0x79BE667EF9DCBBAC);
         Key key3(0x9C47D08FFB10D4B8, 0xFD17B448A6855419, 0x5DA4FBFC0E1108A8, 0x483ADA7726A3C465, 0x59F2815B16F81798, 0x029BFCDB2DCE28D9, 0x55A06295CE870B07, 0x79BE667EF9DCBBAC);
-        TEST("Key::operator==", !(key1 == key2) && !(key2 == key1) && key2 == key3, 1000000, key2 == key3)
+        bool t;
+        TEST("Key::operator==", !(key1 == key2) && !(key2 == key1) && key2 == key3, 1000000, t = key2 == key3)
     }
     {
         Key key1(0x9C47D08FFB10D4B8, 0xFD17B448A6855419, 0x5DA4FBFC0E1108A8, 0x483ADA7726A3C465);
@@ -386,11 +371,11 @@ int test()
         TEST("Key::invert", result, 1000, key.invert())
     }
     {
-        Key inputs1[Key::GROUP_SIZE / 2 + 1];
-        Key inputs2[Key::GROUP_SIZE / 2 + 1];
+        Key inputs1[GROUP_SIZE / 2 + 1];
+        Key inputs2[GROUP_SIZE / 2 + 1];
         inputs1[0] = Key(0x59F2815B16F81798, 0x029BFCDB2DCE28D9, 0x55A06295CE870B07, 0x79BE667EF9DCBBAC);
         inputs2[0] = inputs1[0];
-        for (int k = 1; k < Key::GROUP_SIZE / 2 + 1; k++)
+        for (int k = 1; k < GROUP_SIZE / 2 + 1; k++)
         {
             inputs1[k] = inputs1[k - 1];
             inputs1[k] += Key::ONE;
@@ -398,7 +383,7 @@ int test()
         }
         Key::invertGroup(inputs2);
         bool result = true;
-        for (int k = 0; k < Key::GROUP_SIZE / 2 + 1; k++)
+        for (int k = 0; k < GROUP_SIZE / 2 + 1; k++)
         {
             inputs1[k].invert();
             result &= inputs1[k] == inputs2[k];
@@ -416,7 +401,8 @@ int test()
         Point point1 = Point(/*1, */Key(0x59F2815B16F81798, 0x029BFCDB2DCE28D9, 0x55A06295CE870B07, 0x79BE667EF9DCBBAC), Key(0x9C47D08FFB10D4B8, 0xFD17B448A6855419, 0x5DA4FBFC0E1108A8, 0x483ADA7726A3C465));
         Point point2 = point1;
         Point point3 = Point(/*1025, */Key(0x8304214FE4985A86, 0x640D2464C7FE0AC4, 0x066535A04DBF563A, 0x635CD7A05064D3BC), Key(0xE0453E27E9E3AE1F, 0xE8D5F047F3281A4C, 0x46735CFCAF9E2F30, 0x00E40265913E77F6));
-        TEST("Point::operator==", point1 == point2 && !(point1 == point3), 0, point1 == point2)
+        bool t;
+        TEST("Point::operator==", point1 == point2 && !(point1 == point3), 0, t = point1 == point2)
     }
     {
         Point point1 = Point(/*1, */Key(0x59F2815B16F81798, 0x029BFCDB2DCE28D9, 0x55A06295CE870B07, 0x79BE667EF9DCBBAC), Key(0x9C47D08FFB10D4B8, 0xFD17B448A6855419, 0x5DA4FBFC0E1108A8, 0x483ADA7726A3C465));

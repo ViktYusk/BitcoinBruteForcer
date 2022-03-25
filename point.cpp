@@ -1,4 +1,4 @@
-#include "Point.h"
+#include "point.h"
 
 const unsigned Point::ADDRESS0 = 0x3D13E43E; // FC9602C002C75EAA
 const unsigned Point::COMPRESSION_ENDING[7] = { 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000108 };
@@ -6,7 +6,7 @@ const unsigned Point::COMPRESSION_ENDING[7] = { 0x00000000, 0x00000000, 0x000000
 const Point Point::G = Point(Key(0x59F2815B16F81798, 0x029BFCDB2DCE28D9, 0x55A06295CE870B07, 0x79BE667EF9DCBBAC), Key(0x9C47D08FFB10D4B8, 0xFD17B448A6855419, 0x5DA4FBFC0E1108A8, 0x483ADA7726A3C465)); // (55066263022277343669578718895168534326250603453777594175500187360389116729240, 32670510020758816978083085130507043184471273380659243275938904335757337482424) NOLINT(cert-err58-cpp)
 
 Point Point::gPowers[64] = {};
-Point Point::gMultiples[Key::GROUP_SIZE / 2 + 1] = {};
+Point Point::gMultiples[GROUP_SIZE / 2 + 1] = {};
 
 void Point::initialize()
 {
@@ -19,13 +19,13 @@ void Point::initialize()
 	gMultiples[0] = G;
 	gMultiples[1] = gMultiples[0];
 	gMultiples[1].double_();
-	for (int i = 2; i < Key::GROUP_SIZE / 2; i++)
+	for (int i = 2; i < GROUP_SIZE / 2; i++)
 	{
 		gMultiples[i] = gMultiples[i - 1];
 		gMultiples[i] += G;
 	}
-	gMultiples[Key::GROUP_SIZE / 2] = gMultiples[Key::GROUP_SIZE / 2 - 1];
-	gMultiples[Key::GROUP_SIZE / 2].double_();
+	gMultiples[GROUP_SIZE / 2] = gMultiples[GROUP_SIZE / 2 - 1];
+	gMultiples[GROUP_SIZE / 2].double_();
 }
 
 Point::Point()

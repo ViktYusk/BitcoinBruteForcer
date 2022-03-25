@@ -1,6 +1,15 @@
 #pragma once
 
+#include <chrono>
+#include <iostream>
 #include <string>
+
+#include "key.h"
+#include "point.h"
+#include "sha256.h"
+#include "ripemd160.h"
+
+#define TEST(name, result, iterations, call) if (result) { std::cout << "[I] Test is passed: " << name; Timer timer; if (iterations) { for (int i = 0; i < iterations; i++) call; std::cout << " [" << timer.stop(iterations) << " ns]"; } std::cout << std::endl; } else { std::cout << "[I] Test is failed: " << name << std::endl; return -1; }
 
 struct Timer
 {
@@ -13,6 +22,4 @@ struct Timer
 	double stop();
 };
 
-bool check(unsigned char* array1, unsigned char* array2, int length);
-int round(double number, int digits);
 int test();

@@ -13,11 +13,11 @@
 #define ADD_BLOCKS(i) result += (__uint128_t)blocks[i] + key.blocks[i]; blocks[i] = result; result >>= 64;
 #define SUBTRACT_BLOCKS(i) result = (__uint128_t)blocks[i] - key.blocks[i] - (bool)result; blocks[i] = result; result >>= 64;
 #endif
+#define GROUP_BITS 12
+#define GROUP_SIZE (1 << GROUP_BITS)
 
 struct Key
 {
-	static const int GROUP_BITS = 12;
-	static const int GROUP_SIZE = 1 << GROUP_BITS;
 	static const unsigned long long B = 0x0000000100000000;
 	
 	static const Key ZERO;
@@ -25,14 +25,13 @@ struct Key
 	static const Key THREE;
 	static const Key R;
 	static const Key R2;
-    //static const Key P2;
 	static const Key P_PRIME;
 	static const Key P;
 
 	static void gcd(Key a, Key b, Key& x, Key& y);
 	static void invertGroup(Key* keys);
 
-	unsigned long long blocks[8];
+	unsigned long long blocks[8]{};
 	
 	Key();
 	Key(unsigned long long block0, unsigned long long block1, unsigned long long block2, unsigned long long block3);
@@ -52,7 +51,6 @@ struct Key
 	bool addExtended(const Key& key);
 	bool subtract(const Key& key);
 	unsigned long long differenceParity(const Key& subtrahend);
-    //void rightShift();
     void multiply(const Key& key, Key& product);
     void multiplyLow(const Key& key, Key& product);
 	void multiplyByR2();
