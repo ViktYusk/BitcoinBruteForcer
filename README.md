@@ -64,22 +64,30 @@ Operation | Time for 1 operation | Usages for 1 key | Time for 1 key | % of tota
 
 ### main
 
-The sought private key consists of 64 bits. In the project, the bits are divided into groups, where Bit # 1 is a higher one:
+The sought private key consists of 64 bits. In the project, the bits are divided into groups, where Bit # 1 is a higher one. The next table describes a private key's bits partition (when 4 threads are running):
 
 Bit # 1 | Bits # 2—28 | Bits # 29—30 | Bits # 31—40 | Bits # 41—52 | Bits # 53—64
 ------- | ----------- | ------------ | ------------ | ------------ | ------------
 `1` | block bits | thread bits | progress bits | subblock bits | group bits
 
-The total number of private keys to brute force is 2^63. The whole work is divided into 2^27 = 134 217 728 so called *blocks*, each of them contains 2^36 keys. *Block bits* correspond to a specific block. Since my laptop and Raspberry Pi 3B+ have 4 cores, I use 2 bits as *thread bits*, i.e. for the first thread, thread bits are `00`, for the second thread, thread bits are `01`, etc. When *progress bits* group changes, there prints a progress message. Other bit groups are just being brute-forced. With current speed of calculations, it takes about 15 hours to process a block on Raspberry Pi 3B+ with a 64-bit operating system.
+The total number of private keys to brute force is 2^63. The whole work is divided into 2^27 = 134 217 728 so called *blocks*, each of them contains 2^36 keys. *Block bits* correspond to a specific block. Since my laptop and Raspberry Pi 3B+ have 4 cores, I use 2 bits as *thread bits*, i.e. for the first thread, thread bits are `00`, for the second thread, thread bits are `01`, etc., but the number of threads can be configured. When *progress bits* group changes, there prints a progress message. Other bit groups are just being brute-forced. With current speed of calculations, it takes about 15 hours to process a block on Raspberry Pi 3B+ with a 64-bit operating system.
 
-The compiled program needs one argument with block number in decimal to process. If no argument is passed then the program will test itself.
+The compiled program needs one argument with block number in decimal to process. For example, to brute force block # 130637868 using 4 threads, run 
+```
+bitcoin_puzzle 130637868
+```
+If you need to configure the number of threads, use the second argument (the binary logarithm of the number of threads). For example, to brute force block # 130637868 using 32 threads, run
+```
+bitcoin_puzzle 130637868 5
+```
+If no argument is passed then the program will test itself.
 
 The program prints lines to console with different prefixes:
 * `[I]`: an informational message (for example, a progress message)
 * `[W]`: a wallet with a partially coinciding address
 * `[E]`: an error message
 
-There is an example of a wallet in the program's output: 
+There is an example of a wallet in the program's output:
 ```
 [W] 9C7592C05DC70C7D 3EE4133DC0048754A7B8EB3A085032FADD54E184
 ```
