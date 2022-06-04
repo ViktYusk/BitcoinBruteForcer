@@ -1,14 +1,13 @@
-Use [GCC](https://gcc.gnu.org/) to compile this project.
+In this project, only the CPU is used for brute-forcing.
 
-To compile this project on Windows, I use [Cygwin](https://www.cygwin.com/).
-
-To cross-compile this project on [Raspberry Pi](https://www.raspberrypi.org/), I use [CLion](https://www.jetbrains.com/clion/) IDE. The important thing is that you need to install a 64-bit Raspbian operating system which is not default, but it can be found as a beta-version [here](https://downloads.raspberrypi.org/raspios_lite_arm64/images/). In order to optimize speed, for some operations [GCC Inline Assembly](https://gcc.gnu.org/onlinedocs/gcc/Extended-Asm.html) with some specific instructions of AArch64 processors is used, but the code is compatible with other processors.
-
-This project can be compiled for other platforms as well.
+Use [GCC](https://gcc.gnu.org/) to compile this project:
+* To compile this project on Windows, I use [Cygwin](https://www.cygwin.com/).
+* To cross-compile this project on [Raspberry Pi](https://www.raspberrypi.org/), I use [CLion](https://www.jetbrains.com/clion/) IDE. The important thing is that you need to install a 64-bit Raspbian operating system which is not default, but it can be found as a beta-version [here](https://downloads.raspberrypi.org/raspios_lite_arm64/images/). In order to optimize speed, for some operations [GCC Inline Assembly](https://gcc.gnu.org/onlinedocs/gcc/Extended-Asm.html) with some specific instructions of AArch64 processors is used, but the code is compatible with other processors.
+* This project can be compiled for other platforms as well.
 
 ## Bitcoin Puzzle
 
-A brief introduction to Bitcoin Puzzle, also known as BTC32, all necessary references, and some nice statistical analysis can be found is [this repository](https://github.com/HomelessPhD/BTC32). The whole Bitcoin Puzzle is a set of 160 puzzles with increasing difficulty, some of them are already solved (using brute force), and others are not. The easiest non-solved yet puzzle is # 64, and this project is specifically made to brute force this puzzle.
+A brief introduction to Bitcoin Puzzle, also known as BTC32, all necessary references, and some nice statistical analysis can be found is [this repository](https://github.com/HomelessPhD/BTC32). The whole Bitcoin Puzzle is a set of 160 puzzles with increasing difficulty, some of them are already solved (using brute force), and others are not. You can use this project to brute-force the private keys from this puzzle. The easiest non-solved yet puzzle is # 64.
 
 ## Code Overview
 
@@ -29,9 +28,9 @@ The next principal methods for keys are implemented:
 
 ### Point
 
-`Point` represents a Bitcoin public point which is a point on [`secp256k1` Curve](https://en.bitcoin.it/wiki/Secp256k1) which is a. k. a. *Bitcoin Curve*. It consists of two 256-bit keys `x` and `y`. `G` is the generator point. `ADDRESS0` is the first 4 bytes of the puzzle address.
+`Point` represents a Bitcoin public point which is a point on [secp256k1](https://en.bitcoin.it/wiki/Secp256k1) which is a. k. a. *Bitcoin Curve*. It consists of two 256-bit keys `x` and `y`. `G` is the generator point.
 
-A point can be constructed either from two keys, or from `unsigned long long` private key as the corresponding public point (the last operation is quite slow).
+A point can be constructed either from two keys (`x` and `y`), or from a private key as the corresponding public point (the last operation is quite slow).
 
 The next principal methods for points are implemented:
 * `initialize` is a static method to initialize `gPowers` and `gMultiples` which are some useful pre-computed points
@@ -41,7 +40,7 @@ The next principal methods for points are implemented:
 
 ### sha256 and ripemd160
 
-`sha256` and `ripemd160` are hashes which are used for converting a public point into a Bitcoin address. Addresses in this project are not common addresses of Bitcoin like `16jY7qLJnxb7CHZyqBP8qca9d51gAjyXQN` but Base58Check-decoded ones like `3EE4133D991F52FDF6A25C9834E0745AC74248A4` (by the way, the address in previous examples is the address of the puzzle). In the project, these hash-functions are highly optimized such that they break their specification rules; for example, SHA256 does not do packing and unpacking to optimize speed.
+`sha256` and `ripemd160` are hashes which are used for converting a public point into a Bitcoin address. Addresses in this project are not common addresses of Bitcoin like `16jY7qLJnxb7CHZyqBP8qca9d51gAjyXQN` but Base58Check-decoded ones like `3EE4133D991F52FDF6A25C9834E0745AC74248A4` (by the way, the address in previous examples is the address of the puzzle # 64). In the project, these hash-functions are highly optimized such that they break their specification rules; for example, SHA256 does not do packing and unpacking to optimize speed.
 
 ### test
 
@@ -53,34 +52,32 @@ On Raspberry Pi 3B+ with a 64-bit operating system, the total speed is more than
 
 Operation | Time for 1 operation | Usages for 1 key | Time for 1 key | % of total time
 --------- | -------------------- | ---------------- | -------------- | ---------------
-`sha256` | 750 ns | 1.0000 | 750 ns | 25 %
-`Point::subtractReduced` | 1200 ns | 0.5000 | 600 ns | 20 %
-`Point::addReduced` | 1200 ns | 0.4998 | 600 ns | 20 %
-`ripemd160` | 510 ns | 1.0000 | 510 ns | 17 %
-`Key::invertGroup` | 2 300 000 ns | 0.0002 | 460 ns | 16 %
-`Point::compress` | 15 ns | 1.0000 | 15 ns | 1 %
+`sha256` | 750 ns | 1.0000 | 750 ns | 23 %
+`Key::invertGroup` | 3 000 000 ns | 0.0002 | 730 ns | 23 %
+`Point::subtractReduced` | 1200 ns | 0.5000 | 600 ns | 19 %
+`Point::addReduced` | 1200 ns | 0.4998 | 600 ns | 19 %
+`ripemd160` | 510 ns | 1.0000 | 510 ns | 16 %
+`Point::compress` | 15 ns | 1.0000 | 15 ns | 0 %
 `Key::operator-=` | 17 ns | 0.5002 | 9 ns | 0 %
+`Key::increment` | 8 ns | 1.0000 | 8 ns | 0 %
 `Point::add` | 1200 ns | 0.0002 | 0 ns | 0 %
 
 ### main
 
-The sought private key consists of 64 bits. In the project, the bits are divided into groups, where Bit # 1 is a higher one. The next table describes a private key's bits partition (when 4 threads are running):
+A private key consists of 256 bits, or 64 hexadecimal digits. The first 220 bits, or 55 hexadecimal digits, is the prefix, and the last 36 bits, or 9 hexadecimal digits, — the suffix. For one execution, the program checks one *range* — 2^36 private keys (they correspond to all possible suffixes for a given prefix).
 
-Bit # 1 | Bits # 2—28 | Bits # 29—30 | Bits # 31—40 | Bits # 41—52 | Bits # 53—64
-------- | ----------- | ------------ | ------------ | ------------ | ------------
-`1` | block bits | thread bits | progress bits | subblock bits | group bits
+In the project, the bits of a private key are divided into groups, where Bit 1 is a higher one. The next table describes a private key's bits partition (when 4 threads are running):
 
-The total number of private keys to brute force is 2^63. The whole work is divided into 2^27 = 134 217 728 so called *blocks*, each of them contains 2^36 keys. *Block bits* correspond to a specific block. Since my laptop and Raspberry Pi 3B+ have 4 cores, I use 2 bits as *thread bits*, i.e. for the first thread, thread bits are `00`, for the second thread, thread bits are `01`, etc., but the number of threads can be configured. When *progress bits* group changes, there prints a progress message. Other bit groups are just being brute-forced. With current speed of calculations, it takes about 15 hours to process a block on Raspberry Pi 3B+ with a 64-bit operating system.
+Bits 1—220 | Bits 221—222 | Bits 223—232 | Bits 233—244 | Bits 245—256
+--- | --- | --- | --- | ---
+prefix bits | thread bits | progress bits | subrange bits | group bits
 
-The compiled program needs one argument with block number in decimal to process. For example, to brute force block # 130637868 using 4 threads, run 
+Since my laptop and Raspberry Pi 3B+ have 4 cores, I use 2 bits as *thread bits*, i.e. for the first thread, thread bits are `00`, for the second thread, thread bits are `01`, etc., but the number of threads can be configured. When *progress bits* group changes, there prints a progress message. Other bit groups are just being brute-forced. With current speed of calculations, it takes about 15 hours to process a block on Raspberry Pi 3B+ with a 64-bit operating system.
+
+The compiled program needs two required arguments — the private key prefix and the address prefix. The default number of threads is 4. If you need to run 2^n threads, pass the third argument with the number n. For example, to check all the private keys with prefix `000000000000000000000000000000000000000000000000FC9602C002C75EAA` and find those whose address (Base58Check-decoded one) starts with `3EE4133D`, using 16 threads, run 
 ```
-bitcoin_puzzle 130637868
+bitcoin_brute_forcer 000000000000000000000000000000000000000000000000FC9602C 3EE4133D 4
 ```
-If you need to configure the number of threads, use the second argument (the binary logarithm of the number of threads). For example, to brute force block # 130637868 using 32 threads, run
-```
-bitcoin_puzzle 130637868 5
-```
-If no argument is passed then the program will test itself.
 
 The program prints lines to console with different prefixes:
 * `[I]`: an informational message (for example, a progress message)
@@ -89,10 +86,10 @@ The program prints lines to console with different prefixes:
 
 There is an example of a wallet in the program's output:
 ```
-[W] 9C7592C05DC70C7D 3EE4133DC0048754A7B8EB3A085032FADD54E184
+[W] 000000000000000000000000000000000000000000000000FC9602C002C75EAA 3EE4133DB100C6DEE46F584A1D88BA1533EEEE5D
 ```
 
-It contains a pair of a hexadecimal key (`9C7592C05DC70C7D`) and the corresponding Base58Check-decoded address (`3EE4133DC0048754A7B8EB3A085032FADD54E184`). The program does not check the exact coincidence with the sought decoded address `3EE4133D991F52FDF6A25C9834E0745AC74248A4`; 20%-coincidence for an address is enough to get into the output. Statistically, each block should have about 16 wallets in its output.
+It contains a pair of a hexadecimal private key (`000000000000000000000000000000000000000000000000FC9602C002C75EAA`) and the corresponding Base58Check-decoded address (`3EE4133DB100C6DEE46F584A1D88BA1533EEEE5D`). The program does not check the exact coincidence with the sought decoded address; it checks only the 20%-coincidence i.e. the first 4 bytes which you pass as the second argument. Statistically, each range should have about 16 wallets in its output.
 
 There is also finish point check. If the finish point for some thread is wrong (normally, it doesn't happen), then there will be an error message in the output.
 

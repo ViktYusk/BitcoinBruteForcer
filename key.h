@@ -1,5 +1,7 @@
 #pragma once
 
+#include <string>
+
 #define COMPARE_BLOCKS(block1, block2) if (block1 > block2) return 1; if (block1 < block2) return -1;
 #define MULTIPLY_BLOCK_BY_BLOCK(i, j) result += (__uint128_t)blocks[i] * key.blocks[j]; table[i][j] = result; result >>= 64;
 #define MULTIPLY_BLOCK_BY_BLOCK_LAST(i) result += (__uint128_t)blocks[i] * key.blocks[3]; table[i][3] = result; table[i][4] = result >> 64;
@@ -28,7 +30,7 @@ struct Key
 	static const Key P_PRIME;
 	static const Key P;
 
-	static void gcd(Key a, Key b, Key& x, Key& y);
+    static void gcd(Key a, Key b, Key& x, Key& y);
 	static void invertGroup(Key* keys);
 
 	unsigned long long blocks[8]{};
@@ -36,6 +38,7 @@ struct Key
 	Key();
 	Key(unsigned long long block0, unsigned long long block1, unsigned long long block2, unsigned long long block3);
 	Key(unsigned long long block0, unsigned long long block1, unsigned long long block2, unsigned long long block3, unsigned long long block4, unsigned long long block5, unsigned long long block6, unsigned long long block7);
+    Key(const char* hex);
 
 	bool operator==(const Key& key) const;
 	void operator+=(const Key& key);
@@ -46,6 +49,7 @@ struct Key
 	int compareExtended(const Key& key);
 
     bool isNotZero();
+    bool getBit(int index);
 	bool increment();
 	bool add(const Key& key);
 	bool addExtended(const Key& key);

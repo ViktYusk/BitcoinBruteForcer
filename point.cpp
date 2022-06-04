@@ -1,17 +1,16 @@
 #include "point.h"
 
-const unsigned Point::ADDRESS0 = 0x3D13E43E; // FC9602C002C75EAA
 const unsigned Point::COMPRESSION_ENDING[7] = { 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000108 };
 
 const Point Point::G = Point(Key(0x59F2815B16F81798, 0x029BFCDB2DCE28D9, 0x55A06295CE870B07, 0x79BE667EF9DCBBAC), Key(0x9C47D08FFB10D4B8, 0xFD17B448A6855419, 0x5DA4FBFC0E1108A8, 0x483ADA7726A3C465)); // (55066263022277343669578718895168534326250603453777594175500187360389116729240, 32670510020758816978083085130507043184471273380659243275938904335757337482424) NOLINT(cert-err58-cpp)
 
-Point Point::gPowers[64] = {};
+Point Point::gPowers[256] = {};
 Point Point::gMultiples[GROUP_SIZE / 2 + 1] = {};
 
 void Point::initialize()
 {
     gPowers[0] = G;
-	for (int i = 1; i < 64; i++)
+	for (int i = 1; i < 256; i++)
 	{
 		gPowers[i] = gPowers[i - 1];
 		gPowers[i].double_();
@@ -31,15 +30,15 @@ void Point::initialize()
 Point::Point()
 = default;
 
-Point::Point(unsigned long long key)
+Point::Point(Key key)
 {
-	int bit = 0;
-	while (!(key & 1ULL << bit))
-		bit++;
-	*this = gPowers[bit];
-	for (bit += 1; bit < 64; bit++)
-		if (key & 1ULL << bit)
-			operator+=(gPowers[bit]);
+    int index = 0;
+    while (!key.getBit(index))
+        index++;
+    *this = gPowers[index++];
+    for (; index < 256; index++)
+        if (key.getBit(index))
+            *this+=gPowers[index];
 }
 
 Point::Point(Key x, Key y)

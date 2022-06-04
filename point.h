@@ -9,16 +9,16 @@ struct Point
 
 	static const Point G;
 
-	static Point gPowers[64];
+	static Point gPowers[256];
 	static Point gMultiples[GROUP_SIZE / 2 + 1];
 
 	static void initialize();
-	
+
 	Key x;
 	Key y;
 	
 	Point();
-	explicit Point(unsigned long long key);
+    Point(Key key);
 	Point(Key x, Key y);
 
 	bool operator==(const Point& point) const;

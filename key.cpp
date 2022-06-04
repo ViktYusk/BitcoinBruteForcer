@@ -76,6 +76,18 @@ Key::Key(unsigned long long block0, unsigned long long block1, unsigned long lon
 	blocks[7] = block7;
 }
 
+Key::Key(const char* hex)
+{
+    for (int i = 0; i < 4; i++)
+    {
+        char hexBlock[17];
+        for (int j = 0; j < 16; j++)
+            hexBlock[j] = hex[16 * (3 - i) + j];
+        hexBlock[16] = 0;
+        blocks[i] = std::strtoull(hexBlock, nullptr, 16);
+    }
+}
+
 bool Key::operator==(const Key& key) const
 {
 	return blocks[0] == key.blocks[0] && blocks[1] == key.blocks[1] && blocks[2] == key.blocks[2] && blocks[3] == key.blocks[3];
@@ -125,8 +137,14 @@ int Key::compareExtended(const Key& key)
 	return 0;
 }
 
-bool Key::isNotZero() {
+bool Key::isNotZero()
+{
     return blocks[0] | blocks[1] | blocks[2] | blocks[3];
+}
+
+bool Key::getBit(int index)
+{
+    return blocks[index / 64] & 1ULL << index % 64;
 }
 
 bool Key::increment()
