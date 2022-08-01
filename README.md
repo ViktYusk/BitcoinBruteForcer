@@ -64,16 +64,6 @@ Operation | Time for 1 operation | Usages for 1 key | Time for 1 key | % of tota
 
 ### main
 
-A private key consists of 256 bits, or 64 hexadecimal digits. The first 220 bits, or 55 hexadecimal digits, is the prefix, and the last 36 bits, or 9 hexadecimal digits, — the suffix. For one execution, the program checks one *range* — 2^36 private keys (they correspond to all possible suffixes for a given prefix).
-
-In the project, the bits of a private key are divided into groups, where Bit 1 is a higher one. The next table describes a private key's bits partition (when 4 threads are running):
-
-Bits 1—220 | Bits 221—222 | Bits 223—232 | Bits 233—244 | Bits 245—256
---- | --- | --- | --- | ---
-prefix bits | thread bits | progress bits | subrange bits | group bits
-
-Since my laptop and Raspberry Pi 3B+ have 4 cores, I use 2 bits as *thread bits*, i.e. for the first thread, thread bits are `00`, for the second thread, thread bits are `01`, etc., but the number of threads can be configured. When *progress bits* group changes, there prints a progress message. Other bit groups are just being brute-forced. With current speed of calculations, it takes about 15 hours to process a block on Raspberry Pi 3B+ with a 64-bit operating system.
-
 The compiled program needs two required arguments — the private key prefix and the address prefix. The default number of threads is 4. If you need to run 2^n threads, pass the third argument with the number n. For example, to check all the private keys with prefix `000000000000000000000000000000000000000000000000FC9602C002C75EAA` and find those whose address (Base58Check-decoded one) starts with `3EE4133D`, using 16 threads, run 
 ```
 bitcoin_brute_forcer 000000000000000000000000000000000000000000000000FC9602C 3EE4133D 4

@@ -9,8 +9,7 @@
 #include "sha256.h"
 #include "test.h"
 
-const int blockBits = 27;
-const int blocksNumber = 1 << blockBits;
+int prefixBits;
 const int maxThreadBits = 10;
 int threadBits = 2;
 int threadsNumber;
@@ -72,10 +71,10 @@ void print(const unsigned* address)
 void* threadFunction(void* id)
 {
     Key key = threadsKeys[*(int*)id];
+    Point centerPoint(key);
+    Point semigroupPoint = Point(Key(1 << (GROUP_BITS - 1), 0, 0, 0));
+    centerPoint += semigroupPoint;
     Point point;
-    Key centerKey = key;
-    centerKey.blocks[0] |= GROUP_SIZE / 2;
-    Point centerPoint(centerKey);
 	unsigned compression[64];
 	for (int i = 0; i < 7; i++)
 	    compression[9 + i] = Point::COMPRESSION_ENDING[i];
@@ -132,7 +131,9 @@ void* threadFunction(void* id)
 		mutex_.unlock();
 //#endif
 	}
-	if (!(centerPoint == Point(threadsKeys[*(int*)id + 1])))
+	Point nextCenterPoint = Point(threadsKeys[*(int*)id + 1]);
+    nextCenterPoint += semigroupPoint;
+    if (!(centerPoint == nextCenterPoint))
 	{
 		mutex_.lock();
 		std::cout << "[E] Wrong finish point for thread # " << *(int*)id << std::endl;
@@ -151,11 +152,6 @@ int main(int argc, char* argv[])
     if (argc < 3)
     {
         std::cout << "[E] There are two required parameters" << std::endl;
-        return 0;
-    }
-    if (strlen(argv[1]) != 55)
-    {
-        std::cout << "[E] Key prefix length must be 55" << std::endl;
         return 0;
     }
     if (!isHex(argv[1]))
@@ -188,13 +184,25 @@ int main(int argc, char* argv[])
                 threadBits = threadBits_;
         }
     }
+    int prefixLength = strlen(argv[1]);
+    prefixBits = 4 * prefixLength;
     threadsNumber = 1 << threadBits;
-    progressBits = 63 - blockBits - threadBits - subrangeBits - GROUP_BITS;
+    progressBits = 256 - prefixBits - threadBits - subrangeBits - GROUP_BITS;
+    if (progressBits < 2)
+    {
+        std::cout << "[E] Prefix is too long" << std::endl;
+        return 0;
+    }
+    else if (progressBits > 30)
+    {
+        std::cout << "[E] Prefix is too short" << std::endl;
+        return 0;
+    }
     progressesNumber = 1 << progressBits;
     char startKey[65];
-    for (int i = 0; i < 55; i++)
+    for (int i = 0; i < prefixLength; i++)
         startKey[i] = argv[1][i];
-    for (int i = 55; i < 64; i++)
+    for (int i = prefixLength; i < 64; i++)
         startKey[i] = '0';
     startKey[64] = 0;
     threadsKeys = new Key[threadsNumber + 1];
