@@ -79,18 +79,6 @@ There is an example of a wallet in the program's output:
 [W] 000000000000000000000000000000000000000000000000FC9602C002C75EAA 3EE4133DB100C6DEE46F584A1D88BA1533EEEE5D
 ```
 
-It contains a pair of a hexadecimal private key (`000000000000000000000000000000000000000000000000FC9602C002C75EAA`) and the corresponding Base58Check-decoded address (`3EE4133DB100C6DEE46F584A1D88BA1533EEEE5D`). The program does not check the exact coincidence with the sought decoded address; it checks only the 20%-coincidence i.e. the first 4 bytes which you pass as the second argument. Statistically, each range should have about 16 wallets in its output.
+It contains a pair of a hexadecimal private key (`000000000000000000000000000000000000000000000000FC9602C002C75EAA`) and the corresponding Base58Check-decoded address (`3EE4133DB100C6DEE46F584A1D88BA1533EEEE5D`). The program does not check the exact coincidence with the sought decoded address; it checks only the 20%-coincidence i.e. the first 4 bytes which you pass as the second argument.
 
 There is also finish point check. If the finish point for some thread is wrong (normally, it doesn't happen), then there will be an error message in the output.
-
-## Contributions and Donations
-
-I really want to optimize speed as much as possible up to several million keys in a second. I would appreciate any advice or help. You can use my email to contact me:
-```
-viktyusk@gmail.com
-```
-
-If you want to donate me, please, use the next Bitcoin address:
-```
-bc1qdf30mdgp4ajltv2xktmcajja08lusjysqar9mz
-```
