@@ -171,17 +171,15 @@ int main(int argc, char* argv[])
     }
     if (argc > 3)
     {
-        if (!isNatural(argv[2]))
-            std::cout << "[E] Thread bits number must be non-negative integer: " << argv[2] << std::endl;
-        else if (strlen(argv[1]) > 9)
-            std::cout << "[E] Thread bits number can't be so long: " << argv[2] << std::endl;
-        else
-        {
-            int threadBits_ = atoi(argv[2]);
-            if (threadBits_ > maxThreadBits)
-                std::cout << "[E] Thread bits number must be less than " << maxThreadBits << ": " << threadBits_ << std::endl;
-            else
-                threadBits = threadBits_;
+        if (!isNatural(argv[3])) {
+            std::cout << "[E] Thread bits number must be non-negative integer: " << argv[3] << std::endl;
+            return 0;
+        } else {
+            threadBits = atoi(argv[3]);
+            if (threadBits > maxThreadBits) {
+                std::cout << "[E] Thread bits number must be less than " << maxThreadBits << ": " << threadBits << std::endl;
+                return 0;
+            }
         }
     }
     int prefixLength = strlen(argv[1]);
